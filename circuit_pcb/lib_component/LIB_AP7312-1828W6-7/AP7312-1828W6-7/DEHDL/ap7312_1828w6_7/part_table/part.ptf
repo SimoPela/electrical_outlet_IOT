@@ -1,0 +1,11 @@
+FILE_TYPE = MULTI_PHYS_TABLE;
+
+PART 'AP7312_1828W6_7'
+CLASS = IC
+{========================================================================================}
+:"MANUFACTURER_NAME", "MANUFACTURER_PART_NUMBER"= "PART_NUMBER", "JEDEC_TYPE", "PACK_TYPE", "MOUSER_PART_NUMBER", "MOUSER_PRICE/STOCK", "ARROW_PART_NUMBER", "ARROW_PRICE/STOCK", "DESCRIPTION", "DATASHEET", "HEIGHT";
+{========================================================================================}
+ "Diodes Incorporated", "AP7312-1828W6-7" (!) = "", "SOT95P285X145-6N", "SOT23 (6-Pin)", "621-AP7312-1828W6-7", "https://www.mouser.co.uk/ProductDetail/Diodes-Incorporated/AP7312-1828W6-7?qs=gfe7vQ8txpXIU2bwoIt1PQ%3D%3D", "AP7312-1828W6-7", "https://www.arrow.com/en/products/ap7312-1828w6-7/diodes-incorporated?utm_currency=USD&region=nac", "DIODES INC. - AP7312-1828W6-7 - LDO Voltage Regulator IC, Fixed, 2 Output, 2 V to 6 V in, 150 mV drop, 150 mA out, SOT-26-6", "https://www.diodes.com/assets/Datasheets/products_inactive_data/AP7312.pdf", "1.45 mm"
+END_PART
+
+END.

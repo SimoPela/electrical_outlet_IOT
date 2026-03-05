@@ -1,0 +1,9 @@
+Manufacturer=Diodes Incorporated
+PartNumber=AP7312-1828W6-7
+PartCategory=Integrated Circuit
+PackageCategory=SOT23 (6-Pin)
+PinCount=6
+Version=1.1
+Released=2022-08-11 15:12:31
+Downloaded=2026-02-20 12:15:32
+3D=Y

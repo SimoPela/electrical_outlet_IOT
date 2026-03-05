@@ -1,0 +1,18 @@
+.SHT41A-AW1B-R2 :1 ;Humidity, Temperature 0 ~ 100% RH I2C +/-2% RH 4 s Surface Mount
+SHT41AAW1BR2
+*STM IC
+*NGS
+*PLB 1="SDA" 2="SCL" 3="VDD" 4="VSS"
+*MXP 4
+*DFN SHT41A-AW1B-R2
+~!Manufacturer_Name (Sensirion)
+~!Manufacturer_Part_Number (SHT41A-AW1B-R2)
+~!Mouser Part Number (403-SHT41A-AW1B-R2)
+~!Link Mouser Price/Stock (https://www.mouser.co.uk/ProductDetail/Sensirion/SHT41A-AW1B-R2?qs=ulEaXIWI0c8gYiWa38rOTg%3D%3D)
+~!Arrow Part Number (-)
+~!Arrow Price/Stock (-)
+~!Link Datasheet (https://sensirion.com/media/documents/C43ACD8C/6685097A/HT_DS_Datasheet_SHT4xA_1.pdf)
+~!Height (0.59mm)
+~!3D_Model (SHT41A-AW1B-R2)
+SHT41A-AW1B-R2
+1.1!U 2.1!U 3.1!U 4.1!U 

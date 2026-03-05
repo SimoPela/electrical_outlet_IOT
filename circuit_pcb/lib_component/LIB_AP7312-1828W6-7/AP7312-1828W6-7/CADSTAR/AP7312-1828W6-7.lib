@@ -1,0 +1,18 @@
+.AP7312-1828W6-7 :1 ;DIODES INC. - AP7312-1828W6-7 - LDO Voltage Regulator IC, Fixed, 2 Output, 2 V to 6 V in, 150 mV drop, 150 mA out, SOT-26-6
+SOT95P285X145-6N
+*STM IC
+*NGS
+*PLB 1="OUT2" 2="GND" 3="EN2" 4="EN1" 5="IN" 6="OUT1"
+*MXP 6
+*DFN AP7312-1828W6-7
+~!Manufacturer_Name (Diodes Incorporated)
+~!Manufacturer_Part_Number (AP7312-1828W6-7)
+~!Mouser Part Number (621-AP7312-1828W6-7)
+~!Link Mouser Price/Stock (https://www.mouser.co.uk/ProductDetail/Diodes-Incorporated/AP7312-1828W6-7?qs=gfe7vQ8txpXIU2bwoIt1PQ%3D%3D)
+~!Arrow Part Number (AP7312-1828W6-7)
+~!Link Arrow Price/Stock (https://www.arrow.com/en/products/ap7312-1828w6-7/diodes-incorporated?utm_currency=USD&region=nac)
+~!Link Datasheet (https://www.diodes.com/assets/Datasheets/products_inactive_data/AP7312.pdf)
+~!Height (1.45mm)
+~!3D_Model (AP7312-1828W6-7)
+AP7312-1828W6-7
+1.1!U 2.1!U 3.1!U 6.1!U 5.1!U 4.1!U 

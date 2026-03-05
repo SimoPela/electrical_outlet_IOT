@@ -1,0 +1,9 @@
+Manufacturer=Diodes Incorporated
+PartNumber=AP7312-1833W6-7
+PartCategory=Integrated Circuit
+PackageCategory=Small Outline Packages
+PinCount=6
+Version=5.1
+Released=2016-04-13 09:35:14
+Downloaded=2026-02-20 12:17:41
+3D=Y

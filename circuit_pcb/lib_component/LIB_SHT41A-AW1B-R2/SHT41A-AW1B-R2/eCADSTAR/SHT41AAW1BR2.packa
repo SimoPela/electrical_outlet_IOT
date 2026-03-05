@@ -1,0 +1,13 @@
+(unit MM)
+
+(package "SHT41A-AW1B-R2"
+    (type UNDEF)
+    (uver 2)
+    (cuser "SamacSys")
+    (uuser "SamacSys")
+    (utime 2024-11-20-14:30:28)
+    (mountForm default
+        (footprintRef "SHT41AAW1BR2")
+        (spec "System")
+    )
+)

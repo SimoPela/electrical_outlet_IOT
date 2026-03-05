@@ -1,0 +1,9 @@
+Manufacturer=SCHURTER
+PartNumber=0031.8201.G
+PartCategory=Hardware
+PackageCategory=Other
+PinCount=2
+Version=7.3
+Released=2023-01-26 03:34:38
+Downloaded=2026-02-27 08:31:57
+3D=Y

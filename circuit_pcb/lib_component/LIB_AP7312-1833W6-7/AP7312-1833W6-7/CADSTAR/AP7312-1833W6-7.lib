@@ -1,0 +1,18 @@
+.AP7312-1833W6-7 :1 ;LDO,Regulator,Pos,reg,3.3V,0.15A,SOT26 DiodesZetex AP7312-1833W6-7, Dual LDO Voltage Regulator, 150mA, 1.8 V, 3.3 V  /-2%, 6-Pin SOT-26
+SOP95P285X145-6N
+*STM IC
+*NGS
+*PLB 1="OUT2" 2="GND" 3="EN2" 4="EN1" 5="IN" 6="OUT1"
+*MXP 6
+*DFN AP7312-1833W6-7
+~!Manufacturer_Name (Diodes Incorporated)
+~!Manufacturer_Part_Number (AP7312-1833W6-7)
+~!Mouser Part Number (621-AP7312-1833W6-7)
+~!Link Mouser Price/Stock (https://www.mouser.co.uk/ProductDetail/Diodes-Incorporated/AP7312-1833W6-7?qs=gfe7vQ8txpU5mQKCTYslow%3D%3D)
+~!Arrow Part Number (AP7312-1833W6-7)
+~!Link Arrow Price/Stock (https://www.arrow.com/en/products/ap7312-1833w6-7/diodes-incorporated?utm_currency=USD&region=nac)
+~!Link Datasheet (https://www.mouser.se/datasheet/2/115/DIODS13520_1-2512524.pdf)
+~!Height (1.45mm)
+~!3D_Model (AP7312-1833W6-7)
+AP7312-1833W6-7
+1.1!U 2.1!U 3.1!U 6.1!U 5.1!U 4.1!U 

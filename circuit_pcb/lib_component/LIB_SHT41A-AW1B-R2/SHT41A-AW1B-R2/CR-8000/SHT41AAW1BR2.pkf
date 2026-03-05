@@ -1,0 +1,10 @@
+(unit MM)
+
+(package "SHT41AAW1BR2"
+    (type UNDEF)
+    (uver 2)
+    (mountForm default
+        (footprintRef "SHT41AAW1BR2")
+        (spec "default")
+    )
+)

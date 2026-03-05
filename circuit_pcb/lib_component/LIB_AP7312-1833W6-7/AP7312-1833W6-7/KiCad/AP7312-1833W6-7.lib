@@ -1,0 +1,29 @@
+EESchema-LIBRARY Version 2.3
+#encoding utf-8
+#SamacSys ECAD Model AP7312-1833W6-7
+#/282243/737228/2.50/6/2/Integrated Circuit
+DEF AP7312-1833W6-7 IC 0 30 Y Y 1 F N
+F0 "IC" 950 300 50 H V L CNN
+F1 "AP7312-1833W6-7" 950 200 50 H V L CNN
+F2 "SOP95P285X145-6N" 950 100 50 H I L CNN
+F3 "https://www.mouser.se/datasheet/2/115/DIODS13520_1-2512524.pdf" 950 0 50 H I L CNN
+F4 "LDO,Regulator,Pos,reg,3.3V,0.15A,SOT26 DiodesZetex AP7312-1833W6-7, Dual LDO Voltage Regulator, 150mA, 1.8 V, 3.3 V  /-2%, 6-Pin SOT-26" 950 -100 50 H I L CNN "Description"
+F5 "1.45" 950 -200 50 H I L CNN "Height"
+F6 "Diodes Incorporated" 950 -300 50 H I L CNN "Manufacturer_Name"
+F7 "AP7312-1833W6-7" 950 -400 50 H I L CNN "Manufacturer_Part_Number"
+F8 "621-AP7312-1833W6-7" 950 -500 50 H I L CNN "Mouser Part Number"
+F9 "https://www.mouser.co.uk/ProductDetail/Diodes-Incorporated/AP7312-1833W6-7?qs=gfe7vQ8txpU5mQKCTYslow%3D%3D" 950 -600 50 H I L CNN "Mouser Price/Stock"
+F10 "AP7312-1833W6-7" 950 -700 50 H I L CNN "Arrow Part Number"
+F11 "https://www.arrow.com/en/products/ap7312-1833w6-7/diodes-incorporated?utm_currency=USD&region=nac" 950 -800 50 H I L CNN "Arrow Price/Stock"
+DRAW
+X OUT2 1 0 0 200 R 50 50 0 0 P
+X GND 2 0 -100 200 R 50 50 0 0 P
+X EN2 3 0 -200 200 R 50 50 0 0 P
+X OUT1 6 1100 0 200 L 50 50 0 0 P
+X IN 5 1100 -100 200 L 50 50 0 0 P
+X EN1 4 1100 -200 200 L 50 50 0 0 P
+P 5 0 1 6 200 100 900 100 900 -300 200 -300 200 100 N
+ENDDRAW
+ENDDEF
+#
+#End Library

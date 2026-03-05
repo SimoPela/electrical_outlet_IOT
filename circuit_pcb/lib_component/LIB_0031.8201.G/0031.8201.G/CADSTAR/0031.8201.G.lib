@@ -1,0 +1,18 @@
+.0031.8201.G :1 ;OGN for THT 22.5mm
+"00318201G"
+*STM H
+*NGS
+*PLB 1="1" 2="2"
+*MXP 2
+*DFN 0031.8201.G
+~!Manufacturer_Name (SCHURTER)
+~!Manufacturer_Part_Number (0031.8201.G)
+~!Mouser Part Number (693-0031.8201.G)
+~!Link Mouser Price/Stock (https://www.mouser.co.uk/ProductDetail/Schurter/0031.8201.G?qs=53fxdJjyGHQ26HnfkWkpvg%3D%3D)
+~!Arrow Part Number (0031.8201.G)
+~!Link Arrow Price/Stock (https://www.arrow.com/en/products/0031.8201.g/schurter?region=europe)
+~!Link Datasheet (https://www.schurter.com/en/datasheet/ogn)
+~!Height (12.7mm)
+~!3D_Model (0031.8201.G)
+"0031.8201.G"
+1.1!U 2.1!U 

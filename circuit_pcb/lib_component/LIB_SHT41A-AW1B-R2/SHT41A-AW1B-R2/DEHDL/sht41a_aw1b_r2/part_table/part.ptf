@@ -1,0 +1,11 @@
+FILE_TYPE = MULTI_PHYS_TABLE;
+
+PART 'SHT41A_AW1B_R2'
+CLASS = IC
+{========================================================================================}
+:"MANUFACTURER_NAME", "MANUFACTURER_PART_NUMBER"= "PART_NUMBER", "JEDEC_TYPE", "PACK_TYPE", "MOUSER_PART_NUMBER", "MOUSER_PRICE/STOCK", "ARROW_PART_NUMBER", "ARROW_PRICE/STOCK", "DESCRIPTION", "DATASHEET", "HEIGHT";
+{========================================================================================}
+ "Sensirion", "SHT41A-AW1B-R2" (!) = "", "SHT41AAW1BR2", "Other", "403-SHT41A-AW1B-R2", "https://www.mouser.co.uk/ProductDetail/Sensirion/SHT41A-AW1B-R2?qs=ulEaXIWI0c8gYiWa38rOTg%3D%3D", "", "", "Humidity, Temperature 0 ~ 100% RH I2C +/-2% RH 4 s Surface Mount", "https://sensirion.com/media/documents/C43ACD8C/6685097A/HT_DS_Datasheet_SHT4xA_1.pdf", "0.59 mm"
+END_PART
+
+END.

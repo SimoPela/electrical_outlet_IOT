@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP AP7312-1828W6-7
+D DIODES INC. - AP7312-1828W6-7 - LDO Voltage Regulator IC, Fixed, 2 Output, 2 V to 6 V in, 150 mV drop, 150 mA out, SOT-26-6
+K
+F https://www.diodes.com/assets/Datasheets/products_inactive_data/AP7312.pdf
+$ENDCMP
+#
+#End Doc Library
