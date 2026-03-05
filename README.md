@@ -76,3 +76,8 @@ The firmware architecture and data infrastructure will evolve as the hardware pl
 
 ---
 
+Dimensioni placca presa T13 suisse
+Placca frontale:      ~86 mm × 86 mm
+Foro incasso muro:    ~55–60 mm diametro
+Profondità scatola:   ~45–60 mm
+
