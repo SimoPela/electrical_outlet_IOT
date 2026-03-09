@@ -74,10 +74,45 @@ The current stage of the project focuses on:
 
 The firmware architecture and data infrastructure will evolve as the hardware platform stabilizes.
 
----
 
-Dimensioni placca presa T13 suisse
-Placca frontale:      ~86 mm × 86 mm
-Foro incasso muro:    ~55–60 mm diametro
-Profondità scatola:   ~45–60 mm
+# Project Progress Report
+
+This section summarizes the current progress based on the repository contents.
+
+## Completed
+
+- System concept and sensor selection defined in the project documentation.
+- Core firmware architecture implemented with FreeRTOS tasks and queues.
+- SCD40 integration implemented (`scd40_task`) with data acquisition, validity checks, timeout supervision, and automatic recovery.
+- RGB status LED task implemented with CO2 threshold mapping and offline indication.
+- Watchdog configuration implemented and integrated into runtime tasks.
+- First PCB work completed in KiCad with a main board project and multiple sensor-related schematic sheets.
+- Initial bill of materials and component ordering tracked in `parts_shop/component.csv`.
+
+## In Progress
+
+- Full multi-sensor firmware integration beyond the currently active SCD40 path.
+- Hardware bring-up and validation of all selected sensors on the prototype.
+- End-to-end firmware robustness testing on real hardware.
+
+## Open Points / Gaps -> fix these points before the first prototype
+
+- `main.c` references `mq7_task` and related types, but no `mq7` implementation files are present yet in the repository.
+- No automated test suite is currently implemented (the `test` folder still contains only the default template README).
+- Data logging, communication pipeline, and automation features are not yet present.
+
+## Next Milestones
+
+- Implement and integrate the remaining sensor tasks one by one.
+- Add a unified sensor data model and publish mechanism for all measurements.
+- Add basic hardware-in-the-loop validation tests and fault-injection scenarios.
+- Stabilize PCB revision after bring-up feedback and final pin mapping checks.
+
+
+---
+## Swiss T13 Outlet Plate Dimensions
+
+- Front plate: ~86 mm x 86 mm
+- Wall recess hole: ~55-60 mm diameter
+- Box depth: ~45-60 mm
 
