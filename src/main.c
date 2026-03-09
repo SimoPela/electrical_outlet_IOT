@@ -14,7 +14,6 @@
 
 #include "led_RGB.h"
 #include "scd40_task.h"
-#include "mq7_task.h"
 #include "wtd.h"
 
 static const char *TAG = "MAIN";
@@ -35,9 +34,7 @@ void app_main(void)
 
     /* Create queues (length MUST be 1 for xQueueOverwrite pattern) */
     g_scd40_queue = xQueueCreate(1, sizeof(scd40_sample_t));
-    g_mq7_queue   = xQueueCreate(1, sizeof(mq7_sample_t));
     configASSERT(g_scd40_queue);
-    configASSERT(g_mq7_queue);
 
     /* SCD40 configuration */
     static const scd40_cfg_t scd_cfg = {
@@ -53,17 +50,8 @@ void app_main(void)
         .active_high = 1,  // 1 = common cathode, 0 = common anode
     };
 
-    #define MQ7_TASK_PRIORITY 2
-
-    static const mq7_cfg_t mq7_cfg = {
-        .adc_ch = ADC1_CHANNEL_4,   // GPIO32
-        .heater_gpio = 25           // MOSFET gate
-    };
-
-
     TaskHandle_t scd40_handle = NULL;
     TaskHandle_t led_handle   = NULL;
-    TaskHandle_t mq7_handle   = NULL;
 
     BaseType_t ret;
 
@@ -89,22 +77,9 @@ void app_main(void)
 #endif
     configASSERT(ret == pdPASS);
 
-    /* ---- MQ7 task ---- */
-#if CONFIG_FREERTOS_UNICORE
-    ret = xTaskCreate(mq7_task, "mq7", STACK_MQ7_WORDS,
-                      (void *)&mq7_cfg, MQ7_TASK_PRIORITY, &mq7_handle);
-#else
-    ret = xTaskCreatePinnedToCore(mq7_task, "mq7", STACK_MQ7_WORDS,
-        (void *)&mq7_cfg, MQ7_TASK_PRIORITY,
-        &mq7_handle, 1);
-
-#endif
-    configASSERT(ret == pdPASS);
-
     /* Register tasks to watchdog */
     ESP_ERROR_CHECK(esp_task_wdt_add(scd40_handle));
     ESP_ERROR_CHECK(esp_task_wdt_add(led_handle));
-    ESP_ERROR_CHECK(esp_task_wdt_add(mq7_handle));
 
     ESP_LOGI(TAG, "Tasks started and registered to WDT");
 }
