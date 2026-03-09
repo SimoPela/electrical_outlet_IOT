@@ -64,6 +64,27 @@ Two possible microphone configurations are considered:
 
 ---
 
+### First layout of the prototype
+this is a simple diagram that shows the layout of the prototype
+```mermaid
+---
+config:
+  look: handDrawn
+  theme: neutral
+---
+flowchart LR
+  A[ESP32-S3] -->|I2C| B[SCD40]
+  A -->|I2C| C[SGP41]
+  A -->|UART| D[PMS7003]
+  A -->|I2C| E[SHT41]
+  A -->|I2C| F[BMP280]
+  A -->|I2C| G[AS7341]
+  A -->|GPIO| H[AS312]
+  A -->|I2S| I[INMP441]
+  A -->|ADC| J[MiCS-5524]
+
+```
+
 # Development Status
 
 The current stage of the project focuses on:
