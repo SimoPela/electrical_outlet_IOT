@@ -69,22 +69,133 @@ this is a simple diagram that shows the layout of the prototype
 ```mermaid
 ---
 config:
-  look: handDrawn
-  theme: neutral
+  theme: base
+  flowchart:
+    curve: linear
+    nodeSpacing: 35
+    rankSpacing: 45
 ---
 flowchart LR
-  A[ESP32-S3] -->|I2C| B[SCD40] --> K[CO2 sensor]
-  A -->|I2C| C[SGP41] --> L[VOC/NOx sensor]
-  A -->|UART| D[PMS7003] --> R[Particulate matter sensor]
-  A -->|I2C| E[SHT41] --> M[Temperature/Humidity sensor]
-  A -->|I2C| F[BMP280] --> N[Atmospheric pressure sensor]
-  A -->|I2C| G[AS7431] --> O[Light spectrum sensor]
-  A -->|GPIO| H[AS312] --> P[Motion detection sensor]
-  A -->|I2S| I[INMP441] --> Q[Noise level sensor]
-  A -->|ADC| J[MiCS-5524] --> S[Combustible gases sensor]
 
-  A <-->|WiFi| T[MQTT server]
+    %% =========================
+    %% CENTRAL NODE
+    %% =========================
+    A[ESP32-S3 Sensor Node]
 
+    %% =========================
+    %% ENVIRONMENTAL SENSORS
+    %% =========================
+    subgraph ENV[Environmental Sensors]
+        direction TB
+        B[SCD40]
+        C[SGP41]
+        D[PMS7003]
+        E[SHT41]
+        F[BMP280]
+        G[AS7341]
+    end
+
+    %% =========================
+    %% PRESENCE / AUDIO / GAS
+    %% =========================
+    subgraph AUX[Presence, Audio and Safety Sensors]
+        direction TB
+        H[AS312]
+        I[INMP441]
+        J[MiCS-5524]
+    end
+
+    %% =========================
+    %% MEASURED QUANTITIES
+    %% =========================
+    subgraph DATA[Measured Quantities]
+        direction TB
+        K[CO2]
+        L[VOC / NOx]
+        R[Particulate Matter]
+        M[Temperature / Humidity]
+        N[Atmospheric Pressure]
+        O[Light Spectrum]
+        P[Motion Detection]
+        Q[Noise Level]
+        S[Combustible Gas]
+    end
+
+    %% =========================
+    %% NETWORK
+    %% =========================
+    T[MQTT Broker]
+
+    %% =========================
+    %% CONNECTIONS: ESP32 -> SENSORS
+    %% =========================
+    A -->|I2C| B
+    A -->|I2C| C
+    A -->|UART| D
+    A -->|I2C| E
+    A -->|I2C| F
+    A -->|I2C| G
+    A -->|GPIO| H
+    A -->|I2S| I
+    A -->|ADC| J
+
+    %% =========================
+    %% CONNECTIONS: SENSORS -> DATA
+    %% =========================
+    B --> K
+    C --> L
+    D --> R
+    E --> M
+    F --> N
+    G --> O
+    H --> P
+    I --> Q
+    J --> S
+
+    %% =========================
+    %% NETWORK LINK
+    %% =========================
+    A <-->|Wi-Fi / MQTT| T
+
+    %% =========================
+    %% STYLES
+    %% =========================
+    classDef mcu fill:#1f2937,color:#ffffff,stroke:#111827,stroke-width:2px;
+    classDef sensor fill:#f8fafc,color:#111827,stroke:#94a3b8,stroke-width:1.5px;
+    classDef quantity fill:#ecfeff,color:#0f172a,stroke:#06b6d4,stroke-width:1.5px;
+    classDef broker fill:#fef3c7,color:#78350f,stroke:#f59e0b,stroke-width:2px;
+    classDef group fill:#ffffff,color:#111827,stroke:#cbd5e1,stroke-width:1.5px;
+
+    class A mcu;
+    class B,C,D,E,F,G,H,I,J sensor;
+    class K,L,R,M,N,O,P,Q,S quantity;
+    class T broker;
+    class ENV,AUX,DATA group;
+
+    %% Bus colors
+    linkStyle 0 stroke:#2563eb,stroke-width:2.5px,color:#2563eb;
+    linkStyle 1 stroke:#2563eb,stroke-width:2.5px,color:#2563eb;
+    linkStyle 2 stroke:#16a34a,stroke-width:2.5px,color:#16a34a;
+    linkStyle 3 stroke:#2563eb,stroke-width:2.5px,color:#2563eb;
+    linkStyle 4 stroke:#2563eb,stroke-width:2.5px,color:#2563eb;
+    linkStyle 5 stroke:#2563eb,stroke-width:2.5px,color:#2563eb;
+    linkStyle 6 stroke:#6b7280,stroke-width:2.5px,color:#6b7280;
+    linkStyle 7 stroke:#7c3aed,stroke-width:2.5px,color:#7c3aed;
+    linkStyle 8 stroke:#ea580c,stroke-width:2.5px,color:#ea580c;
+
+    %% Sensor -> quantity links
+    linkStyle 9 stroke:#94a3b8,stroke-width:1.5px;
+    linkStyle 10 stroke:#94a3b8,stroke-width:1.5px;
+    linkStyle 11 stroke:#94a3b8,stroke-width:1.5px;
+    linkStyle 12 stroke:#94a3b8,stroke-width:1.5px;
+    linkStyle 13 stroke:#94a3b8,stroke-width:1.5px;
+    linkStyle 14 stroke:#94a3b8,stroke-width:1.5px;
+    linkStyle 15 stroke:#94a3b8,stroke-width:1.5px;
+    linkStyle 16 stroke:#94a3b8,stroke-width:1.5px;
+    linkStyle 17 stroke:#94a3b8,stroke-width:1.5px;
+
+    %% Wi-Fi / MQTT link
+    linkStyle 18 stroke:#d97706,stroke-width:3px,color:#d97706;
 ```
 
 # Development Status
