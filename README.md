@@ -83,6 +83,7 @@ flowchart LR
 
     subgraph AUX[Presence, Audio and Safety Sensors]
         direction TB
+        X[ ]:::ghost
         H[AS312]
         I[INMP441]
         J[MiCS-5524]
@@ -130,6 +131,8 @@ flowchart LR
     classDef quantity fill:#ecfeff,color:#0f172a,stroke:#06b6d4,stroke-width:1.5px
     classDef broker fill:#fef3c7,color:#78350f,stroke:#f59e0b,stroke-width:2px
     classDef group fill:#ffffff,color:#111827,stroke:#cbd5e1,stroke-width:1.5px
+    classDef ghost fill:transparent,stroke:transparent
+    class X ghost
 
     class A mcu
     class B,C,D,E,F,G,H,I,J sensor
