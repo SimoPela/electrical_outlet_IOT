@@ -1,6 +1,6 @@
 # Electrical Outlet IoT
 
-An environmental monitoring platform built around a **smart outlet form factor**.
+An embedded environmental monitoring platform designed to fit inside a **standard electrical outlet enclosure**.
 
 The device focuses on **indoor air quality and comfort monitoring**, rather than electrical power measurement.  
 The objective is to integrate multiple environmental sensors into a compact embedded system capable of collecting meaningful indoor data.
@@ -162,6 +162,20 @@ flowchart LR
 
     linkStyle 18 stroke:#d97706,stroke-width:3px
 ```
+# System Architecture
+
+The system is structured around a sensor node based on an ESP32-S3 microcontroller.
+
+All environmental sensors are connected directly to the microcontroller through I2C, UART, GPIO, ADC and I2S interfaces.
+
+The firmware is implemented using **FreeRTOS**, where each sensor is managed by a dedicated acquisition task.  
+Measurements are validated and aggregated before being transmitted through Wi-Fi using the **MQTT protocol**.
+
+The MQTT broker acts as the central data hub for future integrations such as:
+
+- home automation platforms
+- data logging systems
+- monitoring dashboards
 
 # Development Status
 
