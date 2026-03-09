@@ -229,3 +229,339 @@ This section summarizes the current progress based on the repository contents.
 - Wall recess hole: ~55-60 mm diameter
 - Box depth: ~45-60 mm
 
+# Firmware Architecture
+
+The firmware is built on **FreeRTOS** and follows a **minimal task architecture** designed for reliability, maintainability, and predictable timing behavior.
+
+Instead of dedicating a separate task to each sensor, the system groups responsibilities into a small number of well-defined tasks.  
+This approach reduces context switching, memory usage, and synchronization complexity, which is important for a production-grade embedded system.
+
+The firmware is structured around **four main tasks**.
+
+---
+
+# Task Overview
+
+| Task | Responsibility |
+|-----|-----|
+| `acquisition_task` | Polls environmental sensors and updates system state |
+| `audio_task` | Handles I2S audio acquisition and noise level estimation |
+| `system_task` | Supervises system health, alarms, watchdog and LED status |
+| `comm_task` | Manages Wi-Fi connectivity and MQTT communication |
+
+This architecture provides clear separation between **sensor acquisition**, **signal processing**, **system supervision**, and **network communication**.
+
+---
+
+# System State Model
+
+Sensor measurements and device status are stored in a centralized structure called `device_state`.
+
+This structure represents the **current state of the device** and is shared between tasks.
+
+Typical stored values include:
+
+- CO₂ concentration
+- VOC / NOx index
+- particulate matter
+- temperature and humidity
+- atmospheric pressure
+- light spectrum
+- motion detection
+- noise level
+- combustible gas level
+- network connectivity state
+- system fault flags
+
+The acquisition tasks update the structure, while the communication task reads it to publish measurements.
+
+Access to the structure is protected using a **mutex** to ensure thread-safe updates.
+
+---
+
+# Inter-Task Communication
+
+The system uses a small number of FreeRTOS synchronization primitives.
+
+## Event Queue
+
+`event_queue`
+
+Used for important runtime events such as:
+
+- alarm triggers
+- sensor failures
+- motion detection
+- connectivity changes
+- system warnings
+
+The `system_task` consumes these events and decides how the system should react.
+
+---
+
+## Publish Queue
+
+`publish_queue`
+
+Used to request data transmission to the MQTT broker.
+
+Messages can include:
+
+- periodic telemetry
+- alarm events
+- device status updates
+
+The `comm_task` reads this queue and publishes messages over MQTT.
+
+---
+
+# Task Responsibilities
+
+## Acquisition Task
+
+`acquisition_task`
+
+Responsible for managing the majority of environmental sensors.
+
+Sensors handled by this task include:
+
+- SCD40 (CO₂)
+- SGP41 (VOC / NOx)
+- SHT41 (temperature / humidity)
+- BMP280 (pressure)
+- AS7341 (light spectrum)
+- PMS7003 (particulate matter)
+- AS312 (motion detection)
+- MiCS-5524 (combustible gases)
+
+Instead of running independent threads, sensors are polled using an **internal scheduler** based on time intervals.
+
+Typical polling intervals:
+
+| Sensor | Interval |
+|------|------|
+| Motion detection | 100 ms |
+| Gas sensor | 1 s |
+| VOC / NOx | 1 s |
+| Temperature / Humidity | 2 s |
+| Pressure | 2 s |
+| Light spectrum | 2–5 s |
+| CO₂ | 5 s |
+| Particulate matter | 5–10 s |
+
+The task updates the shared `device_state` structure and generates events when thresholds are exceeded.
+
+---
+
+## Audio Task (I2S)
+
+`audio_task`
+
+Handles audio acquisition from the **I2S MEMS microphone**.
+
+Responsibilities include:
+
+- configuring the I2S peripheral
+- capturing audio samples using DMA
+- computing noise level metrics (RMS / dB)
+- updating the system noise measurement
+
+This task is kept separate from the main acquisition loop because I2S audio streaming requires different timing and buffering constraints.
+
+The current prototype uses:
+
+INMP441 digital MEMS microphone
+
+Future versions may support higher-quality analog acquisition paths.
+
+---
+
+## Communication Task
+
+`comm_task`
+
+Responsible for all network communication.
+
+Responsibilities include:
+
+- Wi-Fi connection management
+- MQTT broker connection and reconnection
+- telemetry publishing
+- alarm message publishing
+- device status reporting
+
+Only this task interacts with the MQTT client to avoid concurrency issues.
+
+Data published by this task is obtained from the shared `device_state` structure.
+
+---
+
+## System Supervision Task
+
+`system_task`
+
+Responsible for system-level supervision and safety logic.
+
+Functions include:
+
+- watchdog management
+- system health monitoring
+- fault detection
+- degraded mode management
+- LED status control
+- alarm handling
+
+The task consumes events from the `event_queue` and updates system status accordingly.
+
+---
+
+# Synchronization Mechanisms
+
+The firmware relies on a minimal set of synchronization primitives.
+
+## Mutex
+
+`state_mutex`
+
+Protects access to the shared `device_state` structure.
+
+---
+
+## Event Groups
+
+Event groups are used to represent system state flags such as:
+
+- Wi-Fi connected
+- MQTT connected
+- system ready
+- degraded mode
+- alarm active
+
+These flags allow tasks to quickly react to changes in system status.
+
+# Task Diagram
+acquisition_task ──┐
+                   ├── update shared device_state
+audio_task ────────┘
+
+acquisition_task/audio_task
+   └── task notification or small event message
+         to system_task
+
+system_task
+   ├── fault/alarm logic
+   ├── LED / watchdog / degraded mode
+   └── publish request to comm_task
+
+comm_task
+   ├── owns Wi-Fi + MQTT client
+   ├── handles network/MQTT events
+   └── reads snapshot from device_state and publishes
+
+MQTT Broker
+
+
+```mermaid
+flowchart LR
+
+    A[acquisition_task]
+    B[audio_task]
+    S[system_task]
+    C[comm_task]
+
+    DS[device_state]
+
+    MQTT[MQTT Broker]
+
+    A -->|update measurements| DS
+    B -->|update noise level| DS
+
+    A -->|event / notification| S
+    B -->|event / notification| S
+
+    S -->|publish request| C
+
+    C -->|read snapshot| DS
+
+    C --> MQTT
+```
+
+# Task Interaction Model
+
+The firmware follows a centralized state + event-driven architecture.
+
+## Sensor Acquisition Layer
+
+Two tasks are responsible for collecting sensor data:
+
+1. `acquisition_task`
+
+- Polls environmental sensors
+
+- Updates the shared device_state
+
+- Generates events when thresholds or faults occur
+
+2. `audio_task`
+
+- Captures audio data through the I2S interface
+
+- Computes noise level metrics
+
+- Updates the noise field in device_state
+
+Both tasks act as data producers.
+
+---
+
+## System Supervision Layer
+
+1. `system_task` acts as the central control logic of the device.
+
+Responsibilities include:
+
+- alarm detection
+
+- system fault monitoring
+
+- watchdog supervision
+
+- degraded mode handling
+
+- LED status control
+
+The task reacts to notifications or events generated by acquisition tasks.
+
+## Communication Layer
+
+1. `comm_task` is responsible for all network communication.
+
+Responsibilities include:
+
+- Wi-Fi connection management
+
+- MQTT connection and reconnection
+
+- telemetry publishing
+
+- alarm message publishing
+
+- device status reporting
+
+This task is the single owner of the MQTT client, avoiding concurrency issues.
+
+When a publish request is received, the task reads the latest measurements from `device_state` and transmits them to the MQTT broker.
+
+
+# stability
+
+È stabile?
+
+Sì, potenzialmente molto stabile, a tre condizioni:
+
+1. acquisition_task non deve mai bloccare troppo a lungo su un sensore;
+
+2. device_state deve avere accesso molto corto e ben protetto;
+
+3. comm_task deve essere isolata dai problemi di rete, senza trascinare giù il resto del firmware.
+Questo è esattamente il motivo per cui si separano acquisizione, supervisione e comunicazione in thread distinti nei sistemi RTOS. Anche Zephyr documenta il vantaggio di queue/workqueue per spostare elaborazione non urgente fuori dal path sensibile e serializzarla in un thread dedicato.
