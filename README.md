@@ -75,6 +75,7 @@ flowchart LR
 
     subgraph ENV[Environmental Sensors]
         direction TB
+        X[ ]:::ghost
         B[SCD40]
         C[SGP41]
         D[PMS7003]
@@ -94,6 +95,7 @@ flowchart LR
 
     subgraph DATA[Measured Quantities and Outputs]
         direction TB
+        X[ ]:::ghost
         K[CO2]
         L[VOC / NOx]
         R[Particulate Matter]
