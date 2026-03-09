@@ -75,7 +75,7 @@ flowchart LR
 
     subgraph ENV[Environmental Sensors]
         direction TB
-        X[ ]:::ghost
+        X1[ ]:::ghost
         B[SCD40]
         C[SGP41]
         D[PMS7003]
@@ -86,7 +86,7 @@ flowchart LR
 
     subgraph AUX[Presence, Audio, Safety and Status]
         direction TB
-        X[ ]:::ghost
+        X2[ ]:::ghost
         H[AS312]
         I[INMP441]
         J[MiCS-5524]
@@ -95,7 +95,7 @@ flowchart LR
 
     subgraph DATA[Measured Quantities and Outputs]
         direction TB
-        X[ ]:::ghost
+        X3[ ]:::ghost
         K[CO2]
         L[VOC / NOx]
         R[Particulate Matter]
@@ -135,15 +135,16 @@ flowchart LR
 
     classDef mcu fill:#1f2937,color:#ffffff,stroke:#111827,stroke-width:2px
     classDef sensor fill:#f8fafc,color:#111827,stroke:#94a3b8,stroke-width:1.5px
+    classDef actuator fill:#fff7ed,color:#111827,stroke:#fb923c,stroke-width:1.5px
     classDef quantity fill:#ecfeff,color:#0f172a,stroke:#06b6d4,stroke-width:1.5px
     classDef broker fill:#fef3c7,color:#78350f,stroke:#f59e0b,stroke-width:2px
     classDef group fill:#ffffff,color:#111827,stroke:#cbd5e1,stroke-width:1.5px
     classDef ghost fill:transparent,stroke:transparent
-    class X ghost
 
+    class X1,X2,X3 ghost
     class A mcu
     class B,C,D,E,F,G,H,I,J sensor
-    class Z sensor
+    class Z actuator
     class K,L,R,M,N,O,P,Q,S,W quantity
     class T broker
     class ENV,AUX,DATA group
