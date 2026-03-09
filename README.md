@@ -73,15 +73,17 @@ config:
   theme: neutral
 ---
 flowchart LR
-  A[ESP32-S3] -->|I2C| B[SCD40]
-  A -->|I2C| C[SGP41]
-  A -->|UART| D[PMS7003]
-  A -->|I2C| E[SHT41]
-  A -->|I2C| F[BMP280]
-  A -->|I2C| G[AS7341]
-  A -->|GPIO| H[AS312]
-  A -->|I2S| I[INMP441]
-  A -->|ADC| J[MiCS-5524]
+  A[ESP32-S3] -->|I2C| B[SCD40] --> K[CO2 sensor]
+  A -->|I2C| C[SGP41] --> L[VOC/NOx sensor]
+  A -->|UART| D[PMS7003] --> R[Particulate matter sensor]
+  A -->|I2C| E[SHT41] --> M[Temperature/Humidity sensor]
+  A -->|I2C| F[BMP280] --> N[Atmospheric pressure sensor]
+  A -->|I2C| G[AS7431] --> O[Light spectrum sensor]
+  A -->|GPIO| H[AS312] --> P[Motion detection sensor]
+  A -->|I2S| I[INMP441] --> Q[Noise level sensor]
+  A -->|ADC| J[MiCS-5524] --> S[Combustible gases sensor]
+
+  A <-->|WiFi| T[MQTT server]
 
 ```
 
