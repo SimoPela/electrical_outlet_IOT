@@ -30,6 +30,7 @@ The system aims to monitor the following environmental indicators:
 - Ambient noise level
 - Light spectrum
 - Motion detection
+- Led status (rgb led)
 
 ---
 
@@ -54,6 +55,7 @@ The prototype is built around an **ESP32-S3 microcontroller**, combined with sev
 | Motion detection       | **AS312 PIR sensor** |
 | Noise level            | **INMP441 MEMS microphone** |
 | Combustible gases      | **MiCS-5524 gas sensor** |
+| Led status (rgb)       | **APHF1608SEEQBDZGKC** |
 
 ### Audio Acquisition Options
 
@@ -81,15 +83,16 @@ flowchart LR
         G[AS7341]
     end
 
-    subgraph AUX[Presence, Audio and Safety Sensors]
+    subgraph AUX[Presence, Audio, Safety and Status]
         direction TB
         X[ ]:::ghost
         H[AS312]
         I[INMP441]
         J[MiCS-5524]
+        Z[RGB LED]
     end
 
-    subgraph DATA[Measured Quantities]
+    subgraph DATA[Measured Quantities and Outputs]
         direction TB
         K[CO2]
         L[VOC / NOx]
@@ -100,6 +103,7 @@ flowchart LR
         P[Motion Detection]
         Q[Noise Level]
         S[Combustible Gas]
+        W[RGB Status Indication]
     end
 
     T[MQTT Broker]
@@ -113,6 +117,7 @@ flowchart LR
     A -->|GPIO| H
     A -->|I2S| I
     A -->|ADC| J
+    A -->|GPIO / PWM| Z
 
     B --> K
     C --> L
@@ -123,7 +128,7 @@ flowchart LR
     H --> P
     I --> Q
     J --> S
-
+    Z --> W
     A <-->|Wi-Fi / MQTT| T
 
     classDef mcu fill:#1f2937,color:#ffffff,stroke:#111827,stroke-width:2px
@@ -136,31 +141,10 @@ flowchart LR
 
     class A mcu
     class B,C,D,E,F,G,H,I,J sensor
-    class K,L,R,M,N,O,P,Q,S quantity
+    class Z sensor
+    class K,L,R,M,N,O,P,Q,S,W quantity
     class T broker
     class ENV,AUX,DATA group
-
-    linkStyle 0 stroke:#2563eb,stroke-width:2.5px
-    linkStyle 1 stroke:#2563eb,stroke-width:2.5px
-    linkStyle 2 stroke:#16a34a,stroke-width:2.5px
-    linkStyle 3 stroke:#2563eb,stroke-width:2.5px
-    linkStyle 4 stroke:#2563eb,stroke-width:2.5px
-    linkStyle 5 stroke:#2563eb,stroke-width:2.5px
-    linkStyle 6 stroke:#6b7280,stroke-width:2.5px
-    linkStyle 7 stroke:#7c3aed,stroke-width:2.5px
-    linkStyle 8 stroke:#ea580c,stroke-width:2.5px
-
-    linkStyle 9 stroke:#94a3b8,stroke-width:1.5px
-    linkStyle 10 stroke:#94a3b8,stroke-width:1.5px
-    linkStyle 11 stroke:#94a3b8,stroke-width:1.5px
-    linkStyle 12 stroke:#94a3b8,stroke-width:1.5px
-    linkStyle 13 stroke:#94a3b8,stroke-width:1.5px
-    linkStyle 14 stroke:#94a3b8,stroke-width:1.5px
-    linkStyle 15 stroke:#94a3b8,stroke-width:1.5px
-    linkStyle 16 stroke:#94a3b8,stroke-width:1.5px
-    linkStyle 17 stroke:#94a3b8,stroke-width:1.5px
-
-    linkStyle 18 stroke:#d97706,stroke-width:3px
 ```
 # System Architecture
 
