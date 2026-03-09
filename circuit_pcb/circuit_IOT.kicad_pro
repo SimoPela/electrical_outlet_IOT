@@ -432,6 +432,14 @@
     [
       "f3ba517f-9bbb-41fc-9786-d8e3a199e848",
       "SHT41A humidity and temperature sensor"
+    ],
+    [
+      "88338a5e-c4f0-4ac2-9e94-54dc6b470590",
+      "PMS7003 pm2.5 fine dust"
+    ],
+    [
+      "3d2a540b-e0a0-4c89-9d43-c6cbec90654c",
+      "MiCS-5524 combustible gas"
     ]
   ],
   "text_variables": {}
