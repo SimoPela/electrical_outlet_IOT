@@ -2,6 +2,7 @@
 build/
 .pio/
 .vscode/
+.cache/
 
 # compiled files
 *.bin

@@ -21,10 +21,8 @@ static const char *TAG = "MAIN";
 /* Stack sizes are in WORDS, not bytes (1 word = 4 bytes on ESP32) */
 #define STACK_LED_WORDS        2048   // ~8 KB
 #define STACK_SENSOR_WORDS     4096   // ~16 KB
-#define STACK_MQ7_WORDS        2048   // ~8 KB
 
 #define LED_TASK_PRIORITY      1
-#define MQ7_TASK_PRIORITY      2
 #define SENSOR_TASK_PRIORITY   3
 
 void app_main(void)
