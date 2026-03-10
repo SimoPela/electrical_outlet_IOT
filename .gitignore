@@ -3,6 +3,7 @@ build/
 .pio/
 .vscode/
 .cache/
+.clangd/
 
 # compiled files
 *.bin
