@@ -934,3 +934,4 @@ In the final firmware, the same supervision pattern will be applied to all senso
 
 This keeps the architecture modular, easy to maintain, and scalable.
 
+# Communication Task

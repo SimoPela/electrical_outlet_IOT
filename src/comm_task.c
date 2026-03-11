@@ -1,6 +1,7 @@
-#include <comm_task.h>
-#include <task_config.h>
-#include <device_state.h>
+#include "comm_task.h"
+#include "task_config.h"
+#include "device_state.h"
+#include "mqtt_payload.h"
 
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
@@ -11,20 +12,60 @@ static const char *TAG = "COMM";
 void comm_task(void *pvParameters)
 {
     (void)pvParameters;
-    // Counter used to log the stack usage periodically (counter = 10, tick = 1000 ms -> log every 10 seconds)
-    uint32_t counter = 0;
 
-    ESP_LOGI(TAG, "Comm task started");
-    // get the time of the last wakeup
+    uint32_t counter = 0;
+    uint32_t alive_counter = 0;
+
+    ESP_LOGI(TAG, "Communication task started");
+
     TickType_t xLastWakeTime = xTaskGetTickCount();
 
-    for (;;) {
-        ESP_LOGI(TAG, "Comm task alive");
+    for (;;)
+    {
+        // Print that the task is alive every 5 seconds
+        alive_counter++;
+        if (alive_counter >= 5)
+        {
+            ESP_LOGI(TAG, "Communication task alive");
+            alive_counter = 0;
+        }
 
-        // Log the stack usage periodically. Once the stack size is tuned, this can be removed.
+        // Copy the layout of the device state structure
+        device_state_t state_copy = {0};
+
+        // Read a consistent snapshot
+        if (xSemaphoreTake(g_device_state_mutex, portMAX_DELAY) == pdTRUE)
+        {
+            state_copy = g_device_state;
+            xSemaphoreGive(g_device_state_mutex);
+        }
+
+        // Example communication logic
+        if (state_copy.mqtt_connected)
+        {
+            char payload[256] = {0};
+
+            if (mqtt_payload_build(payload, sizeof(payload), &state_copy) >= 0)
+            {
+                ESP_LOGI(TAG, "Publishing payload: %s", payload);
+
+                // TODO: replace with real MQTT publish
+                // esp_mqtt_client_publish(client, "device/state", payload, 0, 1, 0);
+            }
+            else
+            {
+                ESP_LOGE(TAG, "Failed to build MQTT payload");
+            }
+        }
+        else
+        {
+            ESP_LOGW(TAG, "MQTT not connected, publish skipped");
+        }
+        
+        // Log the stack usage
         logTaskStackUsage(&counter, TAG, STACK_COMM_WORDS);
 
-        // wait for 1 second
-        vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(1000));
+        // Publish period: 5 seconds
+        vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(5000));
     }
 }
