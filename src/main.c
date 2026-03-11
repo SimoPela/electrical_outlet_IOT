@@ -1,12 +1,19 @@
+// standard headers
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "scd40_sensor.h" // is inside lib/scd40/src/
-
+// freertos headers
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+// esp-idf headers
 #include "esp_log.h"
+
+// task headers
+#include "acquisition_task.h"
+#include "audio_task.h"
+#include "system_task.h"
+#include "comm_task.h"
 
 static const char *TAG = "MAIN";
 
