@@ -538,181 +538,196 @@ This variable contains the latest known values of all measurements and system fl
 
 ### Thread Safety
 
-Since multiple FreeRTOS tasks access the device state concurrently, access must be protected using a mutex.
+Since multiple FreeRTOS tasks access the shared device state concurrently, access must be protected using a mutex:
 
 > `g_device_state_mutex`
 
-The mutex ensures that only one task at a time can read or modify the structure, preventing race conditions and inconsistent data.
+The mutex ensures that only one task at a time can read or modify the shared structure, preventing race conditions and inconsistent updates.
 
-Typical usage pattern:
+However, in the updated architecture, the mutex is **not kept during the whole sensor acquisition phase**.  
+The `acquisition_task` first updates a **local persistent structure** called `acquisition_local_state_t`, and only after that it briefly locks the mutex to copy the final values into `g_device_state`.
+
+Typical pattern:
+
 ```shell
+read sensors into local_state
 take mutex
-read or update state
+copy local_state into g_device_state
 release mutex
 ```
+This approach keeps the critical section short and avoids blocking other tasks while sensors are being read.
 
 ### Initialization
-
 The function `device_state_init()` is responsible for initializing the module:
 
 - sets the initial state values
 
 - creates the mutex used for synchronization
 
-This function must be called during system startup before any task accesses the device state.
+This function must be called during system startup before any task accesses the shared device state.
 
 ### Usage
 
-The device state is initialized in `main.c`. After initialization, the code verifies that the mutex was successfully created.
+The device state is initialized in `main.c`.
+After initialization, the code verifies that the mutex was successfully created.
 
-All tasks that need to read or update the device state must access it through the mutex in order to guarantee thread-safe access.
+All tasks that need to read or update the device state must access it through the mutex to guarantee thread-safe access.
 
-Typical usage pattern:
-
+In the updated acquisition model, sensor values are first stored in a task-local structure and then committed to the shared state:
 ```c
+// Copy the complete local state into the shared device state
 if (xSemaphoreTake(g_device_state_mutex, portMAX_DELAY) == pdTRUE)
 {
-    g_device_state.temperature_c = 22.5f;
-    g_device_state.humidity_percent = 45.0f;
+    g_device_state.motion_detected   = local_state.motion_detected;
 
-    xSemaphoreGive(g_device_state_mutex);
-}
+    g_device_state.gas_level_raw     = local_state.gas_level_raw;
 
-example:
+    g_device_state.voc_index         = local_state.voc_index;
+    g_device_state.nox_index         = local_state.nox_index;
 
-```c
-static const char *TAG = "ACQUISITION";
+    g_device_state.temperature_c     = local_state.temperature_c;
+    g_device_state.humidity_percent  = local_state.humidity_percent;
 
-void acquisition_task(void *pvParameters)
-{
-    (void)pvParameters;
-    uint32_t counter = 0;
-    TickType_t xLastWakeTime = xTaskGetTickCount();
+    g_device_state.pressure_hpa      = local_state.pressure_hpa;
 
-    for (;;)
+    g_device_state.co2_ppm           = local_state.co2_ppm;
+    g_device_state.temperature_scd40 = local_state.temperature_scd40;
+    g_device_state.humidity_scd40    = local_state.humidity_scd40;
+
+    g_device_state.pm1_0_ug_m3       = local_state.pm1_0_ug_m3;
+    g_device_state.pm2_5_ug_m3       = local_state.pm2_5_ug_m3;
+    g_device_state.pm10_ug_m3        = local_state.pm10_ug_m3;
+
+    for (int i = 0; i < AS7341_CHANNELS; i++)
     {
-        // Example sensor values (placeholder for real sensors)
-        float temp = 22.5f;
-        float hum  = 45.0f;
-
-        // Update the shared device state
-        if (xSemaphoreTake(g_device_state_mutex, portMAX_DELAY) == pdTRUE)
-        {
-            g_device_state.temperature_c = temp;
-            g_device_state.humidity_percent = hum;
-
-            xSemaphoreGive(g_device_state_mutex);
-        }
-        vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(1000));
+        g_device_state.light.channels[i] = local_state.light.channels[i];
     }
+    xSemaphoreGive(g_device_state_mutex);
 }
 ```
 
-## Scheduler Inside the Acquisition Task
+So the shared structure stays centralized, but the actual acquisition work happens outside the critical section.
+
+### Scheduler Inside the Acquisition Task
 
 The `acquisition_task` uses a simple internal time-based scheduler to poll sensors at different intervals.
 
-Instead of creating one FreeRTOS task for each sensor, the firmware keeps a timestamp for the last execution of each sensor read operation.  
-At every loop iteration, the task checks whether the configured polling interval has elapsed. If so, the corresponding sensor is read and the shared `device_state` is updated.
+Instead of creating one FreeRTOS task for each sensor, the firmware stores one timestamp for each sensor group and checks at every loop iteration whether its polling interval has expired.
 
-This approach reduces RAM usage, avoids unnecessary context switching, and keeps the firmware architecture simple and scalable.
+The task wakes up every 100 ms using `vTaskDelayUntil()`.
+At each iteration:
 
-Example:
+- it updates the current tick
 
+- it checks whether each sensor interval has elapsed
+
+- if yes, it updates the corresponding field in local_state
+
+- at the end of the loop, it copies the complete local_state into g_device_state under mutex
+
+This keeps the architecture simple, scalable, and memory-efficient.
+
+Example based on the updated code:
 ```c
-static const char *TAG = "ACQUISITION";
-
 void acquisition_task(void *pvParameters)
 {
     (void)pvParameters;
-    uint32_t counter = 0;
 
-    ESP_LOGI(TAG, "Acquisition task started");
+    uint32_t counter = 0;
+    uint32_t alive_counter = 0;
 
     TickType_t xLastWakeTime = xTaskGetTickCount();
     TickType_t now = xLastWakeTime;
 
-    // Force the first read at startup
-    TickType_t last_as312 = now - pdMS_TO_TICKS(AS312_INTERVAL_MS);
+    acquisition_local_state_t local_state = {
+        .motion_detected = false,
+    };
+
+    TickType_t last_as312    = now - pdMS_TO_TICKS(AS312_INTERVAL_MS);
 
     for (;;)
     {
+        alive_counter++;
+        if (alive_counter >= 20)
+        {
+            ESP_LOGI(TAG, "Acquisition task alive");
+            alive_counter = 0;
+        }
+
         now = xTaskGetTickCount();
 
-        // AS312 - motion sensor
         if ((now - last_as312) >= pdMS_TO_TICKS(AS312_INTERVAL_MS))
         {
             last_as312 = now;
-
-            if (xSemaphoreTake(g_device_state_mutex, portMAX_DELAY) == pdTRUE)
-            {
-                g_device_state.motion_detected = sensor_values.motion_detected;
-                xSemaphoreGive(g_device_state_mutex);
-            }
+            local_state.motion_detected = true;
         }
 
-        // Log the stack usage periodically. Once the stack size is tuned, this can be removed.
-        logTaskStackUsage(&counter, TAG, STACK_ACQUISITION_WORDS);
+        if (xSemaphoreTake(g_device_state_mutex, portMAX_DELAY) == pdTRUE)
+        {
+            g_device_state.motion_detected  = local_state.motion_detected;
+            xSemaphoreGive(g_device_state_mutex);
+        }
 
-        // Base scheduler period
+        logTaskStackUsage(&counter, TAG, STACK_ACQUISITION_WORDS);
         vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(100));
     }
 }
 ```
-In this example, the task wakes up every 100 ms and checks whether the AS312 polling interval has expired. If the interval has elapsed, the sensor is processed and the shared device state is updated.
 
-
-For the example the following diagram shows how it's work:
+### Device State Update
+The following diagram shows the updated logic:
 ```mermaid
 flowchart TD
 
-START[Task Start]
+START[Task start]
+ALIVE[Update alive counter]
+NOW[Get current tick]
 
-TICK[Get current tick]
-
-CHECK1{AS312 interval elapsed?}
-
-READ1[Read AS312]
-
+CHECK{AS312 interval elapsed?}
 UPDATE_TS[Update timestamp<br/>last_as312 = now]
+READ[Update local_state.motion_detected]
 
-LOCK1[Take device_state mutex]
-
-UPDATE1[Update motion_detected]
-
-UNLOCK1[Release mutex]
+LOCK[Take device_state mutex]
+COPY[Copy local_state.motion_detected<br/>into g_device_state]
+UNLOCK[Release mutex]
 
 STACK[Log stack usage]
-
 DELAY[vTaskDelayUntil 100 ms]
 
-START --> TICK
-TICK --> CHECK1
+START --> ALIVE
+ALIVE --> NOW
+NOW --> CHECK
 
-CHECK1 -->|yes| READ1
-READ1 --> UPDATE_TS
-UPDATE_TS --> LOCK1
-LOCK1 --> UPDATE1
-UPDATE1 --> UNLOCK1
-UNLOCK1 --> STACK
+CHECK -->|yes| UPDATE_TS
+UPDATE_TS --> READ
+READ --> LOCK
 
-CHECK1 -->|no| STACK
+CHECK -->|no| LOCK
 
+LOCK --> COPY
+COPY --> UNLOCK
+UNLOCK --> STACK
 STACK --> DELAY
-DELAY --> TICK
+DELAY --> ALIVE
 ```
 
-Interation of acquisition task with the device state:
+### Interaction of `acquisition_task` with the Shared Device State
+
+This diagram shows the key correction in the architecture:
+the task works first on `local_state`, then performs a short synchronized copy into the shared state.
 ```mermaid
 flowchart LR
 
 A[acquisition_task]
+L[acquisition_local_state_t]
+M[g_device_state_mutex]
+S[g_device_state]
 
-S[device_state]
-
-M[device_state_mutex]
-
-A -->|Take mutex| M
-A -->|update measurements| S
-A -->|Release mutex| M
+A -->|read/update sensor values| L
+A -->|take mutex| M
+L -->|copy final values| S
+A -->|release mutex| M
 ```
+
+This is more accurate than saying that each sensor directly locks the mutex during measurement.
+In the updated implementation, the mutex is only used during the final commit phase.

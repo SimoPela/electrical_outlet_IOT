@@ -18,6 +18,9 @@ typedef struct
 typedef struct
 {
     float co2_ppm;
+    float temperature_scd40;
+    float humidity_scd40;
+
     float temperature_c;
     float humidity_percent;
     float pressure_hpa;
