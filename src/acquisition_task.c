@@ -1,5 +1,6 @@
 #include <acquisition_task.h>
 #include <task_config.h>
+#include <device_state.h>
 
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
@@ -20,6 +21,19 @@ void acquisition_task(void *pvParameters)
     for (;;) {
         ESP_LOGI(TAG, "Acquisition task alive");
 
+        // Example sensor values (placeholder for real sensors)
+        float temp = 22.5f;
+        float hum  = 45.0f;
+
+        // Update the shared device state
+        if (xSemaphoreTake(g_device_state_mutex, portMAX_DELAY) == pdTRUE)
+        {
+            g_device_state.temperature_c = temp;
+            g_device_state.humidity_percent = hum;
+
+            xSemaphoreGive(g_device_state_mutex);
+        }
+        
         // Log the stack usage periodically. Once the stack size is tuned, this can be removed.
         logTaskStackUsage(&counter, TAG, STACK_ACQUISITION_WORDS);
 

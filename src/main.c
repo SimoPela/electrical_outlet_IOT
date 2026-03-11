@@ -18,11 +18,26 @@
 #include "system_task.h"
 #include "comm_task.h"
 
+// device state headers
+#include "device_state.h"
+
 static const char *TAG = "MAIN";
 
 void app_main(void)
 {
     ESP_LOGI(TAG, "System booting...");
+
+
+    // Initialize the device state (structure to store the current state of the device measurements and system flags)
+    device_state_init();
+    
+    // Check if the device state mutex was created successfully
+    if (g_device_state_mutex == NULL)
+    {
+        ESP_LOGE(TAG, "Failed to create device_state mutex");
+        abort();
+    }
+    
     ESP_LOGI(TAG, "Creating tasks");
 
     // Create tasks and check the return value of xTaskCreate.

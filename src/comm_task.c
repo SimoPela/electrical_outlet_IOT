@@ -1,5 +1,6 @@
 #include <comm_task.h>
 #include <task_config.h>
+#include <device_state.h>
 
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"

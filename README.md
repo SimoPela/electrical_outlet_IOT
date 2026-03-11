@@ -44,18 +44,18 @@ The prototype is built around an **ESP32-S3 microcontroller**, combined with sev
 
 ## Sensor Stack
 
-| Measurement            | Sensor |
-|------------------------|------|
-| CO₂                    | **Sensirion SCD40** |
-| VOC / NOx              | **Sensirion SGP41** |
-| PM particles           | **Plantower PMS7003** |
-| Temperature / Humidity | **Sensirion SHT41** |
-| Atmospheric pressure   | **Bosch BMP280** |
-| Light spectrum         | **AMS AS7341** |
-| Motion detection       | **AS312 PIR sensor** |
-| Noise level            | **INMP441 MEMS microphone** |
-| Combustible gases      | **MiCS-5524 gas sensor** |
-| Led status (rgb)       | **APHF1608SEEQBDZGKC** |
+| Measurement                      | Sensor |
+|----------------------------------|------|
+| CO₂                              | **Sensirion SCD40** |
+| VOC / NOx                        | **Sensirion SGP41** |
+| PM particles                     | **Plantower PMS7003** |
+| Temperature / Humidity           | **Sensirion SHT41** |
+| Atmospheric pressure             | **Bosch BMP280** |
+| Light spectrum                   | **AMS AS7341** |
+| Motion detection                 | **AS312 PIR sensor** |
+| Noise level                      | **INMP441 MEMS microphone** |
+| Combustible gases                | **MiCS-5524 gas sensor** |
+| - RGB LED status indicator       | **APHF1608SEEQBDZGKC** |
 
 ### Audio Acquisition Options
 
@@ -179,36 +179,6 @@ The firmware architecture and data infrastructure will evolve as the hardware pl
 
 This section summarizes the current progress based on the repository contents.
 
-## Completed
-
-- System concept and sensor selection defined in the project documentation.
-- Core firmware architecture implemented with FreeRTOS tasks and queues.
-- SCD40 integration implemented (`scd40_task`) with data acquisition, validity checks, timeout supervision, and automatic recovery.
-- RGB status LED task implemented with CO2 threshold mapping and offline indication.
-- Watchdog configuration implemented and integrated into runtime tasks.
-- First PCB work completed in KiCad with a main board project and multiple sensor-related schematic sheets.
-- Initial bill of materials and component ordering tracked in `parts_shop/component.csv`.
-
-## In Progress
-
-- Full multi-sensor firmware integration beyond the currently active SCD40 path.
-- Hardware bring-up and validation of all selected sensors on the prototype.
-- End-to-end firmware robustness testing on real hardware.
-
-## Open Points / Gaps -> fix these points before the first prototype
-
-- `main.c` references `mq7_task` and related types, but no `mq7` implementation files are present yet in the repository.
-- No automated test suite is currently implemented (the `test` folder still contains only the default template README).
-- Data logging, communication pipeline, and automation features are not yet present.
-
-## Next Milestones
-
-- Implement and integrate the remaining sensor tasks one by one.
-- Add a unified sensor data model and publish mechanism for all measurements.
-- Add basic hardware-in-the-loop validation tests and fault-injection scenarios.
-- Stabilize PCB revision after bring-up feedback and final pin mapping checks.
-
-
 ---
 ## Swiss T13 Outlet Plate Dimensions
 
@@ -218,12 +188,7 @@ This section summarizes the current progress based on the repository contents.
 
 # Firmware Architecture
 
-The firmware is built on **FreeRTOS** and follows a **minimal task architecture** designed for reliability, maintainability, and predictable timing behavior.
-
-Instead of dedicating a separate task to each sensor, the system groups responsibilities into a small number of well-defined tasks.
-
-
-This approach reduces context switching, memory usage, and synchronization complexity, which is important for a production-grade embedded system.
+The firmware is built on **FreeRTOS** and follows a **minimal task architecture** designed for reliability, maintainability, and predictable timing behavior. Instead of dedicating a separate task to each sensor, the system groups responsibilities into a small number of well-defined tasks. This approach reduces context switching, memory usage, and synchronization complexity, which is important for a production-grade embedded system.
 
 The firmware is structured around **four main tasks**.
 
@@ -231,21 +196,12 @@ The firmware is structured around **four main tasks**.
 
 # Task Overview
 
-  -----------------------------------------------------------------------
-  Task                                Responsibility
-  ----------------------------------- -----------------------------------
-  `acquisition_task`                  Polls environmental sensors and
-                                      updates system state
-
-  `audio_task`                        Handles I2S audio acquisition and
-                                      noise level estimation
-
-  `system_task`                       Supervises system health, alarms,
-                                      watchdog and LED status
-
-  `comm_task`                         Manages Wi‑Fi connectivity and MQTT
-                                      communication
-  -----------------------------------------------------------------------
+| Task                | Responsibility                                                      |
+|---------------------|---------------------------------------------------------------------|
+| `acquisition_task`  | Polls environmental sensors and updates system state                |
+| `audio_task`        | Handles I2S audio acquisition and noise level estimation            |
+| `system_task`       | Supervises system health, alarms, watchdog and LED status           |
+| `comm_task`         | Manages Wi‑Fi connectivity and MQTT communication                   |
 
 This architecture provides clear separation between **sensor acquisition**, **signal processing**, **system supervision**, and **network communication**.
 
@@ -466,10 +422,10 @@ flowchart LR
 
 | Task | Stack Size |
 |-----|-----|
-| acquisition_task | 4096 – 8192 bytes |
-| audio_task | 8192 – 16384 bytes |
-| system_task | 4096 bytes |
-| comm_task | 8192 – 12288 bytes |
+| acquisition_task | 4096 – 8192 words |
+| audio_task | 8192 – 16384 words |
+| system_task | 4096 words |
+| comm_task | 8192 – 12288 words |
 
 At the beginning of the project, relatively large stack sizes are used to avoid stack overflows.  
 Later, the actual stack usage will be evaluated using:
@@ -491,7 +447,7 @@ Based on these measurements, the stack sizes can be reduced to optimize memory u
 
 The default priorities for the **main task** and the **idle task** will remain unchanged.
 
-## Recap: Printing in esp-idf
+## Logging in ESP-IDF
 
 | Macro      | Meaning  | When to use                    |
 |------------|----------|-------------------------------|
@@ -516,4 +472,130 @@ void logTaskStackUsage(uint32_t *counter, const char *TAG, UBaseType_t task_stac
     }
 }
 ```
-The `counter` parameter is used to control how often the stack usage is printed.
+The `counter` parameter is used to control how often the stack usage is printed. `uxTaskGetStackHighWaterMark()` returns the minimum amount of stack that has remained unused since the task started running. This allows estimating the real stack usage of the task.
+
+## Task Creation
+The basic task structure and stack monitoring have been implemented.  
+The next step is to develop the internal logic of each task.
+
+## Device State
+
+The **device state** represents the current internal state of the device. It contains the latest measurements collected from the sensors as well as important system status flags.
+
+All tasks in the firmware share this structure. Instead of storing measurements in multiple global variables, all data is centralized inside a single structure called `device_state_t`. This approach improves code readability, simplifies data management, and provides a single source of truth for the system.
+
+The device state is implemented in the `device_state.h` and `device_state.c` files.
+
+```c
+typedef struct
+{
+    float co2_ppm;
+    float temperature_c;
+    float humidity_percent;
+    float pressure_hpa;
+
+    float voc_index;
+    float nox_index;
+
+    float pm1_0_ug_m3;
+    float pm2_5_ug_m3;
+    float pm10_ug_m3;
+
+    float noise_db;
+
+    float gas_level_raw;
+
+    bool motion_detected;
+
+    bool wifi_connected;
+    bool mqtt_connected;
+    bool alarm_active;
+    bool degraded_mode;
+
+} device_state_t;
+
+extern device_state_t g_device_state;
+extern SemaphoreHandle_t g_device_state_mutex;
+
+void device_state_init(void);
+```
+
+### Global Device State
+
+A global instance of the structure is created:
+
+> `g_device_state`
+
+This variable contains the latest known values of all measurements and system flags. All tasks read from or update this structure when interacting with the system state.
+
+### Thread Safety
+
+Since multiple FreeRTOS tasks access the device state concurrently, access must be protected using a mutex.
+
+> `g_device_state_mutex`
+
+The mutex ensures that only one task at a time can read or modify the structure, preventing race conditions and inconsistent data.
+
+Typical usage pattern:
+```shell
+take mutex
+read or update state
+release mutex
+```
+
+### Initialization
+
+The function `device_state_init()` is responsible for initializing the module:
+
+- sets the initial state values
+
+- creates the mutex used for synchronization
+
+This function must be called during system startup before any task accesses the device state.
+
+### Usage
+
+The device state is initialized in `main.c`. After initialization, the code verifies that the mutex was successfully created.
+
+All tasks that need to read or update the device state must access it through the mutex in order to guarantee thread-safe access.
+
+Typical usage pattern:
+
+```c
+if (xSemaphoreTake(g_device_state_mutex, portMAX_DELAY) == pdTRUE)
+{
+    g_device_state.temperature_c = 22.5f;
+    g_device_state.humidity_percent = 45.0f;
+
+    xSemaphoreGive(g_device_state_mutex);
+}
+
+example:
+
+```c
+static const char *TAG = "ACQUISITION";
+
+void acquisition_task(void *pvParameters)
+{
+    (void)pvParameters;
+    uint32_t counter = 0;
+    TickType_t xLastWakeTime = xTaskGetTickCount();
+
+    for (;;)
+    {
+        // Example sensor values (placeholder for real sensors)
+        float temp = 22.5f;
+        float hum  = 45.0f;
+
+        // Update the shared device state
+        if (xSemaphoreTake(g_device_state_mutex, portMAX_DELAY) == pdTRUE)
+        {
+            g_device_state.temperature_c = temp;
+            g_device_state.humidity_percent = hum;
+
+            xSemaphoreGive(g_device_state_mutex);
+        }
+        vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(1000));
+    }
+}
+```
