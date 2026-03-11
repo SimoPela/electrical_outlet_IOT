@@ -408,14 +408,11 @@ flowchart LR
     A -->|update measurements| DS
     B -->|update noise level| DS
 
-    A -->|task notification| S
-    B -->|task notification| S
-
-    S -->|publish request| C
+    S -->|monitor system state| DS
 
     C -->|read snapshot| DS
 
-    C --> MQTT
+    C -->|publish telemetry| MQTT
 ```
 
 ## Task Stack Sizes
@@ -731,3 +728,209 @@ A -->|release mutex| M
 
 This is more accurate than saying that each sensor directly locks the mutex during measurement.
 In the updated implementation, the mutex is only used during the final commit phase.
+
+## Device State Structure
+
+To support system supervision and communication tasks, the device_state structure also contains additional metadata:
+
+- timestamps (last update time)
+
+- valid flags (data validity)
+
+- fault flags (sensor errors)
+
+Example:
+
+The next step is to prepare the device_state structure for the other tasks. In the global structure, we will add the following fields:
+```c
+    // -----------------------------
+    // Last update timestamps
+    // -----------------------------
+    TickType_t motion_last_update;
+
+    // -----------------------------
+    // Validity flags
+    // -----------------------------
+    bool motion_valid;
+
+    // -----------------------------
+    // Fault flags
+    // -----------------------------
+    bool motion_fault;
+
+```
+These fields allow other tasks (for example system_task or comm_task) to detect:
+
+- stale measurements
+
+- sensor failures
+
+- degraded operating modes
+
+# System Task
+
+The `system_task` is responsible for supervising the health of the device.
+
+Unlike the acquisition_task, it does not read sensors directly. Instead, it reads the shared `device_state`, checks whether the data is still reliable, and updates the global system flags. Typical responsibilities include:
+
+- checking sensor validity
+- checking sensor fault flags
+- checking data freshness
+- updating `degraded_mode`, `alarm_active`, and `system_ok`
+
+## Supervision Model
+
+The task follows this simple sequence:
+```bash
+read shared state
+check sensor status
+compute system flags
+write flags back
+```
+To keep access thread-safe, the shared state is protected by the same mutex used by the other tasks.
+
+### Example: Motion Sensor Supervision
+
+For clarity, the README uses only the motion sensor as an example. The system_task checks three conditions:
+
+1. Validity
+
+If the motion data is not valid, the system enters degraded mode.
+```c
+if (!state_copy.motion_valid)
+{
+    degraded_mode = true;
+}
+```
+2. Fault
+
+If the driver reports a motion sensor fault, the system enters degraded mode.
+```c
+if (state_copy.motion_fault)
+{
+    degraded_mode = true;
+}
+```
+3. Freshness
+
+If the motion sensor has not been updated for too long, the system enters degraded mode.
+```c
+if ((now - state_copy.motion_last_update) > pdMS_TO_TICKS(MOTION_TIMEOUT_MS))
+{
+    degraded_mode = true;
+}
+```
+## Important Note
+
+The absence of motion is not a fault condition. For example:
+
+```shell
+motion_detected = false;
+motion_valid = true;
+```
+
+means that no movement was detected, but the sensor is still working correctly. So `degraded_mode` depends on the health of the sensor, not on the measured value itself.
+
+## System Flags Update
+
+After evaluating the motion sensor state, the task updates the global system flags. Example:
+
+```c
+system_ok = !degraded_mode;
+```
+Then the result is written back to the shared state:
+```c
+if (xSemaphoreTake(g_device_state_mutex, portMAX_DELAY) == pdTRUE)
+{
+    g_device_state.degraded_mode = degraded_mode;
+    g_device_state.alarm_active = alarm_active;
+    g_device_state.system_ok = system_ok;
+
+    xSemaphoreGive(g_device_state_mutex);
+}
+```
+## Flow Example
+
+The following diagram shows the logic of the system_task using only the motion sensor.
+```mermaid
+flowchart TD
+
+START[Task start]
+NOW[Get current tick]
+
+LOCK1[Take device_state mutex]
+COPY[Copy g_device_state into state_copy]
+UNLOCK1[Release mutex]
+
+VALID{motion_valid?}
+FAULT{motion_fault?}
+FRESH{motion_last_update too old?}
+
+DEGRADED[Set degraded_mode = true]
+OK[Set system_ok = true]
+NOT_OK[Set system_ok = false]
+
+ALARM[Set alarm_active = false]
+
+LOCK2[Take device_state mutex]
+WRITE[Write degraded_mode alarm_active and system_ok to g_device_state]
+UNLOCK2[Release mutex]
+
+DELAY[vTaskDelayUntil 1000 ms]
+
+START --> NOW
+NOW --> LOCK1
+LOCK1 --> COPY
+COPY --> UNLOCK1
+UNLOCK1 --> VALID
+
+VALID -->|no| DEGRADED
+VALID -->|yes| FAULT
+
+FAULT -->|yes| DEGRADED
+FAULT -->|no| FRESH
+
+FRESH -->|yes| DEGRADED
+FRESH -->|no| OK
+
+DEGRADED --> NOT_OK
+OK --> ALARM
+NOT_OK --> ALARM
+
+ALARM --> LOCK2
+LOCK2 --> WRITE
+WRITE --> UNLOCK2
+UNLOCK2 --> DELAY
+DELAY --> NOW
+```
+## Interaction With the Firmware
+```mermaid
+flowchart LR
+
+A[acquisition_task]
+DS[device_state]
+S[system_task]
+C[comm_task]
+
+A -->|update measurements| DS
+S -->|read and update system flags| DS
+DS -->|snapshot| C
+```
+- `acquisition_task` updates sensor values
+
+- `system_task` supervises sensor health
+
+- `comm_task` will later publish the device state
+
+## Future Extension
+
+In the final firmware, the same supervision pattern will be applied to all sensors:
+
+- validity
+
+- fault
+
+- freshness
+
+This keeps the architecture modular, easy to maintain, and scalable.
+

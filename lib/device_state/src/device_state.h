@@ -5,11 +5,10 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 
-
-//Number of spectral channels measured by the AS7341
+// Number of spectral channels measured by the AS7341
 #define AS7341_CHANNELS 8
 
-//AS7341 spectral data structure
+// AS7341 spectral data structure
 typedef struct
 {
     float channels[AS7341_CHANNELS];
@@ -17,6 +16,9 @@ typedef struct
 
 typedef struct
 {
+    // -----------------------------
+    // Sensor measurements
+    // -----------------------------
     float co2_ppm;
     float temperature_scd40;
     float humidity_scd40;
@@ -40,10 +42,53 @@ typedef struct
 
     bool motion_detected;
 
+    // -----------------------------
+    // Last update timestamps
+    // -----------------------------
+    TickType_t motion_last_update;
+    TickType_t gas_last_update;
+    TickType_t sgp41_last_update;
+    TickType_t sht41_last_update;
+    TickType_t bmp280_last_update;
+    TickType_t scd40_last_update;
+    TickType_t pms7003_last_update;
+    TickType_t as7341_last_update;
+    TickType_t audio_last_update;
+
+    // -----------------------------
+    // Validity flags
+    // -----------------------------
+    bool motion_valid;
+    bool gas_valid;
+    bool sgp41_valid;
+    bool sht41_valid;
+    bool bmp280_valid;
+    bool scd40_valid;
+    bool pms7003_valid;
+    bool as7341_valid;
+    bool audio_valid;
+
+    // -----------------------------
+    // Fault flags
+    // -----------------------------
+    bool motion_fault;
+    bool gas_fault;
+    bool sgp41_fault;
+    bool sht41_fault;
+    bool bmp280_fault;
+    bool scd40_fault;
+    bool pms7003_fault;
+    bool as7341_fault;
+    bool audio_fault;
+
+    // -----------------------------
+    // System state
+    // -----------------------------
     bool wifi_connected;
     bool mqtt_connected;
     bool alarm_active;
     bool degraded_mode;
+    bool system_ok;
 
 } device_state_t;
 

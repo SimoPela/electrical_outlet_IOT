@@ -25,22 +25,8 @@ void acquisition_task(void *pvParameters)
     TickType_t now = xLastWakeTime;
 
     // Local persistent state: keeps the last valid values
-    acquisition_local_state_t local_state = {
-        .motion_detected = false,
-        .gas_level_raw = 0.0f,
-        .voc_index = 0.0f,
-        .nox_index = 0.0f,
-        .temperature_c = 0.0f,
-        .humidity_percent = 0.0f,
-        .pressure_hpa = 0.0f,
-        .co2_ppm = 0.0f,
-        .temperature_scd40 = 0.0f,
-        .humidity_scd40 = 0.0f,
-        .pm1_0_ug_m3 = 0.0f,
-        .pm2_5_ug_m3 = 0.0f,
-        .pm10_ug_m3 = 0.0f,
-        .light = {{0}}
-    };
+    // initialize all fields to 0
+    acquisition_local_state_t local_state = {0};
 
     // Force first read
     TickType_t last_as312    = now - pdMS_TO_TICKS(AS312_INTERVAL_MS);
@@ -72,6 +58,9 @@ void acquisition_task(void *pvParameters)
 
             // TODO: replace with real sensor read
             local_state.motion_detected = true;
+            local_state.motion_last_update = now;
+            local_state.motion_valid = true;
+            local_state.motion_fault = false;
         }
 
         // MiCS-5524 - gas
@@ -81,6 +70,9 @@ void acquisition_task(void *pvParameters)
 
             // TODO: replace with real ADC read
             local_state.gas_level_raw = 1293.0f;
+            local_state.gas_last_update = now;
+            local_state.gas_valid = true;
+            local_state.gas_fault = false;
         }
 
         // SGP41 - VOC / NOx
@@ -91,6 +83,9 @@ void acquisition_task(void *pvParameters)
             // TODO: replace with real sensor read
             local_state.voc_index = 1223.0f;
             local_state.nox_index = 1253.0f;
+            local_state.sgp41_last_update = now;
+            local_state.sgp41_valid = true;
+            local_state.sgp41_fault = false;
         }
 
         // SHT41 - temperature and humidity
@@ -101,6 +96,9 @@ void acquisition_task(void *pvParameters)
             // TODO: replace with real sensor read
             local_state.temperature_c = 22.5f;
             local_state.humidity_percent = 45.0f;
+            local_state.sht41_last_update = now;
+            local_state.sht41_valid = true;
+            local_state.sht41_fault = false;
         }
 
         // BMP280 - pressure
@@ -110,6 +108,9 @@ void acquisition_task(void *pvParameters)
 
             // TODO: replace with real sensor read
             local_state.pressure_hpa = 1013.25f;
+            local_state.bmp280_last_update = now;
+            local_state.bmp280_valid = true;
+            local_state.bmp280_fault = false;
         }
 
         // AS7341 - light spectrum
@@ -122,6 +123,9 @@ void acquisition_task(void *pvParameters)
             {
                 local_state.light.channels[i] = 1293.0f;
             }
+            local_state.as7341_last_update = now;
+            local_state.as7341_valid = true;
+            local_state.as7341_fault = false;
         }
 
         // SCD40 - CO2
@@ -133,6 +137,9 @@ void acquisition_task(void *pvParameters)
             local_state.co2_ppm = 400.0f;
             local_state.temperature_scd40 = 22.5f;
             local_state.humidity_scd40 = 45.0f;
+            local_state.scd40_last_update = now;
+            local_state.scd40_valid = true;
+            local_state.scd40_fault = false;
         }
 
         // PMS7003 - particulate matter
@@ -144,35 +151,55 @@ void acquisition_task(void *pvParameters)
             local_state.pm1_0_ug_m3 = 1293.0f;
             local_state.pm2_5_ug_m3 = 1293.0f;
             local_state.pm10_ug_m3 = 1293.0f;
+            local_state.pms7003_last_update = now;
+            local_state.pms7003_valid = true;
+            local_state.pms7003_fault = false;
         }
 
         // Copy the complete local state into the shared device state
         if (xSemaphoreTake(g_device_state_mutex, portMAX_DELAY) == pdTRUE)
         {
-            g_device_state.motion_detected   = local_state.motion_detected;
-
-            g_device_state.gas_level_raw     = local_state.gas_level_raw;
-
-            g_device_state.voc_index         = local_state.voc_index;
-            g_device_state.nox_index         = local_state.nox_index;
-
-            g_device_state.temperature_c     = local_state.temperature_c;
-            g_device_state.humidity_percent  = local_state.humidity_percent;
-
-            g_device_state.pressure_hpa      = local_state.pressure_hpa;
-
-            g_device_state.co2_ppm           = local_state.co2_ppm;
+            g_device_state.motion_detected = local_state.motion_detected;
+            g_device_state.gas_level_raw = local_state.gas_level_raw;
+            g_device_state.voc_index = local_state.voc_index;
+            g_device_state.nox_index = local_state.nox_index;
+            g_device_state.temperature_c = local_state.temperature_c;
+            g_device_state.humidity_percent = local_state.humidity_percent;
+            g_device_state.pressure_hpa = local_state.pressure_hpa;
+            g_device_state.co2_ppm = local_state.co2_ppm;
             g_device_state.temperature_scd40 = local_state.temperature_scd40;
-            g_device_state.humidity_scd40    = local_state.humidity_scd40;
+            g_device_state.humidity_scd40 = local_state.humidity_scd40;
+            g_device_state.pm1_0_ug_m3 = local_state.pm1_0_ug_m3;
+            g_device_state.pm2_5_ug_m3 = local_state.pm2_5_ug_m3;
+            g_device_state.pm10_ug_m3 = local_state.pm10_ug_m3;
+            g_device_state.light = local_state.light;
 
-            g_device_state.pm1_0_ug_m3       = local_state.pm1_0_ug_m3;
-            g_device_state.pm2_5_ug_m3       = local_state.pm2_5_ug_m3;
-            g_device_state.pm10_ug_m3        = local_state.pm10_ug_m3;
+            g_device_state.motion_last_update = local_state.motion_last_update;
+            g_device_state.gas_last_update = local_state.gas_last_update;
+            g_device_state.sgp41_last_update = local_state.sgp41_last_update;
+            g_device_state.sht41_last_update = local_state.sht41_last_update;
+            g_device_state.bmp280_last_update = local_state.bmp280_last_update;
+            g_device_state.scd40_last_update = local_state.scd40_last_update;
+            g_device_state.pms7003_last_update = local_state.pms7003_last_update;
+            g_device_state.as7341_last_update = local_state.as7341_last_update;
 
-            for (int i = 0; i < AS7341_CHANNELS; i++)
-            {
-                g_device_state.light.channels[i] = local_state.light.channels[i];
-            }
+            g_device_state.motion_valid = local_state.motion_valid;
+            g_device_state.gas_valid = local_state.gas_valid;
+            g_device_state.sgp41_valid = local_state.sgp41_valid;
+            g_device_state.sht41_valid = local_state.sht41_valid;
+            g_device_state.bmp280_valid = local_state.bmp280_valid;
+            g_device_state.scd40_valid = local_state.scd40_valid;
+            g_device_state.pms7003_valid = local_state.pms7003_valid;
+            g_device_state.as7341_valid = local_state.as7341_valid;
+
+            g_device_state.motion_fault = local_state.motion_fault;
+            g_device_state.gas_fault = local_state.gas_fault;
+            g_device_state.sgp41_fault = local_state.sgp41_fault;
+            g_device_state.sht41_fault = local_state.sht41_fault;
+            g_device_state.bmp280_fault = local_state.bmp280_fault;
+            g_device_state.scd40_fault = local_state.scd40_fault;
+            g_device_state.pms7003_fault = local_state.pms7003_fault;
+            g_device_state.as7341_fault = local_state.as7341_fault;
 
             xSemaphoreGive(g_device_state_mutex);
         }
