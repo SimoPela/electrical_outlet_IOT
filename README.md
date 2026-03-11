@@ -461,3 +461,59 @@ flowchart LR
 
     C --> MQTT
 ```
+
+## Task Stack Sizes
+
+| Task | Stack Size |
+|-----|-----|
+| acquisition_task | 4096 – 8192 bytes |
+| audio_task | 8192 – 16384 bytes |
+| system_task | 4096 bytes |
+| comm_task | 8192 – 12288 bytes |
+
+At the beginning of the project, relatively large stack sizes are used to avoid stack overflows.  
+Later, the actual stack usage will be evaluated using:
+
+`uxTaskGetStackHighWaterMark(NULL)`
+
+Based on these measurements, the stack sizes can be reduced to optimize memory usage.
+
+---
+
+## Task Priorities
+
+| Task | Priority |
+|-----|-----|
+| acquisition_task | 2 |
+| audio_task | 2 |
+| system_task | 4 |
+| comm_task | 3 |
+
+The default priorities for the **main task** and the **idle task** will remain unchanged.
+
+## Recap: Printing in esp-idf
+
+| Macro      | Meaning  | When to use                    |
+|------------|----------|-------------------------------|
+| ESP_LOGE   | Error    | Errors or problems            |
+| ESP_LOGW   | Warning  | Warnings or recoverable issues|
+| ESP_LOGI   | Info     | Normal informational output   |
+| ESP_LOGD   | Debug    | Debugging information         |
+| ESP_LOGV   | Verbose  | Highly detailed trace output  |
+
+## Stack tuning
+I implemented a function to periodically log the stack usage of the current task.
+```c
+void logTaskStackUsage(uint32_t *counter, const char *TAG, UBaseType_t task_stack_size)
+{
+    if (++(*counter) % 10 == 0)
+    {
+        UBaseType_t stack_remaining = uxTaskGetStackHighWaterMark(NULL);
+        UBaseType_t stack_used = task_stack_size - stack_remaining;
+
+        ESP_LOGI(TAG, "Stack used: %u words | remaining: %u words",
+                 stack_used, stack_remaining);
+    }
+}
+```
+The `counter` parameter is used to control how often the stack usage is printed.

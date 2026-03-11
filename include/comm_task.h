@@ -1,6 +1,6 @@
 #ifndef COMM_TASK_H
 #define COMM_TASK_H
 
-/*TO DO*/
+void comm_task(void *pvParameters);
 
 #endif

@@ -9,6 +9,9 @@
 // esp-idf headers
 #include "esp_log.h"
 
+// task config headers
+#include "task_config.h"
+
 // task headers
 #include "acquisition_task.h"
 #include "audio_task.h"
@@ -17,56 +20,77 @@
 
 static const char *TAG = "MAIN";
 
-/* Stack sizes are in WORDS, not bytes (1 word = 4 bytes on ESP32) */
-#define STACK_LED_WORDS        2048
-#define STACK_SENSOR_WORDS     4096
-
-#define LED_TASK_PRIORITY      1
-#define SENSOR_TASK_PRIORITY   3
-
-static void led_task(void *pvParameters)
-{
-    (void)pvParameters;
-    ESP_LOGI("LED", "LED task started");
-
-    while (true) {
-        ESP_LOGI("LED", "Heartbeat");
-        vTaskDelay(pdMS_TO_TICKS(1000));
-    }
-}
-
-static void sensor_task(void *pvParameters)
-{
-    (void)pvParameters;
-    ESP_LOGI("SENSOR", "Sensor task started");
-
-    while (true) {
-        ESP_LOGI("SENSOR", "Polling sensors...");
-        vTaskDelay(pdMS_TO_TICKS(5000));
-    }
-}
-
 void app_main(void)
 {
     ESP_LOGI(TAG, "System booting...");
+    ESP_LOGI(TAG, "Creating tasks");
 
-    xTaskCreate(
-        led_task,
-        "led_task",
-        STACK_LED_WORDS,
+    // Create tasks and check the return value of xTaskCreate.
+    // If there is not enough RAM, the function will fail and return a value different from pdPASS.
+    
+    // Acquisition task
+    if (xTaskCreate(acquisition_task,
+        "acquisition_task",
+        STACK_ACQUISITION_WORDS,
         NULL,
-        LED_TASK_PRIORITY,
-        NULL
-    );
+        ACQUISITION_TASK_PRIORITY,
+        NULL) != pdPASS)
+    {
+        ESP_LOGE(TAG, "Failed to create acquisition_task");
+        abort(); // abort the program if the task creation fails
+    }
+    else
+    {
+        ESP_LOGI(TAG, "Acquisition task created");
+    }
 
-    xTaskCreate(
-        sensor_task,
-        "sensor_task",
-        STACK_SENSOR_WORDS,
-        NULL,
-        SENSOR_TASK_PRIORITY,
-        NULL
-    );
+    // Audio task
+    if(xTaskCreate(audio_task, 
+       "audio_task",
+       STACK_AUDIO_WORDS,
+       NULL,
+       AUDIO_TASK_PRIORITY,
+       NULL) != pdPASS)
+    {
+        ESP_LOGE(TAG, "Failed to create audio_task");
+        abort();
+    }
+    else
+    {
+        ESP_LOGI(TAG, "Audio task created");
+    }
 
-    ESP_LOGI(TAG, "Tasks started");
+    // Comm task
+    if(xTaskCreate(comm_task, 
+       "comm_task",
+       STACK_COMM_WORDS,
+       NULL,
+       COMM_TASK_PRIORITY,
+       NULL) != pdPASS)
+    {
+        ESP_LOGE(TAG, "Failed to create comm_task");
+        abort();
+    }
+    else
+    {
+        ESP_LOGI(TAG, "Comm task created");
+    }
+
+    // System task
+    if(xTaskCreate(system_task, 
+       "system_task",
+       STACK_SYSTEM_WORDS,
+       NULL,
+       SYSTEM_TASK_PRIORITY,
+       NULL) != pdPASS)
+    {
+        ESP_LOGE(TAG, "Failed to create system_task");
+        abort();
+    }
+    else
+    {
+        ESP_LOGI(TAG, "System task created");
+    }
+
+    ESP_LOGI(TAG, "All tasks started");
 }

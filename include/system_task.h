@@ -1,6 +1,6 @@
 #ifndef SYSTEM_TASK_H
 #define SYSTEM_TASK_H
 
-/*TO DO*/
+void system_task(void *pvParameters);
 
 #endif

@@ -1,6 +1,6 @@
 #ifndef ACQUISITION_TASK_H
 #define ACQUISITION_TASK_H
 
-/*TO DO*/
+void acquisition_task(void *pvParameters);
 
 #endif
