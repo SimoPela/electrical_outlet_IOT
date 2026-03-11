@@ -5,6 +5,16 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 
+
+//Number of spectral channels measured by the AS7341
+#define AS7341_CHANNELS 8
+
+//AS7341 spectral data structure
+typedef struct
+{
+    float channels[AS7341_CHANNELS];
+} as7341_data_t;
+
 typedef struct
 {
     float co2_ppm;
@@ -20,6 +30,8 @@ typedef struct
     float pm10_ug_m3;
 
     float noise_db;
+
+    as7341_data_t light;
 
     float gas_level_raw;
 

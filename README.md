@@ -487,8 +487,15 @@ All tasks in the firmware share this structure. Instead of storing measurements 
 The device state is implemented in the `device_state.h` and `device_state.c` files.
 
 ```c
-typedef struct
-{
+//Number of spectral channels measured by the AS7341
+#define AS7341_CHANNELS 8
+
+//AS7341 spectral data structure
+typedef struct{
+    float channels[AS7341_CHANNELS];
+} as7341_data_t;
+
+typedef struct{
     float co2_ppm;
     float temperature_c;
     float humidity_percent;
@@ -503,6 +510,8 @@ typedef struct
 
     float noise_db;
 
+    as7341_data_t light;
+
     float gas_level_raw;
 
     bool motion_detected;
@@ -516,7 +525,6 @@ typedef struct
 
 extern device_state_t g_device_state;
 extern SemaphoreHandle_t g_device_state_mutex;
-
 void device_state_init(void);
 ```
 

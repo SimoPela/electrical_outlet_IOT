@@ -22,6 +22,16 @@ Stack sizes (in WORDS, not bytes)
 #define SYSTEM_TASK_PRIORITY        4
 #define COMM_TASK_PRIORITY          3
 
+//Sensor polling intervals
+#define AS312_INTERVAL_MS      100
+#define MICS5524_INTERVAL_MS   1000
+#define SGP41_INTERVAL_MS      1000
+#define SHT41_INTERVAL_MS      2000
+#define BMP280_INTERVAL_MS     2000
+#define AS7341_INTERVAL_MS     3000
+#define SCD40_INTERVAL_MS      5000
+#define PMS7003_INTERVAL_MS    5000
+
 /**
  * @brief Log the stack usage of the current task periodically.
  *
