@@ -607,3 +607,112 @@ void acquisition_task(void *pvParameters)
     }
 }
 ```
+
+## Scheduler Inside the Acquisition Task
+
+The `acquisition_task` uses a simple internal time-based scheduler to poll sensors at different intervals.
+
+Instead of creating one FreeRTOS task for each sensor, the firmware keeps a timestamp for the last execution of each sensor read operation.  
+At every loop iteration, the task checks whether the configured polling interval has elapsed. If so, the corresponding sensor is read and the shared `device_state` is updated.
+
+This approach reduces RAM usage, avoids unnecessary context switching, and keeps the firmware architecture simple and scalable.
+
+Example:
+
+```c
+static const char *TAG = "ACQUISITION";
+
+void acquisition_task(void *pvParameters)
+{
+    (void)pvParameters;
+    uint32_t counter = 0;
+
+    ESP_LOGI(TAG, "Acquisition task started");
+
+    TickType_t xLastWakeTime = xTaskGetTickCount();
+    TickType_t now = xLastWakeTime;
+
+    // Force the first read at startup
+    TickType_t last_as312 = now - pdMS_TO_TICKS(AS312_INTERVAL_MS);
+
+    for (;;)
+    {
+        now = xTaskGetTickCount();
+
+        // AS312 - motion sensor
+        if ((now - last_as312) >= pdMS_TO_TICKS(AS312_INTERVAL_MS))
+        {
+            last_as312 = now;
+
+            if (xSemaphoreTake(g_device_state_mutex, portMAX_DELAY) == pdTRUE)
+            {
+                g_device_state.motion_detected = sensor_values.motion_detected;
+                xSemaphoreGive(g_device_state_mutex);
+            }
+        }
+
+        // Log the stack usage periodically. Once the stack size is tuned, this can be removed.
+        logTaskStackUsage(&counter, TAG, STACK_ACQUISITION_WORDS);
+
+        // Base scheduler period
+        vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(100));
+    }
+}
+```
+In this example, the task wakes up every 100 ms and checks whether the AS312 polling interval has expired. If the interval has elapsed, the sensor is processed and the shared device state is updated.
+
+
+For the example the following diagram shows how it's work:
+```mermaid
+flowchart TD
+
+START[Task Start]
+
+TICK[Get current tick]
+
+CHECK1{AS312 interval elapsed?}
+
+READ1[Read AS312]
+
+UPDATE_TS[Update timestamp<br/>last_as312 = now]
+
+LOCK1[Take device_state mutex]
+
+UPDATE1[Update motion_detected]
+
+UNLOCK1[Release mutex]
+
+STACK[Log stack usage]
+
+DELAY[vTaskDelayUntil 100 ms]
+
+START --> TICK
+TICK --> CHECK1
+
+CHECK1 -->|yes| READ1
+READ1 --> UPDATE_TS
+UPDATE_TS --> LOCK1
+LOCK1 --> UPDATE1
+UPDATE1 --> UNLOCK1
+UNLOCK1 --> STACK
+
+CHECK1 -->|no| STACK
+
+STACK --> DELAY
+DELAY --> TICK
+```
+
+Interation of acquisition task with the device state:
+```mermaid
+flowchart LR
+
+A[acquisition_task]
+
+S[device_state]
+
+M[device_state_mutex]
+
+A -->|Take mutex| M
+A -->|update measurements| S
+A -->|Release mutex| M
+```
