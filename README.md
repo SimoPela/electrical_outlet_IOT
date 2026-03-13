@@ -5,9 +5,38 @@ An embedded environmental monitoring platform designed to fit inside a **standar
 The device focuses on **indoor air quality and comfort monitoring**, rather than electrical power measurement.  
 The objective is to integrate multiple environmental sensors into a compact embedded system capable of collecting meaningful indoor data.
 
+## Quick Start (PlatformIO)
+
+```bash
+pio run
+```
+
+Optional commands:
+
+```bash
+pio run -t upload
+pio device monitor
+```
+
+## Repository Structure
+
+```text
+src/       Main firmware tasks and application entry points
+include/   Public headers for application modules
+lib/       Reusable modules (device_state, mqtt, drivers)
+```
+
+## README Navigation
+
+- Hardware overview: `Hardware Platform`
+- Firmware architecture: `Firmware Architecture`
+- Shared state model: `Device State`
+- Supervision logic: `System Task`
+- MQTT model: `Communication Task`
+
 ---
 
-# Project Objectives
+## Project Objectives
 
 - Monitor key **indoor air quality parameters**
 - Track **comfort indicators** in living environments
@@ -16,7 +45,7 @@ The objective is to integrate multiple environmental sensors into a compact embe
 
 ---
 
-# Planned Measurements
+## Planned Measurements
 
 The system aims to monitor the following environmental indicators:
 
@@ -30,22 +59,22 @@ The system aims to monitor the following environmental indicators:
 - Ambient noise level
 - Light spectrum
 - Motion detection
-- Led status (rgb led)
+- LED status (RGB LED)
 
 ---
 
-# Hardware Platform
+## Hardware Platform
 
 The prototype is built around an **ESP32-S3 microcontroller**, combined with several specialized environmental sensors.
 
-## Core Controller
+### Core Controller
 
 - `ESP32-S3` — main microcontroller and communication interface
 
-## Sensor Stack
+### Sensor Stack
 
 | Measurement                      | Sensor |
-|----------------------------------|------|
+|----------------------------------|--------------------------------|
 | CO₂                              | **Sensirion SCD40** |
 | VOC / NOx                        | **Sensirion SGP41** |
 | PM particles                     | **Plantower PMS7003** |
@@ -55,7 +84,7 @@ The prototype is built around an **ESP32-S3 microcontroller**, combined with sev
 | Motion detection                 | **AS312 PIR sensor** |
 | Noise level                      | **INMP441 MEMS microphone** |
 | Combustible gases                | **MiCS-5524 gas sensor** |
-| - RGB LED status indicator       | **APHF1608SEEQBDZGKC** |
+| RGB LED status indicator         | **APHF1608SEEQBDZGKC** |
 
 ### Audio Acquisition Options
 
@@ -66,8 +95,8 @@ Two possible microphone configurations are considered:
 
 ---
 
-### First layout of the prototype
-this is a simple diagram that shows the layout of the prototype
+### First Prototype Layout
+This diagram shows the first prototype layout.
 ```mermaid
 flowchart LR
 
@@ -149,13 +178,13 @@ flowchart LR
     class T broker
     class ENV,AUX,DATA group
 ```
-# System Architecture
+## System Architecture
 
 The system is structured around a sensor node based on an ESP32-S3 microcontroller.
 
 All environmental sensors are connected directly to the microcontroller through I2C, UART, GPIO, ADC and I2S interfaces.
 
-The firmware is implemented using **FreeRTOS**, where each sensor is managed by a dedicated acquisition task.  
+The firmware is implemented using **FreeRTOS**, where sensors are grouped into a small set of coordinated tasks.  
 Measurements are validated and aggregated before being transmitted through Wi-Fi using the **MQTT protocol**.
 
 The MQTT broker acts as the central data hub for future integrations such as:
@@ -164,7 +193,7 @@ The MQTT broker acts as the central data hub for future integrations such as:
 - data logging systems
 - monitoring dashboards
 
-# Development Status
+## Development Status
 
 The current stage of the project focuses on:
 
@@ -175,18 +204,18 @@ The current stage of the project focuses on:
 The firmware architecture and data infrastructure will evolve as the hardware platform stabilizes.
 
 
-# Project Progress Report
+## Project Progress Report
 
 This section summarizes the current progress based on the repository contents.
 
 ---
-## Swiss T13 Outlet Plate Dimensions
+### Swiss T13 Outlet Plate Dimensions
 
 - Front plate: ~86 mm x 86 mm
 - Wall recess hole: ~55-60 mm diameter
 - Box depth: ~45-60 mm
 
-# Firmware Architecture
+## Firmware Architecture
 
 The firmware is built on **FreeRTOS** and follows a **minimal task architecture** designed for reliability, maintainability, and predictable timing behavior. Instead of dedicating a separate task to each sensor, the system groups responsibilities into a small number of well-defined tasks. This approach reduces context switching, memory usage, and synchronization complexity, which is important for a production-grade embedded system.
 
@@ -194,7 +223,7 @@ The firmware is structured around **four main tasks**.
 
 ---
 
-# Task Overview
+## Task Overview
 
 | Task                | Responsibility                                                      |
 |---------------------|---------------------------------------------------------------------|
@@ -207,7 +236,7 @@ This architecture provides clear separation between **sensor acquisition**, **si
 
 ---
 
-# System State Model
+## System State Model
 
 Sensor measurements and device status are stored in a centralized structure called `device_state`.
 
@@ -227,22 +256,22 @@ Typical stored values include:
 -   network connectivity state
 -   system fault flags
 
-The acquisition tasks update this structure, while the communication task reads it to publish telemetry.
+The acquisition and audio tasks update this structure, while the communication task reads it to publish telemetry.
 
 Access to `device_state` is protected using a **mutex** to guarantee thread‑safe access with minimal locking time.
 
 ---
 
-# Inter‑Task Communication
+## Inter‑Task Communication
 
 The firmware uses a minimal set of synchronization primitives to keep the system deterministic and lightweight.
 
-## Task Notifications
+### Task Notifications
 
 Direct **task notifications** are used for fast signaling between tasks.
 
 
-For example, acquisition tasks can notify the `system_task` when:
+For example, the acquisition task can notify the `system_task` when:
 
 -   a threshold is exceeded
 -   a sensor failure occurs
@@ -252,7 +281,7 @@ Task notifications are preferred for one‑to‑one signaling because they are f
 
 ---
 
-## Publish Queue
+### Publish Queue
 
 `publish_queue`
 
@@ -268,9 +297,9 @@ The `comm_task` reads this queue and publishes messages over MQTT.
 
 ---
 
-# Task Responsibilities
+## Task Responsibilities
 
-## Acquisition Task
+### Acquisition Task
 
 `acquisition_task`
 
@@ -306,7 +335,7 @@ The task updates the shared `device_state` structure and generates notifications
 
 ---
 
-## Audio Task (I2S)
+### Audio Task (I2S)
 
 `audio_task`
 
@@ -327,7 +356,7 @@ INMP441 digital MEMS microphone
 
 ---
 
-## System Supervision Task
+### System Supervision Task
 
 `system_task`
 
@@ -341,11 +370,11 @@ Responsibilities include:
 -   degraded mode handling
 -   LED status control
 
-The task reacts to notifications from acquisition tasks and decides whether telemetry or alarms must be published.
+The task reacts to notifications from acquisition and audio tasks and decides whether telemetry or alarms must be published.
 
 ---
 
-## Communication Task
+### Communication Task
 
 `comm_task`
 
@@ -365,19 +394,19 @@ When a publish request is received, the task reads the latest measurements from 
 
 ---
 
-# Synchronization Mechanisms
+## Synchronization Mechanisms
 
 The firmware relies on a minimal set of synchronization primitives.
 
-## Mutex
+### Mutex
 
-`state_mutex`
+`g_device_state_mutex`
 
 Protects access to the shared `device_state` structure.
 
 ---
 
-## Event Groups
+### Event Groups
 
 Event groups are used to represent system state flags such as:
 
@@ -391,9 +420,9 @@ These flags allow tasks to quickly react to changes in system status.
 
 ---
 
-# Task Interaction Diagram
+## Task Interaction Diagram
 
-``` mermaid
+```mermaid
 flowchart LR
 
     A[acquisition_task]
@@ -415,7 +444,7 @@ flowchart LR
     C -->|publish telemetry| MQTT
 ```
 
-## Task Stack Sizes
+### Task Stack Sizes
 
 | Task | Stack Size |
 |-----|-----|
@@ -433,7 +462,7 @@ Based on these measurements, the stack sizes can be reduced to optimize memory u
 
 ---
 
-## Task Priorities
+### Task Priorities
 
 | Task | Priority |
 |-----|-----|
@@ -444,7 +473,7 @@ Based on these measurements, the stack sizes can be reduced to optimize memory u
 
 The default priorities for the **main task** and the **idle task** will remain unchanged.
 
-## Logging in ESP-IDF
+### Logging in ESP-IDF
 
 | Macro      | Meaning  | When to use                    |
 |------------|----------|-------------------------------|
@@ -454,7 +483,7 @@ The default priorities for the **main task** and the **idle task** will remain u
 | ESP_LOGD   | Debug    | Debugging information         |
 | ESP_LOGV   | Verbose  | Highly detailed trace output  |
 
-## Stack tuning
+### Stack tuning
 I implemented a function to periodically log the stack usage of the current task.
 ```c
 void logTaskStackUsage(uint32_t *counter, const char *TAG, UBaseType_t task_stack_size)
@@ -471,11 +500,11 @@ void logTaskStackUsage(uint32_t *counter, const char *TAG, UBaseType_t task_stac
 ```
 The `counter` parameter is used to control how often the stack usage is printed. `uxTaskGetStackHighWaterMark()` returns the minimum amount of stack that has remained unused since the task started running. This allows estimating the real stack usage of the task.
 
-## Task Creation
-The basic task structure and stack monitoring have been implemented.  
-The next step is to develop the internal logic of each task.
+### Task Creation
+The basic task structure and stack monitoring are in place.  
+Task internals are developed incrementally and validated through integration tests.
 
-## Device State
+### Device State
 
 The **device state** represents the current internal state of the device. It contains the latest measurements collected from the sensors as well as important system status flags.
 
@@ -525,7 +554,7 @@ extern SemaphoreHandle_t g_device_state_mutex;
 void device_state_init(void);
 ```
 
-### Global Device State
+#### Global Device State
 
 A global instance of the structure is created:
 
@@ -533,7 +562,7 @@ A global instance of the structure is created:
 
 This variable contains the latest known values of all measurements and system flags. All tasks read from or update this structure when interacting with the system state.
 
-### Thread Safety
+#### Thread Safety
 
 Since multiple FreeRTOS tasks access the shared device state concurrently, access must be protected using a mutex:
 
@@ -541,12 +570,12 @@ Since multiple FreeRTOS tasks access the shared device state concurrently, acces
 
 The mutex ensures that only one task at a time can read or modify the shared structure, preventing race conditions and inconsistent updates.
 
-However, in the updated architecture, the mutex is **not kept during the whole sensor acquisition phase**.  
+In this architecture, the mutex is **not kept during the whole sensor acquisition phase**.  
 The `acquisition_task` first updates a **local persistent structure** called `acquisition_local_state_t`, and only after that it briefly locks the mutex to copy the final values into `g_device_state`.
 
 Typical pattern:
 
-```shell
+```text
 read sensors into local_state
 take mutex
 copy local_state into g_device_state
@@ -554,7 +583,7 @@ release mutex
 ```
 This approach keeps the critical section short and avoids blocking other tasks while sensors are being read.
 
-### Initialization
+#### Initialization
 The function `device_state_init()` is responsible for initializing the module:
 
 - sets the initial state values
@@ -563,14 +592,14 @@ The function `device_state_init()` is responsible for initializing the module:
 
 This function must be called during system startup before any task accesses the shared device state.
 
-### Usage
+#### Usage
 
 The device state is initialized in `main.c`.
 After initialization, the code verifies that the mutex was successfully created.
 
 All tasks that need to read or update the device state must access it through the mutex to guarantee thread-safe access.
 
-In the updated acquisition model, sensor values are first stored in a task-local structure and then committed to the shared state:
+In this acquisition model, sensor values are first stored in a task-local structure and then committed to the shared state:
 ```c
 // Copy the complete local state into the shared device state
 if (xSemaphoreTake(g_device_state_mutex, portMAX_DELAY) == pdTRUE)
@@ -605,7 +634,7 @@ if (xSemaphoreTake(g_device_state_mutex, portMAX_DELAY) == pdTRUE)
 
 So the shared structure stays centralized, but the actual acquisition work happens outside the critical section.
 
-### Scheduler Inside the Acquisition Task
+#### Scheduler Inside the Acquisition Task
 
 The `acquisition_task` uses a simple internal time-based scheduler to poll sensors at different intervals.
 
@@ -624,7 +653,7 @@ At each iteration:
 
 This keeps the architecture simple, scalable, and memory-efficient.
 
-Example based on the updated code:
+Example based on the current code:
 ```c
 void acquisition_task(void *pvParameters)
 {
@@ -671,8 +700,8 @@ void acquisition_task(void *pvParameters)
 }
 ```
 
-### Device State Update
-The following diagram shows the updated logic:
+#### Device State Update
+The following diagram shows the current logic:
 ```mermaid
 flowchart TD
 
@@ -708,9 +737,9 @@ STACK --> DELAY
 DELAY --> ALIVE
 ```
 
-### Interaction of `acquisition_task` with the Shared Device State
+#### Interaction of `acquisition_task` with the Shared Device State
 
-This diagram shows the key correction in the architecture:
+This diagram summarizes the architecture pattern:
 the task works first on `local_state`, then performs a short synchronized copy into the shared state.
 ```mermaid
 flowchart LR
@@ -729,7 +758,7 @@ A -->|release mutex| M
 This is more accurate than saying that each sensor directly locks the mutex during measurement.
 In the updated implementation, the mutex is only used during the final commit phase.
 
-## Device State Structure
+### Device State Structure
 
 To support system supervision and communication tasks, the device_state structure also contains additional metadata:
 
@@ -741,7 +770,7 @@ To support system supervision and communication tasks, the device_state structur
 
 Example:
 
-The next step is to prepare the device_state structure for the other tasks. In the global structure, we will add the following fields:
+Typical extension fields in `device_state` include:
 ```c
     // -----------------------------
     // Last update timestamps
@@ -767,7 +796,7 @@ These fields allow other tasks (for example system_task or comm_task) to detect:
 
 - degraded operating modes
 
-# System Task
+## System Task
 
 The `system_task` is responsible for supervising the health of the device.
 
@@ -778,10 +807,10 @@ Unlike the acquisition_task, it does not read sensors directly. Instead, it read
 - checking data freshness
 - updating `degraded_mode`, `alarm_active`, and `system_ok`
 
-## Supervision Model
+### Supervision Model
 
 The task follows this simple sequence:
-```bash
+```text
 read shared state
 check sensor status
 compute system flags
@@ -789,7 +818,7 @@ write flags back
 ```
 To keep access thread-safe, the shared state is protected by the same mutex used by the other tasks.
 
-### Example: Motion Sensor Supervision
+#### Example: Motion Sensor Supervision
 
 For clarity, the README uses only the motion sensor as an example. The system_task checks three conditions:
 
@@ -820,18 +849,18 @@ if ((now - state_copy.motion_last_update) > pdMS_TO_TICKS(MOTION_TIMEOUT_MS))
     degraded_mode = true;
 }
 ```
-## Important Note
+### Important Note
 
 The absence of motion is not a fault condition. For example:
 
-```shell
+```text
 motion_detected = false;
 motion_valid = true;
 ```
 
 means that no movement was detected, but the sensor is still working correctly. So `degraded_mode` depends on the health of the sensor, not on the measured value itself.
 
-## System Flags Update
+### System Flags Update
 
 After evaluating the motion sensor state, the task updates the global system flags. Example:
 
@@ -849,7 +878,7 @@ if (xSemaphoreTake(g_device_state_mutex, portMAX_DELAY) == pdTRUE)
     xSemaphoreGive(g_device_state_mutex);
 }
 ```
-## Flow Example
+### Flow Example
 
 The following diagram shows the logic of the system_task using only the motion sensor.
 ```mermaid
@@ -903,7 +932,7 @@ WRITE --> UNLOCK2
 UNLOCK2 --> DELAY
 DELAY --> NOW
 ```
-## Interaction With the Firmware
+### Interaction With the Firmware
 ```mermaid
 flowchart LR
 
@@ -920,11 +949,11 @@ DS -->|snapshot| C
 
 - `system_task` supervises sensor health
 
-- `comm_task` will later publish the device state
+- `comm_task` publishes the device state
 
-## Future Extension
+### Future Extension
 
-In the final firmware, the same supervision pattern will be applied to all sensors:
+The same supervision pattern can be applied to all sensors:
 
 - validity
 
@@ -934,12 +963,49 @@ In the final firmware, the same supervision pattern will be applied to all senso
 
 This keeps the architecture modular, easy to maintain, and scalable.
 
-# Communication Task
+## Communication Task
 
 The `comm_task` is responsible for managing the network connection and publishing the device state to the MQTT broker.
-It reads the shared `device_state` and builds an MQTT payload using the `mqtt_payload` library.
 
-topic:
+The task periodically reads a snapshot of the shared `device_state`, builds the appropriate MQTT payloads and publishes them to the configured MQTT broker.
+
+To avoid blocking other tasks, the communication task only performs:
+- network supervision
+- MQTT connection management
+- payload generation
+- message publishing
+All sensor acquisition and system supervision are handled by other tasks.
+
+
+### MQTT Payload
+
+The MQTT payloads are built using the mqtt_payload module.
+
+This module converts the internal device_state_t structure into JSON payloads suitable for transmission over MQTT.
+
+Files:
+```bash
+mqtt_payload.c
+mqtt_payload.h
+```
+Example functions:
+```bash
+mqtt_payload_build_state()
+mqtt_payload_build_system()
+mqtt_payload_build_environment()
+mqtt_payload_build_audio()
+mqtt_payload_build_faults()
+mqtt_payload_build_validity()
+mqtt_payload_build_last_update()
+mqtt_payload_build_alarm()
+mqtt_payload_build_availability()
+```
+This design keeps the communication task simple and separates data formatting from networking logic.
+
+
+### MQTT Topic Structure
+
+The device publishes data using the following topic hierarchy:
 ```bash
 devices/<device_id>/state
 devices/<device_id>/telemetry/environment
@@ -950,8 +1016,13 @@ devices/<device_id>/availability
 devices/<device_id>/command
 devices/<device_id>/command/reply
 ```
+This structure allows easy integration with:
+- IoT dashboards
+- Home automation systems
+- monitoring platforms
+- data collection services
 
-folder structure:
+### MQTT Module Folder Structure
 ```bash
 mqtt/
 ├── mqtt_topic.h
@@ -962,3 +1033,10 @@ mqtt/
 ├── mqtt_publish.c
 ├── mqtt_defs.h
 ```
+#### Module responsibilities
+| File         | Responsibility                               |
+|--------------|----------------------------------------------|
+| `mqtt_topic` | Build MQTT topic strings                     |
+| `mqtt_payload` | Convert device_state into JSON payloads       |
+| `mqtt_publish` | Publish messages to the MQTT broker           |
+| `mqtt_defs`    | Global MQTT configuration and constants       |
