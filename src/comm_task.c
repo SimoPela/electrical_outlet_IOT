@@ -45,12 +45,13 @@ void comm_task(void *pvParameters)
         {
             char payload[256] = {0};
 
-            if (mqtt_payload_build(payload, sizeof(payload), &state_copy) >= 0)
+            // Build the payload for the state topic (EXAMPLE)
+            if (mqtt_payload_build_state(payload, sizeof(payload), &state_copy) >= 0)
             {
-                ESP_LOGI(TAG, "Publishing payload: %s", payload);
+                ESP_LOGI(TAG, "Publishing state payload: %s", payload);
 
                 // TODO: replace with real MQTT publish
-                // esp_mqtt_client_publish(client, "device/state", payload, 0, 1, 0);
+                // esp_mqtt_client_publish(client, "devices/<device_id>/state", payload, 0, 1, 0);
             }
             else
             {

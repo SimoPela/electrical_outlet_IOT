@@ -1,6 +1,8 @@
 #ifndef SYSTEM_TASK_H
 #define SYSTEM_TASK_H
 
+#include <stdbool.h>
+
 // Example timeout 
 #define MOTION_TIMEOUT_MS 15000
 #define GAS_TIMEOUT_MS 15000

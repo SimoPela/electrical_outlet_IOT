@@ -21,8 +21,7 @@ int mqtt_payload_build_state(char *buffer, size_t buffer_size, const device_stat
 {
     if (!buffer || !state || buffer_size == 0)
     {
-        ESP_LOGE(TAG, "MQTT state payload build failed: buffer=%p state=%p buffer_size=%zu",
-                 buffer, state, buffer_size);
+        ESP_LOGE(TAG, "MQTT state payload build failed: buffer=%p state=%p buffer_size=%zu", buffer, state, buffer_size);
         return -1;
     }
 
@@ -45,8 +44,7 @@ int mqtt_payload_build_system(char *buffer, size_t buffer_size, const device_sta
 {
     if (!buffer || !state || buffer_size == 0)
     {
-        ESP_LOGE(TAG, "MQTT system payload build failed: buffer=%p state=%p buffer_size=%zu",
-                 buffer, state, buffer_size);
+        ESP_LOGE(TAG, "MQTT system payload build failed: buffer=%p state=%p buffer_size=%zu", buffer, state, buffer_size);
         return -1;
     }
 
