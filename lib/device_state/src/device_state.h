@@ -34,13 +34,16 @@ typedef struct
     float pm2_5_ug_m3;
     float pm10_ug_m3;
 
-    float noise_db;
-
     as7341_data_t light;
 
     float gas_level_raw;
 
     bool motion_detected;
+
+    // -----------------------------
+    // Audio state
+    // -----------------------------
+    float noise_db;
 
     // -----------------------------
     // Last update timestamps
@@ -86,9 +89,15 @@ typedef struct
     // -----------------------------
     bool wifi_connected;
     bool mqtt_connected;
-    bool alarm_active;
     bool degraded_mode;
     bool system_ok;
+
+    // -----------------------------
+    // Alarm state
+    // -----------------------------
+    bool alarm_active;
+    bool gas_alarm;
+    bool motion_alarm;
 
 } device_state_t;
 

@@ -17,6 +17,18 @@
 #define DEGRADED_MODE_TIMEOUT_MS 15000
 #define SYSTEM_OK_TIMEOUT_MS 15000
 
+typedef struct
+{
+    // -----------------------------
+    // System flags
+    // -----------------------------
+    bool degraded_mode;
+    bool motion_alarm;
+    bool gas_alarm;
+    bool alarm_active;
+    bool system_ok;
+} system_local_state_t;
+
 void system_task(void *pvParameters);
 
 #endif

@@ -935,3 +935,30 @@ In the final firmware, the same supervision pattern will be applied to all senso
 This keeps the architecture modular, easy to maintain, and scalable.
 
 # Communication Task
+
+The `comm_task` is responsible for managing the network connection and publishing the device state to the MQTT broker.
+It reads the shared `device_state` and builds an MQTT payload using the `mqtt_payload` library.
+
+topic:
+```bash
+devices/<device_id>/state
+devices/<device_id>/telemetry/environment
+devices/<device_id>/telemetry/audio
+devices/<device_id>/status/system
+devices/<device_id>/event/alarm
+devices/<device_id>/availability
+devices/<device_id>/command
+devices/<device_id>/command/reply
+```
+
+folder structure:
+```bash
+mqtt/
+├── mqtt_topic.h
+├── mqtt_topic.c
+├── mqtt_payload.h
+├── mqtt_payload.c
+├── mqtt_publish.h
+├── mqtt_publish.c
+├── mqtt_defs.h
+```

@@ -78,9 +78,15 @@ void device_state_init(void)
     // -----------------------------
     g_device_state.wifi_connected = false;
     g_device_state.mqtt_connected = false;
-    g_device_state.alarm_active = false;
     g_device_state.degraded_mode = false;
     g_device_state.system_ok = false;
+
+    // -----------------------------
+    // Alarm state
+    // -----------------------------
+    g_device_state.alarm_active = false;
+    g_device_state.gas_alarm = false;
+    g_device_state.motion_alarm = false;
 
     // -----------------------------
     // Mutex
