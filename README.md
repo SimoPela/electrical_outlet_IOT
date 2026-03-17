@@ -1,5 +1,7 @@
 # Electrical Outlet IoT
 
+# Work in progress ... (not yet functional)
+
 An embedded environmental monitoring platform designed to fit inside a **standard electrical outlet enclosure**.
 
 The device focuses on **indoor air quality and comfort monitoring**, rather than electrical power measurement.  
