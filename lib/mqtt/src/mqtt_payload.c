@@ -1,3 +1,10 @@
+/*
+ * Copyright 2026 Simone Pelascini and Aurélien Bollin
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ */
+
+
 #include "mqtt_payload.h"
 #include <stdio.h>
 #include "esp_log.h"
