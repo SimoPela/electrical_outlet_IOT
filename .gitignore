@@ -23,3 +23,4 @@ lib/config/src/app_config.h
 
 # temporary files (copyright issues)
 lib/scd40/*
+raport/
