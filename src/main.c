@@ -4,6 +4,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  */
 
+ // test that lib work
+ #include <mqtt_topic.h>
+ #include <mqtt_payload.h>
 
 // standard headers
 #include <stdint.h>
