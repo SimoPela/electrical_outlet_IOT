@@ -17,3 +17,6 @@ build/
 *.pio.elf
 *.pio.hex
 *.pio.map
+
+# secret files
+include/app_config.h
