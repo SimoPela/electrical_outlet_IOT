@@ -1,3 +1,10 @@
+/*
+ * Copyright 2026 Simone Pelascini and Aurélien Bollin
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ */
+
+
 #include "network_app.h"
 #include "app_config.h"
 
