@@ -5,8 +5,7 @@
  */
 
  // test that lib work
- #include <mqtt_topic.h>
- #include <mqtt_payload.h>
+#include "mqtt_app.h"
 
 // standard headers
 #include <stdint.h>
@@ -48,7 +47,18 @@ void app_main(void)
         abort();
     }
     
+        /* TODO:
+         * Initialize NVS
+         * Initialize Wi-Fi
+         * Wait for network connection
+         * Start MQTT client
+         */
+
     ESP_LOGI(TAG, "Creating tasks");
+
+    /* Start MQTT client */
+    ESP_LOGI(TAG, "Starting MQTT app");
+    mqtt_app_start();
 
     // Create tasks and check the return value of xTaskCreate.
     // If there is not enough RAM, the function will fail and return a value different from pdPASS.
