@@ -10,15 +10,14 @@
  #include "mqtt_publish.h"
  #include "mqtt_app.h"
  
+ #include "app_config.h"
+
  #include "esp_log.h"
  #include "freertos/FreeRTOS.h"
  #include "freertos/task.h"
  #include "freertos/semphr.h"
  
  static const char *TAG = "COMM";
- 
- #define COMM_PERIOD_MS 5000
- #define DEVICE_ID      "esp32_node_01"
  
  void comm_task(void *pvParameters)
  {
@@ -54,7 +53,7 @@
          {
              ESP_LOGW(TAG, "Failed to lock device state mutex");
              logTaskStackUsage(&counter, TAG, STACK_COMM_WORDS);
-             vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(COMM_PERIOD_MS));
+             vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(APP_COMM_PERIOD_MS));
              continue;
          }
  
@@ -64,13 +63,13 @@
              {
                  ESP_LOGI(TAG, "MQTT became connected");
  
-                 if (mqtt_publish_availability(g_mqtt_client, DEVICE_ID, true) < 0)
+                 if (mqtt_publish_availability(g_mqtt_client, APP_DEVICE_ID, true) < 0)
                  {
                      ESP_LOGW(TAG, "Failed to publish availability");
                  }
              }
  
-             if (mqtt_publish_all_periodic(g_mqtt_client, DEVICE_ID, &state_copy) < 0)
+             if (mqtt_publish_all_periodic(g_mqtt_client, APP_DEVICE_ID, &state_copy) < 0)
              {
                  ESP_LOGW(TAG, "One or more periodic publishes failed");
              }
@@ -79,7 +78,7 @@
              {
                  ESP_LOGW(TAG, "Alarm activated, publishing event");
  
-                 if (mqtt_publish_alarm(g_mqtt_client, DEVICE_ID, &state_copy) < 0)
+                 if (mqtt_publish_alarm(g_mqtt_client, APP_DEVICE_ID, &state_copy) < 0)
                  {
                      ESP_LOGW(TAG, "Failed to publish alarm event");
                  }
@@ -97,6 +96,6 @@
          last_mqtt_connected = state_copy.mqtt_connected;
  
          logTaskStackUsage(&counter, TAG, STACK_COMM_WORDS);
-         vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(COMM_PERIOD_MS));
+         vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(APP_COMM_PERIOD_MS));
      }
  }

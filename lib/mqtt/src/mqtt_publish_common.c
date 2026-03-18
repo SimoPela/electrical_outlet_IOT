@@ -11,8 +11,7 @@
 #include "esp_log.h"
 #include <stdio.h>
 
-#define MQTT_TOPIC_MAX_LEN    128
-#define MQTT_PAYLOAD_MAX_LEN  512
+#include "app_config.h"
 
 static const char *TAG = "MQTT_PUBLISH";
 
@@ -44,8 +43,8 @@ int mqtt_publish_with_builder(esp_mqtt_client_handle_t client,
                               int qos,
                               int retain)
 {
-    char topic[MQTT_TOPIC_MAX_LEN];
-    char payload[MQTT_PAYLOAD_MAX_LEN];
+    char topic[APP_MQTT_TOPIC_MAX_LEN];
+    char payload[APP_MQTT_PAYLOAD_MAX_LEN];
 
     if (!client || !device_id || !topic_builder || !payload_builder || !state)
     {

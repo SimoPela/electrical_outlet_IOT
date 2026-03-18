@@ -9,6 +9,7 @@
 #include "mqtt_publish_internal.h"
 #include "mqtt_topic.h"
 #include "mqtt_payload.h"
+#include "app_config.h"
 
 int mqtt_publish_environment(esp_mqtt_client_handle_t client,
                              const char *device_id,
@@ -17,7 +18,7 @@ int mqtt_publish_environment(esp_mqtt_client_handle_t client,
     return mqtt_publish_with_builder(client, device_id,
                                      mqtt_topic_environment,
                                      mqtt_payload_build_environment,
-                                     state, 0, 0);
+                                     state, APP_QOS_0, APP_RETAIN_0);
 }
 
 int mqtt_publish_audio(esp_mqtt_client_handle_t client,
@@ -27,7 +28,7 @@ int mqtt_publish_audio(esp_mqtt_client_handle_t client,
     return mqtt_publish_with_builder(client, device_id,
                                      mqtt_topic_audio,
                                      mqtt_payload_build_audio,
-                                     state, 0, 0);
+                                     state, APP_QOS_0, APP_RETAIN_0);
 }
 
 int mqtt_publish_state(esp_mqtt_client_handle_t client,
@@ -37,5 +38,5 @@ int mqtt_publish_state(esp_mqtt_client_handle_t client,
     return mqtt_publish_with_builder(client, device_id,
                                      mqtt_topic_state,
                                      mqtt_payload_build_state,
-                                     state, 1, 0);
+                                     state, APP_QOS_1, APP_RETAIN_0);
 }

@@ -9,6 +9,7 @@
 #include "mqtt_publish_internal.h"
 #include "mqtt_topic.h"
 #include "mqtt_payload.h"
+#include "app_config.h"
 
 int mqtt_publish_alarm(esp_mqtt_client_handle_t client,
                        const char *device_id,
@@ -17,5 +18,5 @@ int mqtt_publish_alarm(esp_mqtt_client_handle_t client,
     return mqtt_publish_with_builder(client, device_id,
                                      mqtt_topic_alarm,
                                      mqtt_payload_build_alarm,
-                                     state, 1, 0);
+                                     state, APP_QOS_1, APP_RETAIN_0);
 }

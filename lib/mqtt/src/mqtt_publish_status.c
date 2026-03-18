@@ -1,14 +1,8 @@
-/*
- * Copyright 2026 Simone Pelascini and Aurélien Bollin
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- */
-
-
 #include "mqtt_publish.h"
 #include "mqtt_publish_internal.h"
 #include "mqtt_topic.h"
 #include "mqtt_payload.h"
+#include "app_config.h"
 
 int mqtt_publish_system(esp_mqtt_client_handle_t client,
                         const char *device_id,
@@ -17,7 +11,7 @@ int mqtt_publish_system(esp_mqtt_client_handle_t client,
     return mqtt_publish_with_builder(client, device_id,
                                      mqtt_topic_system,
                                      mqtt_payload_build_system,
-                                     state, 1, 1);
+                                     state, APP_QOS_1, APP_RETAIN_1);
 }
 
 int mqtt_publish_faults(esp_mqtt_client_handle_t client,
@@ -27,7 +21,7 @@ int mqtt_publish_faults(esp_mqtt_client_handle_t client,
     return mqtt_publish_with_builder(client, device_id,
                                      mqtt_topic_faults,
                                      mqtt_payload_build_faults,
-                                     state, 1, 1);
+                                     state, APP_QOS_1, APP_RETAIN_1);
 }
 
 int mqtt_publish_validity(esp_mqtt_client_handle_t client,
@@ -37,7 +31,7 @@ int mqtt_publish_validity(esp_mqtt_client_handle_t client,
     return mqtt_publish_with_builder(client, device_id,
                                      mqtt_topic_validity,
                                      mqtt_payload_build_validity,
-                                     state, 1, 1);
+                                     state, APP_QOS_1, APP_RETAIN_1);
 }
 
 int mqtt_publish_last_update(esp_mqtt_client_handle_t client,
@@ -47,7 +41,7 @@ int mqtt_publish_last_update(esp_mqtt_client_handle_t client,
     return mqtt_publish_with_builder(client, device_id,
                                      mqtt_topic_last_update,
                                      mqtt_payload_build_last_update,
-                                     state, 0, 0);
+                                     state, APP_QOS_0, APP_RETAIN_0);
 }
 
 int mqtt_publish_availability(esp_mqtt_client_handle_t client,
@@ -63,6 +57,6 @@ int mqtt_publish_availability(esp_mqtt_client_handle_t client,
     if (mqtt_payload_build_availability(payload, sizeof(payload), online) < 0)
         return -1;
 
-    return mqtt_publish_raw(client, topic, payload, 1, 1);
+    return mqtt_publish_raw(client, topic, payload, APP_QOS_1, APP_RETAIN_1);
 }
 

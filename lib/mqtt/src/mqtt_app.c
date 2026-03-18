@@ -1,4 +1,5 @@
 #include "mqtt_app.h"
+#include "app_config.h"
 
 #include "device_state.h"
 
@@ -15,11 +16,6 @@ static const char *TAG = "MQTT_APP";
 
 /* Global MQTT client handle */
 esp_mqtt_client_handle_t g_mqtt_client = NULL;
-
-/* Temporary config for testing */
-#define MQTT_BROKER_URI "mqtt://192.168.1.10"
-#define MQTT_USERNAME   ""
-#define MQTT_PASSWORD   ""
 
 static void mqtt_set_connected_flag(bool connected)
 {
@@ -88,17 +84,17 @@ static void mqtt_event_handler(void *handler_args,
 void mqtt_app_start(void)
 {
     esp_mqtt_client_config_t mqtt_cfg = {
-        .broker.address.uri = MQTT_BROKER_URI,
+        .broker.address.uri = APP_MQTT_BROKER_URI,
     };
 
-    if (MQTT_USERNAME[0] != '\0')
+    if (APP_MQTT_USERNAME[0] != '\0')
     {
-        mqtt_cfg.credentials.username = MQTT_USERNAME;
+        mqtt_cfg.credentials.username = APP_MQTT_USERNAME;
     }
 
-    if (MQTT_PASSWORD[0] != '\0')
+    if (APP_MQTT_PASSWORD[0] != '\0')
     {
-        mqtt_cfg.credentials.authentication.password = MQTT_PASSWORD;
+        mqtt_cfg.credentials.authentication.password = APP_MQTT_PASSWORD;
     }
 
     g_mqtt_client = esp_mqtt_client_init(&mqtt_cfg);

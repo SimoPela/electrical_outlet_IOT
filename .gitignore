@@ -19,4 +19,7 @@ build/
 *.pio.map
 
 # secret files
-include/app_config.h
+lib/config/src/app_config.h
+
+# temporary files (copyright issues)
+lib/scd40/*

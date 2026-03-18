@@ -1,4 +1,5 @@
 #include "network_app.h"
+#include "app_config.h"
 
 #include <stdio.h>
 #include <stdint.h>
@@ -13,14 +14,6 @@
 #include "freertos/event_groups.h"
 
 static const char *TAG = "NETWORK";
-
-#define WIFI_CONNECTED_BIT BIT0
-#define WIFI_FAIL_BIT      BIT1
-
-/* Temporary Wi-Fi config for testing */
-#define WIFI_SSID      "YOUR_WIFI_SSID"
-#define WIFI_PASSWORD  "YOUR_WIFI_PASSWORD"
-#define WIFI_MAX_RETRY 10
 
 static EventGroupHandle_t s_wifi_event_group = NULL;
 static int s_retry_num = 0;
@@ -40,15 +33,15 @@ static void wifi_event_handler(void *arg,
     }
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED)
     {
-        if (s_retry_num < WIFI_MAX_RETRY)
+        if (s_retry_num < APP_WIFI_MAX_RETRY)
         {
             esp_wifi_connect();
             s_retry_num++;
-            ESP_LOGW(TAG, "Wi-Fi reconnect attempt %d/%d", s_retry_num, WIFI_MAX_RETRY);
+            ESP_LOGW(TAG, "Wi-Fi reconnect attempt %d/%d", s_retry_num, APP_WIFI_MAX_RETRY);
         }
         else
         {
-            xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
+            xEventGroupSetBits(s_wifi_event_group, APP_WIFI_FAIL_BIT);
             ESP_LOGE(TAG, "Wi-Fi connection failed");
         }
     }
@@ -57,7 +50,7 @@ static void wifi_event_handler(void *arg,
         ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
         ESP_LOGI(TAG, "Wi-Fi connected, got IP: " IPSTR, IP2STR(&event->ip_info.ip));
         s_retry_num = 0;
-        xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
+        xEventGroupSetBits(s_wifi_event_group, APP_WIFI_CONNECTED_BIT);
     }
 }
 
@@ -122,8 +115,8 @@ bool network_app_init(void)
     };
 
     /* Copy SSID/password safely */
-    snprintf((char *)wifi_config.sta.ssid, sizeof(wifi_config.sta.ssid), "%s", WIFI_SSID);
-    snprintf((char *)wifi_config.sta.password, sizeof(wifi_config.sta.password), "%s", WIFI_PASSWORD);
+    snprintf((char *)wifi_config.sta.ssid, sizeof(wifi_config.sta.ssid), "%s", APP_WIFI_SSID);
+    snprintf((char *)wifi_config.sta.password, sizeof(wifi_config.sta.password), "%s", APP_WIFI_PASSWORD);
 
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
@@ -143,18 +136,18 @@ bool network_app_wait_until_connected(uint32_t timeout_ms)
 
     EventBits_t bits = xEventGroupWaitBits(
         s_wifi_event_group,
-        WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
+        APP_WIFI_CONNECTED_BIT | APP_WIFI_FAIL_BIT,
         pdFALSE,
         pdFALSE,
         pdMS_TO_TICKS(timeout_ms));
 
-    if (bits & WIFI_CONNECTED_BIT)
+    if (bits & APP_WIFI_CONNECTED_BIT)
     {
         ESP_LOGI(TAG, "Wi-Fi connection ready");
         return true;
     }
 
-    if (bits & WIFI_FAIL_BIT)
+    if (bits & APP_WIFI_FAIL_BIT)
     {
         ESP_LOGE(TAG, "Wi-Fi failed to connect");
         return false;
