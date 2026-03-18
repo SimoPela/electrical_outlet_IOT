@@ -1,3 +1,10 @@
+/*
+ * Copyright 2026 Simone Pelascini and Aurélien Bollin
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ */
+
+
 #include "mqtt_publish_internal.h"
 #include "mqtt_topic.h"
 #include "mqtt_payload.h"

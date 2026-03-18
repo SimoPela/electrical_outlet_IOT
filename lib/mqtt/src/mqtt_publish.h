@@ -1,8 +1,17 @@
+/*
+ * Copyright 2026 Simone Pelascini and Aurélien Bollin
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ */
+
+
 #ifndef MQTT_PUBLISH_H
 #define MQTT_PUBLISH_H
 
 #include <stddef.h>
 #include <stdbool.h>
+#include "device_state.h"
+#include "mqtt_client.h"
 
 /* ---- TELEMETRY ---- */
 int mqtt_publish_environment(esp_mqtt_client_handle_t client, const char *device_id, const device_state_t *state);
