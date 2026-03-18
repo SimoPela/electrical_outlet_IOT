@@ -12,15 +12,13 @@
 #define APP_WIFI_SSID       "YOUR_WIFI_SSID"
 #define APP_WIFI_PASSWORD   "YOUR_WIFI_PASSWORD"
 #define APP_WIFI_MAX_RETRY     10
-#define APP_WIFI_CONNECTED_BIT BIT0
-#define APP_WIFI_FAIL_BIT      BIT1
 
 /* ---------------- MQTT ---------------- */
 #define APP_MQTT_BROKER_URI "mqtt://192.168.1.10"
 #define APP_MQTT_USERNAME   ""
 #define APP_MQTT_PASSWORD   ""
 #define APP_MQTT_TOPIC_MAX_LEN 128
-#define APP_MQTT_PAYLOAD_MAX_LEN 128
+#define APP_MQTT_PAYLOAD_MAX_LEN 512
 
 /*
  * MQTT QoS (Quality of Service) Levels
@@ -50,6 +48,5 @@
 
 /* -------------- Device ----------------- */
 #define APP_DEVICE_ID       "esp32_node_01"
-#define APP_COMM_PERIOD_MS  5000
 
 #endif

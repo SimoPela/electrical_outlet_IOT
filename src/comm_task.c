@@ -53,7 +53,7 @@
          {
              ESP_LOGW(TAG, "Failed to lock device state mutex");
              logTaskStackUsage(&counter, TAG, STACK_COMM_WORDS);
-             vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(APP_COMM_PERIOD_MS));
+             vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(COMM_TASK_INTERVAL_MS));
              continue;
          }
  
@@ -96,6 +96,6 @@
          last_mqtt_connected = state_copy.mqtt_connected;
  
          logTaskStackUsage(&counter, TAG, STACK_COMM_WORDS);
-         vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(APP_COMM_PERIOD_MS));
+         vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(COMM_TASK_INTERVAL_MS));
      }
  }

@@ -123,6 +123,6 @@ void system_task(void *pvParameters)
         logTaskStackUsage(&counter, TAG, STACK_SYSTEM_WORDS);
 
         // Run the task periodically every 1 second
-        vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(1000));
+        vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(SYSTEM_TASK_INTERVAL_MS));
     }
 }

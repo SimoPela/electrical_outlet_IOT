@@ -215,6 +215,6 @@ void acquisition_task(void *pvParameters)
         logTaskStackUsage(&counter, TAG, STACK_ACQUISITION_WORDS);
 
         // Wait for 100 ms
-        vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(100));
+        vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(ACQUISITION_TASK_INTERVAL_MS));
     }
 }

@@ -39,6 +39,12 @@ Stack sizes (in WORDS, not bytes)
 #define SCD40_INTERVAL_MS      5000
 #define PMS7003_INTERVAL_MS    5000
 
+// Task interval
+#define ACQUISITION_TASK_INTERVAL_MS 100
+#define AUDIO_TASK_INTERVAL_MS 500
+#define SYSTEM_TASK_INTERVAL_MS 2000
+#define COMM_TASK_INTERVAL_MS 5000
+
 /**
  * @brief Log the stack usage of the current task periodically.
  *

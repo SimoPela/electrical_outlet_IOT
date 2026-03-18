@@ -32,6 +32,6 @@ void audio_task(void *pvParameters)
         logTaskStackUsage(&counter, TAG, STACK_AUDIO_WORDS);
         
         // wait for 500ms
-        vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(500));
+        vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(AUDIO_TASK_INTERVAL_MS));
     }
 }
