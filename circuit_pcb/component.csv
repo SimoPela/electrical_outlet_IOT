@@ -16,3 +16,34 @@ Components for the first prototype
 
 total price for the first prototype -> 63.18 CHF
 
+I2C BUS (tutti i sensori ambientali)
+ESP32	Funzione
+GPIO21	SDA
+GPIO22	SCL
+
+UART — PMS7003
+PMS7003	ESP32
+TX	GPIO16 (RX2)
+RX	GPIO17 (TX2)
+VCC	5V ⚠️
+GND	GND
+
+PIR — AS312
+PIR	ESP32
+OUT	GPIO27
+VCC	3.3V
+GND	GND
+
+I2S — INMP441 (microfono)
+INMP441	ESP32
+WS	GPIO25
+SCK	GPIO26
+SD	GPIO33
+VDD	3.3V
+GND	GND
+
+ADC — MICS-5524
+MICS	ESP32
+OUT	GPIO34
+VCC	5V ⚠️ (o 3.3V modulo)
+GND	GND
