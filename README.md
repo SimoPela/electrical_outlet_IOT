@@ -1042,3 +1042,26 @@ mqtt/
 | `mqtt_payload` | Convert device_state into JSON payloads       |
 | `mqtt_publish` | Publish messages to the MQTT broker           |
 | `mqtt_defs`    | Global MQTT configuration and constants       |
+
+
+
+
+### Debugging MQTT & ESP32
+
+#### Viewing MQTT Topics on Raspberry Pi
+
+To view all messages published by the ESP32 to the MQTT broker, use:
+
+```bash
+mosquitto_sub -h localhost -t "#" -v
+```
+
+This command subscribes to all topics (`#`) and displays both the topic and the payload (`-v`).
+
+#### Monitoring the ESP32
+
+To see logs from the ESP32 (WiFi, MQTT, debug output), run:
+
+```bash
+pio device monitor
+```
