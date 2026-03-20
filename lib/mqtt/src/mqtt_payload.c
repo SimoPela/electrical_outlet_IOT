@@ -38,11 +38,13 @@ int mqtt_payload_build_state(char *buffer, size_t buffer_size, const device_stat
         "{"
         "\"system_ok\":%s,"
         "\"degraded_mode\":%s,"
-        "\"alarm_active\":%s"
+        "\"alarm_active\":%s,"
+        "\"motion_detected\":%s"
         "}",
         state->system_ok ? "true" : "false",
         state->degraded_mode ? "true" : "false",
-        state->alarm_active ? "true" : "false");
+        state->alarm_active ? "true" : "false",
+        state->motion_detected ? "true" : "false");
 
     return mqtt_payload_check_result(written, buffer_size);
 }

@@ -5,11 +5,13 @@
  */
 
 
-#ifndef ADC_INIT_H
-#define ADC_INIT_H
-
-#include "esp_err.h"
-
-esp_err_t adc_init_all(void);
-
-#endif // ADC_INIT_H
+ #ifndef ADC_INIT_H
+ #define ADC_INIT_H
+ 
+ #include "esp_err.h"
+ #include "esp_adc/adc_oneshot.h"
+ 
+ esp_err_t adc_init_all(void);
+ adc_oneshot_unit_handle_t adc_get_handle(void);
+ 
+ #endif

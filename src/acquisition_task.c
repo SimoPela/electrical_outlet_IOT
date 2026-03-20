@@ -12,6 +12,11 @@
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "esp_check.h"
+
+// sensor headers
+#include "mics5524.h"
+#include "as312.h"
 
 static const char *TAG = "ACQUISITION";
 
@@ -63,8 +68,7 @@ void acquisition_task(void *pvParameters)
         {
             last_as312 = now;
 
-            // TODO: replace with real sensor read
-            local_state.motion_detected = true;
+            local_state.motion_detected = as312_read_motion();
             local_state.motion_last_update = now;
             local_state.motion_valid = true;
             local_state.motion_fault = false;
@@ -75,11 +79,27 @@ void acquisition_task(void *pvParameters)
         {
             last_mics5524 = now;
 
-            // TODO: replace with real ADC read
-            local_state.gas_level_raw = 1293.0f;
-            local_state.gas_last_update = now;
-            local_state.gas_valid = true;
-            local_state.gas_fault = false;
+            float acc = 0.0f;
+            bool ok = true;
+
+            for (int i = 0; i < 16; i++) {
+                float raw = mics5524_read_raw();
+                if (raw < 0.0f) {
+                    ok = false;
+                    break;
+                }
+                acc += raw;
+            }
+
+            if (ok) {
+                local_state.gas_level_raw = acc / 16.0f;
+                local_state.gas_last_update = now;
+                local_state.gas_valid = true;
+                local_state.gas_fault = false;
+            } else {
+                local_state.gas_valid = false;
+                local_state.gas_fault = true;
+            }
         }
 
         // SGP41 - VOC / NOx
