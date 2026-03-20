@@ -1,18 +1,19 @@
 Components for the first prototype
 
-- [ available] ESP32                    price -> 4.60CHF            brand -> ESPRESSIF
-- [ available] SCD40                    price -> 14.50CHF    I2C    brand -> Sensirion
-- [ available] BMP280                   price -> 1CHF        I2C    brand -> Bosch
-- [ available] AS7341                   price -> 5.80CHF     I2C    brand -> AMS
-- [ ordered]   SGP41                    price -> 9.80CHF     I2C    brand -> Sensirion
-- [ ordered]   SHT41                    price -> 1.90CHF     I2C    brand -> Sensirion
-- [ ordered]   PMS7003                  price -> 14CHF       UART   brand -> Plantower
-- [ ordered]   AS312                    price -> 1.26CHF     GPIO   brand -> PIR
-- [ ordered]   INMP441                  price -> 1.62CHF     I2S    brand -> InvenSense
-- [ ordered]   MICS-5524                price -> 4.10CHF     ADC    brand -> SGX sensortech
-- [ ordered]   cable male to female     price -> 1CHF           
-- [ ordered]   cable female to female   price -> 1.30CHF
-- [ available] breadboard               price -> 2.30CHF
+- [ available]   ESP32                    price -> 4.60CHF            brand -> ESPRESSIF
+- [ available]   SCD40                    price -> 14.50CHF    I2C    brand -> Sensirion
+- [ available]   BMP280                   price -> 1CHF        I2C    brand -> Bosch
+- [ available]   AS7341                   price -> 5.80CHF     I2C    brand -> AMS
+- [ available]   SGP41                    price -> 9.80CHF     I2C    brand -> Sensirion
+- [ available]   SHT41                    price -> 1.90CHF     I2C    brand -> Sensirion
+- [ available]   PMS7003                  price -> 14CHF       UART   brand -> Plantower
+- [ available]   AS312                    price -> 1.26CHF     GPIO   brand -> PIR
+- [ available]   INMP441                  price -> 1.62CHF     I2S    brand -> InvenSense
+- [ available]   MICS-5524                price -> 4.10CHF     ADC    brand -> SGX sensortech
+- [ available]   LED RGB SMD              price -> 4.10CHF     GPIO   brand -> chinese
+- [ available]   cable male to female     price -> 1CHF           
+- [ available]   cable female to female   price -> 1.30CHF
+- [ available]   breadboard               price -> 2.30CHF
 
 total price for the first prototype -> 63.18 CHF
 
@@ -28,18 +29,19 @@ RX	GPIO17 (TX2)
 VCC	5V ⚠️
 GND	GND
 
-PIR — AS312
+GPIO — AS312
 PIR	ESP32
 OUT	GPIO27
 VCC	3.3V
 GND	GND
 
-I2S — INMP441 (microfono)
+I2S — INMP441 (mic)
 INMP441	ESP32
 WS	GPIO25
 SCK	GPIO26
 SD	GPIO33
 VDD	3.3V
+L/R         GND   ← (LEFT channel)
 GND	GND
 
 ADC — MICS-5524
@@ -47,3 +49,10 @@ MICS	ESP32
 OUT	GPIO34
 VCC	5V ⚠️ (o 3.3V modulo)
 GND	GND
+
+GPIO — LED RGB SMD
+LED	ESP32
+R                GPIO13
+G                GPIO12
+B                GPIO14
+COMMON           GND
