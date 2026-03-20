@@ -8,6 +8,17 @@
 #include "mqtt_app.h"
 #include "network_app.h"
 
+// sensor init headers
+#include "sensor_init.h"
+#include "esp_log.h"
+#include "esp_check.h"
+
+#include "gpio_init.h"
+#include "adc_init.h"
+#include "i2c_init.h"
+#include "uart_init.h"
+#include "i2s_init.h"
+
 // standard headers
 #include <stdint.h>
 #include <stdbool.h>
@@ -37,15 +48,31 @@ void app_main(void)
 {
     ESP_LOGI(TAG, "System booting...");
 
-
     // Initialize the device state (structure to store the current state of the device measurements and system flags)
     device_state_init();
+
+    // Initialize the sensors
+    ESP_LOGI(TAG, "Initializing sensors");
+    if (sensor_init_all() != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to initialize sensors");
+        abort();
+    }
+    else
+    {
+        ESP_LOGI(TAG, "Sensors initialized successfully");
+    }
     
     // Check if the device state mutex was created successfully
+    ESP_LOGI(TAG, "Initializing device state mutex");
     if (g_device_state_mutex == NULL)
     {
         ESP_LOGE(TAG, "Failed to create device_state mutex");
         abort();
+    }
+    else
+    {
+        ESP_LOGI(TAG, "Device state mutex created successfully");
     }
     
     ESP_LOGI(TAG, "Initializing network");
@@ -54,6 +81,10 @@ void app_main(void)
         ESP_LOGE(TAG, "Network initialization failed");
         abort();
     }
+    else
+    {
+        ESP_LOGI(TAG, "Network initialized successfully");
+    }
 
     ESP_LOGI(TAG, "Waiting for Wi-Fi connection");
     if (!network_app_wait_until_connected(15000))
@@ -61,8 +92,12 @@ void app_main(void)
         ESP_LOGE(TAG, "Wi-Fi not connected, MQTT will not start");
         abort();
     }
+    else
+    {
+        ESP_LOGI(TAG, "Wi-Fi connected successfully");
+    }
 
-    ESP_LOGI(TAG, "Starting MQTT app");
+    ESP_LOGI(TAG, "Starting MQTT");
     mqtt_app_start();
 
     ESP_LOGI(TAG, "Creating tasks");

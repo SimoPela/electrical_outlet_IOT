@@ -1063,5 +1063,5 @@ This command subscribes to all topics (`#`) and displays both the topic and the 
 To see logs from the ESP32 (WiFi, MQTT, debug output), run:
 
 ```bash
-pio device monitor
+pio device monitor -b 115200   
 ```
