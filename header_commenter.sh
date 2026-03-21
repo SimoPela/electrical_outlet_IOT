@@ -15,7 +15,7 @@ find . -type f \( -name "*.c" -o -name "*.h" \) \
   -not -path "*/.cache/*" \
   -not -path "*/managed_components/*" \
   -not -path "*/circuit_pcb/*" \
-  -not -path "*/lib/scd40/src/*" \
+  -not -path "*/lib/sensirion/*" \
 | while IFS= read -r file; do
     if ! grep -q "Apache License, Version 2.0" "$file"; then
         tmp=$(mktemp)
