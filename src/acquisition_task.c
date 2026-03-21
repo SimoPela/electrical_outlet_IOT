@@ -17,6 +17,7 @@
 // sensor headers
 #include "mics5524.h"
 #include "as312.h"
+#include "scd40.h"
 
 static const char *TAG = "ACQUISITION";
 
@@ -155,15 +156,27 @@ void acquisition_task(void *pvParameters)
         // SCD40 - CO2
         if ((now - last_scd40) >= pdMS_TO_TICKS(SCD40_INTERVAL_MS))
         {
-            last_scd40 = now;
+            scd40_data_t scd = {0};
+            esp_err_t err = scd40_read(&scd);
 
-            // TODO: replace with real sensor read
-            local_state.co2_ppm = 400.0f;
-            local_state.temperature_scd40 = 22.5f;
-            local_state.humidity_scd40 = 45.0f;
-            local_state.scd40_last_update = now;
-            local_state.scd40_valid = true;
-            local_state.scd40_fault = false;
+            if (err == ESP_OK) {
+                last_scd40 = now;
+                local_state.co2_ppm           = scd.co2_ppm;
+                local_state.temperature_scd40 = scd.temperature_c;
+                local_state.humidity_scd40    = scd.humidity_percent;
+                local_state.scd40_last_update = now;
+                local_state.scd40_valid       = true;
+                local_state.scd40_fault       = false;
+                ESP_LOGI(TAG_DEBUG, "SCD40: co2=%.0f ppm  T=%.1f°C  RH=%.1f%%",
+                        scd.co2_ppm, scd.temperature_c, scd.humidity_percent);
+            } else if (err == ESP_ERR_NOT_FINISHED) {
+                // last_scd40 unchanged → new attempt at next cycle
+            } else {
+                last_scd40 = now;
+                ESP_LOGE(TAG, "SCD40 read error: %s", esp_err_to_name(err));
+                local_state.scd40_valid = false;
+                local_state.scd40_fault = true;
+            }
         }
 
         // PMS7003 - particulate matter
