@@ -14,6 +14,7 @@
 static const char *TAG = "I2C_INIT";
 
 #define I2C_MASTER_PORT         I2C_NUM_0
+/* SCD4x : fréquence SCL max. 100 kHz (CD_DS_SCD40_SCD41_Datasheet_D1, Table 7). */
 #define I2C_MASTER_FREQ_HZ      100000
 
 esp_err_t i2c_init_all(void)

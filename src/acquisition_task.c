@@ -18,6 +18,10 @@
 #include "mics5524.h"
 #include "as312.h"
 #include "scd40.h"
+#include "sht41.h"
+#include "sgp41.h"
+
+#include <math.h>
 
 static const char *TAG = "ACQUISITION";
 
@@ -48,8 +52,9 @@ void acquisition_task(void *pvParameters)
     TickType_t last_sht41    = now - pdMS_TO_TICKS(SHT41_INTERVAL_MS);
     TickType_t last_bmp280   = now - pdMS_TO_TICKS(BMP280_INTERVAL_MS);
     TickType_t last_as7341   = now - pdMS_TO_TICKS(AS7341_INTERVAL_MS);
-    TickType_t last_scd40    = now - pdMS_TO_TICKS(SCD40_INTERVAL_MS);
     TickType_t last_pms7003  = now - pdMS_TO_TICKS(PMS7003_INTERVAL_MS);
+
+    TickType_t last_scd40 = now - pdMS_TO_TICKS(SCD40_INTERVAL_MS);
 
     for (;;)
     {
@@ -100,30 +105,47 @@ void acquisition_task(void *pvParameters)
             }
         }
 
-        // SGP41 - VOC / NOx
-        if ((now - last_sgp41) >= pdMS_TO_TICKS(SGP41_INTERVAL_MS))
-        {
-            last_sgp41 = now;
-
-            // TODO: replace with real sensor read
-            local_state.voc_index = 1223.0f;
-            local_state.nox_index = 1253.0f;
-            local_state.sgp41_last_update = now;
-            local_state.sgp41_valid = true;
-            local_state.sgp41_fault = false;
-        }
-
         // SHT41 - temperature and humidity
         if ((now - last_sht41) >= pdMS_TO_TICKS(SHT41_INTERVAL_MS))
         {
             last_sht41 = now;
 
-            // TODO: replace with real sensor read
-            local_state.temperature_c = 22.5f;
-            local_state.humidity_percent = 45.0f;
-            local_state.sht41_last_update = now;
-            local_state.sht41_valid = true;
-            local_state.sht41_fault = false;
+            sht41_data_t sht = {0};
+            if (sht41_read(&sht) == ESP_OK) {
+                local_state.temperature_c      = sht.temperature_c;
+                local_state.humidity_percent    = sht.humidity_percent;
+                local_state.sht41_last_update   = now;
+                local_state.sht41_valid         = true;
+                local_state.sht41_fault         = false;
+                // Debug log
+                ESP_LOGI(TAG_DEBUG, "SHT41: temperature=%.1f°C, humidity=%.1f%%", local_state.temperature_c, local_state.humidity_percent);
+            } else {
+                local_state.sht41_valid = false;
+                local_state.sht41_fault = true;
+            }
+        }
+
+        // SGP41 - VOC / NOx (raw SRAW signals, pass SHT41 compensation)
+        if ((now - last_sgp41) >= pdMS_TO_TICKS(SGP41_INTERVAL_MS))
+        {
+            last_sgp41 = now;
+
+            float comp_t  = local_state.sht41_valid ? local_state.temperature_c   : NAN;
+            float comp_rh = local_state.sht41_valid ? local_state.humidity_percent : NAN;
+
+            sgp41_data_t sgp = {0};
+            if (sgp41_read(&sgp, comp_t, comp_rh) == ESP_OK) {
+                local_state.voc_index          = (float)sgp.sraw_voc;
+                local_state.nox_index          = (float)sgp.sraw_nox;
+                local_state.sgp41_last_update   = now;
+                local_state.sgp41_valid         = true;
+                local_state.sgp41_fault         = false;
+                // Debug log
+                ESP_LOGI(TAG_DEBUG, "SGP41: voc_index=%.2f, nox_index=%.2f", local_state.voc_index, local_state.nox_index);
+            } else {
+                local_state.sgp41_valid = false;
+                local_state.sgp41_fault = true;
+            }
         }
 
         // BMP280 - pressure
@@ -156,24 +178,33 @@ void acquisition_task(void *pvParameters)
         // SCD40 - CO2
         if ((now - last_scd40) >= pdMS_TO_TICKS(SCD40_INTERVAL_MS))
         {
+            last_scd40 = now;
+
             scd40_data_t scd = {0};
             esp_err_t err = scd40_read(&scd);
 
-            if (err == ESP_OK) {
-                last_scd40 = now;
+            if (err == ESP_OK)
+            {
                 local_state.co2_ppm           = scd.co2_ppm;
                 local_state.temperature_scd40 = scd.temperature_c;
                 local_state.humidity_scd40    = scd.humidity_percent;
                 local_state.scd40_last_update = now;
                 local_state.scd40_valid       = true;
                 local_state.scd40_fault       = false;
-                ESP_LOGI(TAG_DEBUG, "SCD40: co2=%.0f ppm  T=%.1f°C  RH=%.1f%%",
-                        scd.co2_ppm, scd.temperature_c, scd.humidity_percent);
-            } else if (err == ESP_ERR_NOT_FINISHED) {
-                // last_scd40 unchanged → new attempt at next cycle
-            } else {
-                last_scd40 = now;
-                ESP_LOGE(TAG, "SCD40 read error: %s", esp_err_to_name(err));
+
+                ESP_LOGI(TAG_DEBUG,
+                        "SCD40: co2=%.0f ppm  T=%.1f°C  RH=%.1f%%",
+                        scd.co2_ppm,
+                        scd.temperature_c,
+                        scd.humidity_percent);
+            }
+            else if (err == ESP_ERR_NOT_FINISHED)
+            {
+                ESP_LOGD(TAG_DEBUG, "SCD40: no new sample yet");
+            }
+            else
+            {
+                ESP_LOGE(TAG_DEBUG, "SCD40 read error: %s", esp_err_to_name(err));
                 local_state.scd40_valid = false;
                 local_state.scd40_fault = true;
             }

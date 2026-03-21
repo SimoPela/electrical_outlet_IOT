@@ -14,6 +14,8 @@
 
 #include "mics5524.h"
 #include "scd40.h"
+#include "sht41.h"
+#include "sgp41.h"
 
 #include "esp_log.h"
 #include "esp_check.h"
@@ -31,11 +33,22 @@ esp_err_t sensor_init_all(void)
     ESP_RETURN_ON_ERROR(uart_init_all(), TAG, "UART init failed");
     
     ESP_RETURN_ON_ERROR(mics5524_init(),  TAG, "mics5524 init failed");
+
+    esp_err_t err;
+
+    err = sht41_init();
+    if (err != ESP_OK) {
+        ESP_LOGW(TAG, "sht41_init failed (sensor not connected?), continuing");
+    }
     
-    esp_err_t err = scd40_init();
+    err = scd40_init();
     if (err != ESP_OK) {
         ESP_LOGW(TAG, "scd40_init failed (sensor not connected?), continuing");
-        // non return — il sistema parte comunque
+    }
+
+    err = sgp41_init();
+    if (err != ESP_OK) {
+        ESP_LOGW(TAG, "sgp41_init failed (sensor not connected?), continuing");
     }
 
     ESP_LOGI(TAG, "All sensor peripherals initialized");
