@@ -29,6 +29,8 @@ esp_err_t sensor_init_all(void)
     ESP_RETURN_ON_ERROR(i2s_init_all(), TAG, "I2S init failed");
     ESP_RETURN_ON_ERROR(uart_init_all(), TAG, "UART init failed");
     
+    ESP_RETURN_ON_ERROR(mics5524_init(),  TAG, "mics5524 init failed");
+
     ESP_LOGI(TAG, "All sensor peripherals initialized");
 
     return ESP_OK;

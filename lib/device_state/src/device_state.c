@@ -33,6 +33,7 @@ void device_state_init(void)
     g_device_state.noise_db = 0.0f;
 
     g_device_state.gas_level_raw = 0.0f;
+    g_device_state.gas_ppm = 0.0f;
 
     for (int i = 0; i < AS7341_CHANNELS; i++)
     {

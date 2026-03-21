@@ -105,7 +105,8 @@ int mqtt_payload_build_environment(char *buffer, size_t buffer_size, const devic
         "\"pm10_ug_m3\":%.2f,"
 
         "\"light\":[%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f],"
-        "\"gas_level_raw\":%.2f"
+        "\"gas_level_raw\":%.2f,"
+        "\"gas_ppm\":%.2f"
         "}",
         state->co2_ppm,
         state->temperature_scd40,
@@ -126,7 +127,8 @@ int mqtt_payload_build_environment(char *buffer, size_t buffer_size, const devic
         state->light.channels[5],
         state->light.channels[6],
         state->light.channels[7],
-        state->gas_level_raw);
+        state->gas_level_raw,
+        state->gas_ppm);
 
     return mqtt_payload_check_result(written, buffer_size);
 }

@@ -44,6 +44,7 @@ typedef struct
     as7341_data_t light;
 
     float gas_level_raw;
+    float gas_ppm;
 
     bool motion_detected;
 

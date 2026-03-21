@@ -75,30 +75,27 @@ void acquisition_task(void *pvParameters)
         }
 
         // MiCS-5524 - gas
+        // The averaging of samples and ADC calibration are handled
+        // internally by mics5524_read_voltage().
         if ((now - last_mics5524) >= pdMS_TO_TICKS(MICS5524_INTERVAL_MS))
         {
             last_mics5524 = now;
 
-            float acc = 0.0f;
-            bool ok = true;
+            float voltage = mics5524_read_voltage();
+            float ppm     = mics5524_read_ppm();
 
-            for (int i = 0; i < 16; i++) {
-                float raw = mics5524_read_raw();
-                if (raw < 0.0f) {
-                    ok = false;
-                    break;
-                }
-                acc += raw;
-            }
+            if (voltage >= 0.0f && ppm >= 0.0f) {
+                local_state.gas_level_raw    = voltage; /* [V] */
+                local_state.gas_ppm          = ppm;     /* estimated CO ppm */
+                local_state.gas_last_update  = now;
+                local_state.gas_valid        = true;
+                local_state.gas_fault        = false;
 
-            if (ok) {
-                local_state.gas_level_raw = acc / 16.0f;
-                local_state.gas_last_update = now;
-                local_state.gas_valid = true;
-                local_state.gas_fault = false;
+                // Debug log
+                // ESP_LOGI(TAG_DEBUG, "MiCS-5524: voltage=%.2f V, ppm=%.2f ppm", voltage, ppm);
             } else {
-                local_state.gas_valid = false;
-                local_state.gas_fault = true;
+                local_state.gas_valid  = false;
+                local_state.gas_fault  = true;
             }
         }
 
@@ -188,6 +185,7 @@ void acquisition_task(void *pvParameters)
         {
             g_device_state.motion_detected = local_state.motion_detected;
             g_device_state.gas_level_raw = local_state.gas_level_raw;
+            g_device_state.gas_ppm = local_state.gas_ppm;
             g_device_state.voc_index = local_state.voc_index;
             g_device_state.nox_index = local_state.nox_index;
             g_device_state.temperature_c = local_state.temperature_c;

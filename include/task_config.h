@@ -45,6 +45,9 @@ Stack sizes (in WORDS, not bytes)
 #define SYSTEM_TASK_INTERVAL_MS 2000
 #define COMM_TASK_INTERVAL_MS 5000
 
+// Tag debug
+#define TAG_DEBUG "[DEBUG]"
+
 /**
  * @brief Log the stack usage of the current task periodically.
  *
