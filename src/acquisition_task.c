@@ -100,7 +100,7 @@ void acquisition_task(void *pvParameters)
                 local_state.gas_fault        = false;
 
                 // Debug log
-                // ESP_LOGI(TAG_DEBUG, "MiCS-5524: voltage=%.2f V, ppm=%.2f ppm", voltage, ppm);
+                ESP_LOGI(TAG_DEBUG, "MiCS-5524: voltage=%.2f V, ppm=%.2f ppm", voltage, ppm);
             } else {
                 local_state.gas_valid  = false;
                 local_state.gas_fault  = true;
@@ -161,6 +161,8 @@ void acquisition_task(void *pvParameters)
                 local_state.bmp280_last_update = now;
                 local_state.bmp280_valid       = true;
                 local_state.bmp280_fault       = false;
+                // Debug log
+                ESP_LOGI(TAG_DEBUG, "BMP280: pressure=%.2f hPa", local_state.pressure_hpa);
             } else {
                 local_state.bmp280_valid = false;
                 local_state.bmp280_fault = true;
@@ -178,6 +180,10 @@ void acquisition_task(void *pvParameters)
                 local_state.as7341_last_update = now;
                 local_state.as7341_valid       = true;
                 local_state.as7341_fault       = false;
+                // Debug log
+                ESP_LOGI(TAG_DEBUG, "AS7341: light=%.0f, %.0f, %.0f, %.0f, %.0f, %.0f, %.0f, %.0f",
+                         as.channels[0], as.channels[1], as.channels[2], as.channels[3],
+                         as.channels[4], as.channels[5], as.channels[6], as.channels[7]);
             } else {
                 local_state.as7341_valid = false;
                 local_state.as7341_fault = true;
@@ -201,6 +207,7 @@ void acquisition_task(void *pvParameters)
                 local_state.scd40_valid       = true;
                 local_state.scd40_fault       = false;
 
+                // Debug log
                 ESP_LOGI(TAG_DEBUG,
                         "SCD40: co2=%.0f ppm  T=%.1f°C  RH=%.1f%%",
                         scd.co2_ppm,

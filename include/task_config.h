@@ -36,7 +36,7 @@ Stack sizes (in WORDS, not bytes)
 #define SHT41_INTERVAL_MS      2000
 #define BMP280_INTERVAL_MS     2000
 #define AS7341_INTERVAL_MS     3000
-#define SCD40_INTERVAL_MS      1000 // polling each second
+#define SCD40_INTERVAL_MS      2500 // poll faster than the 5 s cycle to catch the data-ready window
 #define PMS7003_INTERVAL_MS    5000
 
 // Task interval

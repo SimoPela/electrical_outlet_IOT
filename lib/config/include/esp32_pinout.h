@@ -26,8 +26,8 @@
  */
  #define PIN_PMS7003_TX_SENSOR   GPIO_NUM_16   // Sensor TX -> ESP32 RX
  #define PIN_PMS7003_RX_SENSOR   GPIO_NUM_17   // Sensor RX -> ESP32 TX
- #define PIN_PMS7003_SET         GPIO_NUM_9
- #define PIN_PMS7003_RESET       GPIO_NUM_10
+ #define PIN_PMS7003_SET         GPIO_NUM_4
+ #define PIN_PMS7003_RESET       GPIO_NUM_5
 
 /*
  * ============================================================
