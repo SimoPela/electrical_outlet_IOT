@@ -20,6 +20,7 @@
 #include "scd40.h"
 #include "sht41.h"
 #include "sgp41.h"
+#include "bmp.h"
 
 #include <math.h>
 
@@ -153,11 +154,16 @@ void acquisition_task(void *pvParameters)
         {
             last_bmp280 = now;
 
-            // TODO: replace with real sensor read
-            local_state.pressure_hpa = 1013.25f;
-            local_state.bmp280_last_update = now;
-            local_state.bmp280_valid = true;
-            local_state.bmp280_fault = false;
+            bmp_data_t bmp = {0};
+            if (bmp_read(&bmp) == ESP_OK) {
+                local_state.pressure_hpa       = bmp.pressure_hpa;
+                local_state.bmp280_last_update = now;
+                local_state.bmp280_valid       = true;
+                local_state.bmp280_fault       = false;
+            } else {
+                local_state.bmp280_valid = false;
+                local_state.bmp280_fault = true;
+            }
         }
 
         // AS7341 - light spectrum
