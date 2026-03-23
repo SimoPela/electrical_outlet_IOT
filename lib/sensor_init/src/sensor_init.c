@@ -38,6 +38,8 @@ esp_err_t sensor_init_all(void)
 
     ESP_RETURN_ON_ERROR(i2cdev_init(), TAG, "i2cdev init failed");
 
+    esp_log_level_set("i2c.master", ESP_LOG_NONE);
+
     esp_err_t err;
 
     err = sht41_init();

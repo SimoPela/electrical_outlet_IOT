@@ -101,6 +101,11 @@ Two possible microphone configurations are considered:
 
 ### First Prototype Layout
 
+Breadboard prototype (ESP32 dev board, environmental sensors, PMS7003, PIR, RGB LED, INMP441).  
+*Note: the spectral sensor tape label reads “AS7342”; the firmware targets **AS7341**.*
+
+![Breadboard prototype](raport/img/protoype.JPG)
+
 This diagram shows the first prototype layout.
 
 ```mermaid

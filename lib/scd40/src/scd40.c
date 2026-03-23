@@ -129,21 +129,7 @@ static esp_err_t scd40_start_periodic(void)
         return err;
     }
 
-    ESP_LOGI(TAG, "periodic measurement started, waiting for first sample...");
-    vTaskDelay(pdMS_TO_TICKS(5500));
-
-    uint8_t rbuf[9];
-    err = scd40_cmd_read(CMD_READ_MEASUREMENT, rbuf, 3, 1500);
-    if (err == ESP_OK)
-    {
-        uint16_t co2 = (rbuf[0] << 8) | rbuf[1];
-        ESP_LOGI(TAG, "first sample OK: CO2=%u ppm", co2);
-    }
-    else
-    {
-        ESP_LOGW(TAG, "first sample failed: %s (will retry in task)", esp_err_to_name(err));
-    }
-
+    ESP_LOGI(TAG, "periodic measurement started (first sample in ~5 s)");
     return ESP_OK;
 }
 
@@ -174,8 +160,6 @@ esp_err_t scd40_init(void)
             return err;
         }
     }
-
-    esp_log_level_set("i2c.master", ESP_LOG_NONE);
 
     esp_err_t err = scd40_start_periodic();
     if (err != ESP_OK)

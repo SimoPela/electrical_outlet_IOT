@@ -12,23 +12,29 @@
 
 typedef struct
 {
-    uint16_t sraw_voc; /* Raw VOC signal (higher = more VOC) */
-    uint16_t sraw_nox; /* Raw NOx signal (higher = more NOx) */
+    int32_t  voc_index; /* VOC Index 0-500 (0 during ~45 s blackout, 100 = typical) */
+    int32_t  nox_index; /* NOx Index 0-500 (0 during ~45 s blackout, 1 = typical)   */
+    uint16_t sraw_voc;  /* Raw VOC SRAW signal (diagnostics)  */
+    uint16_t sraw_nox;  /* Raw NOx SRAW signal (diagnostics)  */
 } sgp41_data_t;
 
 /**
- * @brief Execute the SGP41 conditioning command (heater warm-up).
+ * @brief Initialize the SGP41 sensor and the Gas Index Algorithm.
  *
- * Must be called once after power-up. The sensor needs ~10 s of
- * conditioning before the NOx signal is valid.
- * During conditioning only sraw_voc is returned.
+ * Executes the conditioning command (heater warm-up) and initializes
+ * two instances of Sensirion's Gas Index Algorithm (VOC + NOx).
+ * The sensor needs ~10 s before the NOx signal is valid; the algorithm
+ * has a 45 s blackout period during which indices are 0.
  *
  * @return ESP_OK on success, ESP_FAIL on I2C/CRC error.
  */
 esp_err_t sgp41_init(void);
 
 /**
- * @brief Measure raw VOC + NOx signals.
+ * @brief Measure VOC / NOx indices.
+ *
+ * Reads raw SRAW signals, processes them through Sensirion's Gas Index
+ * Algorithm, and returns both the computed indices (0-500) and raw values.
  *
  * Optionally pass ambient temperature and humidity for on-chip
  * compensation. Use NAN to skip compensation (defaults applied).

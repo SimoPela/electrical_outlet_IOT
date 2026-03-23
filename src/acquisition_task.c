@@ -25,6 +25,7 @@
 #include "pms7003_w.h"
 
 #include <math.h>
+#include <inttypes.h>
 
 static const char *TAG = "ACQUISITION";
 
@@ -138,13 +139,13 @@ void acquisition_task(void *pvParameters)
 
             sgp41_data_t sgp = {0};
             if (sgp41_read(&sgp, comp_t, comp_rh) == ESP_OK) {
-                local_state.voc_index          = (float)sgp.sraw_voc;
-                local_state.nox_index          = (float)sgp.sraw_nox;
+                local_state.voc_index          = (float)sgp.voc_index;
+                local_state.nox_index          = (float)sgp.nox_index;
                 local_state.sgp41_last_update   = now;
                 local_state.sgp41_valid         = true;
                 local_state.sgp41_fault         = false;
-                // Debug log
-                ESP_LOGI(TAG_DEBUG, "SGP41: voc_index=%.2f, nox_index=%.2f", local_state.voc_index, local_state.nox_index);
+                ESP_LOGI(TAG_DEBUG, "SGP41: VOC=%"PRId32"  NOx=%"PRId32"  (sraw %u / %u)",
+                         sgp.voc_index, sgp.nox_index, sgp.sraw_voc, sgp.sraw_nox);
             } else {
                 local_state.sgp41_valid = false;
                 local_state.sgp41_fault = true;
@@ -158,12 +159,13 @@ void acquisition_task(void *pvParameters)
 
             bmp_data_t bmp = {0};
             if (bmp_read(&bmp) == ESP_OK) {
-                local_state.pressure_hpa       = bmp.pressure_hpa;
+                local_state.bmp280_pressure_hpa = bmp.pressure_hpa;
+                local_state.bmp280_temperature_c = bmp.temperature_c;
                 local_state.bmp280_last_update = now;
                 local_state.bmp280_valid       = true;
                 local_state.bmp280_fault       = false;
                 // Debug log
-                ESP_LOGI(TAG_DEBUG, "BMP280: pressure=%.2f hPa", local_state.pressure_hpa);
+                ESP_LOGI(TAG_DEBUG, "BMP280: P=%.2f hPa  T=%.1f°C", bmp.pressure_hpa, bmp.temperature_c);
             } else {
                 local_state.bmp280_valid = false;
                 local_state.bmp280_fault = true;
@@ -269,7 +271,8 @@ void acquisition_task(void *pvParameters)
             g_device_state.nox_index = local_state.nox_index;
             g_device_state.temperature_c = local_state.temperature_c;
             g_device_state.humidity_percent = local_state.humidity_percent;
-            g_device_state.pressure_hpa = local_state.pressure_hpa;
+            g_device_state.bmp280_pressure_hpa = local_state.bmp280_pressure_hpa;
+            g_device_state.bmp280_temperature_c = local_state.bmp280_temperature_c;
             g_device_state.co2_ppm = local_state.co2_ppm;
             g_device_state.temperature_scd40 = local_state.temperature_scd40;
             g_device_state.humidity_scd40 = local_state.humidity_scd40;

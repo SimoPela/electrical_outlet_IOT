@@ -95,7 +95,8 @@ int mqtt_payload_build_environment(char *buffer, size_t buffer_size, const devic
 
         "\"temperature_c\":%.2f,"
         "\"humidity_percent\":%.2f,"
-        "\"pressure_hpa\":%.2f,"
+        "\"bmp280_pressure_hpa\":%.2f,"
+        "\"bmp280_temperature_c\":%.2f,"
 
         "\"voc_index\":%.2f,"
         "\"nox_index\":%.2f,"
@@ -113,7 +114,8 @@ int mqtt_payload_build_environment(char *buffer, size_t buffer_size, const devic
         state->humidity_scd40,
         state->temperature_c,
         state->humidity_percent,
-        state->pressure_hpa,
+        state->bmp280_pressure_hpa,
+        state->bmp280_temperature_c,
         state->voc_index,
         state->nox_index,
         state->pm1_0_ug_m3,

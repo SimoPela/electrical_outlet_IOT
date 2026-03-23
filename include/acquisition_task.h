@@ -26,7 +26,9 @@ typedef struct
 
     float temperature_c;
     float humidity_percent;
-    float pressure_hpa;
+    
+    float bmp280_pressure_hpa;
+    float bmp280_temperature_c;
 
     float co2_ppm;
     float temperature_scd40;

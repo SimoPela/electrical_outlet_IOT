@@ -16,6 +16,7 @@
  */
 
 #include "sgp41.h"
+#include "sensirion_gas_index_algorithm.h"
 #include "esp32_pinout.h"
 
 #include <i2cdev.h>
@@ -42,6 +43,9 @@ static const char *TAG = "SGP41";
 
 static i2c_dev_t g_sgp41;
 static bool g_sgp41_initialized = false;
+
+static GasIndexAlgorithmParams g_voc_params;
+static GasIndexAlgorithmParams g_nox_params;
 
 static uint8_t sgp41_crc8(const uint8_t *data, size_t len)
 {
@@ -124,8 +128,11 @@ esp_err_t sgp41_init(void)
         return ESP_FAIL;
     }
 
+    GasIndexAlgorithm_init(&g_voc_params, GasIndexAlgorithm_ALGORITHM_TYPE_VOC);
+    GasIndexAlgorithm_init(&g_nox_params, GasIndexAlgorithm_ALGORITHM_TYPE_NOX);
+
     g_sgp41_initialized = true;
-    ESP_LOGI(TAG, "SGP41 initialized (NOx valid after ~10 s)");
+    ESP_LOGI(TAG, "SGP41 initialized (indices valid after ~45 s blackout)");
     return ESP_OK;
 }
 
@@ -154,6 +161,9 @@ esp_err_t sgp41_read(sgp41_data_t *out, float temperature, float humidity)
 
     out->sraw_voc = ((uint16_t)buf[0] << 8) | buf[1];
     out->sraw_nox = ((uint16_t)buf[3] << 8) | buf[4];
+
+    GasIndexAlgorithm_process(&g_voc_params, (int32_t)out->sraw_voc, &out->voc_index);
+    GasIndexAlgorithm_process(&g_nox_params, (int32_t)out->sraw_nox, &out->nox_index);
 
     return ESP_OK;
 }

@@ -21,7 +21,9 @@ void device_state_init(void)
 
     g_device_state.temperature_c = 0.0f;
     g_device_state.humidity_percent = 0.0f;
-    g_device_state.pressure_hpa = 0.0f;
+    
+    g_device_state.bmp280_pressure_hpa = 0.0f;
+    g_device_state.bmp280_temperature_c = 0.0f;
 
     g_device_state.voc_index = 0.0f;
     g_device_state.nox_index = 0.0f;
