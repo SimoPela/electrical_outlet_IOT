@@ -15,7 +15,6 @@
 
 #include "gpio_init.h"
 #include "adc_init.h"
-#include "i2c_init.h"
 #include "uart_init.h"
 #include "i2s_init.h"
 
