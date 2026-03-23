@@ -35,8 +35,8 @@ esp_err_t uart_init_all(void)
     }
 
     err = uart_set_pin(PMS7003_UART_PORT,
-                       PIN_PMS7003_TX_SENSOR, 
-                       PIN_PMS7003_RX_SENSOR,
+                       PIN_PMS7003_RX_SENSOR,   /* ESP32 TX → Sensor RX */
+                       PIN_PMS7003_TX_SENSOR,    /* ESP32 RX ← Sensor TX */
                        UART_PIN_NO_CHANGE,
                        UART_PIN_NO_CHANGE);
     if (err != ESP_OK) {

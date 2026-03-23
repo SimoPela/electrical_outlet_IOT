@@ -22,6 +22,7 @@
 #include "sgp41.h"
 #include "bmp.h"
 #include "as7341_w.h"
+#include "pms7003_w.h"
 
 #include <math.h>
 
@@ -231,13 +232,31 @@ void acquisition_task(void *pvParameters)
         {
             last_pms7003 = now;
 
-            // TODO: replace with real sensor read
-            local_state.pm1_0_ug_m3 = 1293.0f;
-            local_state.pm2_5_ug_m3 = 1293.0f;
-            local_state.pm10_ug_m3 = 1293.0f;
-            local_state.pms7003_last_update = now;
-            local_state.pms7003_valid = true;
-            local_state.pms7003_fault = false;
+            pms7003_data_t pm = {0};
+            esp_err_t err = pms7003_w_read(&pm);
+
+            if (err == ESP_OK)
+            {
+                local_state.pm1_0_ug_m3        = pm.pm1_0_ug_m3;
+                local_state.pm2_5_ug_m3        = pm.pm2_5_ug_m3;
+                local_state.pm10_ug_m3         = pm.pm10_ug_m3;
+                local_state.pms7003_last_update = now;
+                local_state.pms7003_valid       = true;
+                local_state.pms7003_fault       = false;
+
+                ESP_LOGI(TAG_DEBUG, "PMS7003: PM1.0=%.0f  PM2.5=%.0f  PM10=%.0f µg/m³",
+                         pm.pm1_0_ug_m3, pm.pm2_5_ug_m3, pm.pm10_ug_m3);
+            }
+            else if (err == ESP_ERR_NOT_FINISHED)
+            {
+                ESP_LOGD(TAG_DEBUG, "PMS7003: stabilizing or no frame yet");
+            }
+            else
+            {
+                ESP_LOGE(TAG_DEBUG, "PMS7003 read error: %s", esp_err_to_name(err));
+                local_state.pms7003_valid = false;
+                local_state.pms7003_fault = true;
+            }
         }
 
         // Copy the complete local state into the shared device state

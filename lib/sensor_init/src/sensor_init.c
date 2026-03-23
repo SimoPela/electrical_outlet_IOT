@@ -17,6 +17,7 @@
 #include "sgp41.h"
 #include "bmp.h"
 #include "as7341_w.h"
+#include "pms7003_w.h"
 
 #include <i2cdev.h>
 #include "esp_log.h"
@@ -62,6 +63,11 @@ esp_err_t sensor_init_all(void)
     err = as7341_w_init();
     if (err != ESP_OK) {
         ESP_LOGW(TAG, "as7341_w_init failed (sensor not connected?), continuing");
+    }
+
+    err = pms7003_w_init();
+    if (err != ESP_OK) {
+        ESP_LOGW(TAG, "pms7003_w_init failed (sensor not connected?), continuing");
     }
 
     ESP_LOGI(TAG, "All sensor peripherals initialized");
