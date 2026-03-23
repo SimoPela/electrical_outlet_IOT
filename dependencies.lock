@@ -121,11 +121,36 @@ dependencies:
     source:
       type: idf
     version: 5.5.0
+  k0i05/esp_as7341:
+    component_hash: 4926fd57454970426a87519f7ce54c880ffd9ed54a1f6edb17d33187fdd02505
+    dependencies:
+    - name: idf
+      require: private
+      version: '>5.3.0'
+    - name: k0i05/esp_type_utils
+      registry_url: https://components.espressif.com
+      require: private
+      version: '>=0.0.1'
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    version: 1.2.7
+  k0i05/esp_type_utils:
+    component_hash: 95d8ec40268e045f7e264d8035f451e53844b4a2f6d5f112ece6645c5effd639
+    dependencies:
+    - name: idf
+      require: private
+      version: '>5.3.0'
+    source:
+      registry_url: https://components.espressif.com
+      type: service
+    version: 1.2.7
 direct_dependencies:
 - esp-idf-lib/bmp280
 - esp-idf-lib/i2cdev
 - esp-idf-lib/scd4x
 - esp-idf-lib/sht4x
-manifest_hash: 0ab5d86a752cd66c1ed9e14b087871b5ae63e83751c4d4ef150773c1acddb499
+- k0i05/esp_as7341
+manifest_hash: 05f320ddb625d8e408fdaee93857a7c80e61dd6d0013c4dea766568af7cf1073
 target: esp32
 version: 2.0.0

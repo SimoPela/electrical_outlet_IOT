@@ -16,6 +16,7 @@
 #include "sht41.h"
 #include "sgp41.h"
 #include "bmp.h"
+#include "as7341_w.h"
 
 #include "esp_log.h"
 #include "esp_check.h"
@@ -53,6 +54,11 @@ esp_err_t sensor_init_all(void)
     err = bmp_init();
     if (err != ESP_OK) {
         ESP_LOGW(TAG, "bmp_init failed (sensor not connected?), continuing");
+    }
+
+    err = as7341_w_init();
+    if (err != ESP_OK) {
+        ESP_LOGW(TAG, "as7341_w_init failed (sensor not connected?), continuing");
     }
 
     ESP_LOGI(TAG, "All sensor peripherals initialized");

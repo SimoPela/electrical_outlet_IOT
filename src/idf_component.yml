@@ -15,3 +15,7 @@ dependencies:
   # Pressure (BMP280)
   esp-idf-lib/bmp280: "^1.0.0"
 
+  # Light spectrum (AS7341)
+  k0i05/esp_as7341: "^1.2.7"
+
+

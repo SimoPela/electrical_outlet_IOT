@@ -21,6 +21,7 @@
 #include "sht41.h"
 #include "sgp41.h"
 #include "bmp.h"
+#include "as7341_w.h"
 
 #include <math.h>
 
@@ -166,19 +167,21 @@ void acquisition_task(void *pvParameters)
             }
         }
 
-        // AS7341 - light spectrum
+        // AS7341 - light spectrum (F1-F8 basic counts)
         if ((now - last_as7341) >= pdMS_TO_TICKS(AS7341_INTERVAL_MS))
         {
             last_as7341 = now;
 
-            // TODO: replace with real sensor read
-            for (int i = 0; i < AS7341_CHANNELS; i++)
-            {
-                local_state.light.channels[i] = 1293.0f;
+            as7341_data_t as = {0};
+            if (as7341_w_read(&as) == ESP_OK) {
+                local_state.light              = as;
+                local_state.as7341_last_update = now;
+                local_state.as7341_valid       = true;
+                local_state.as7341_fault       = false;
+            } else {
+                local_state.as7341_valid = false;
+                local_state.as7341_fault = true;
             }
-            local_state.as7341_last_update = now;
-            local_state.as7341_valid = true;
-            local_state.as7341_fault = false;
         }
 
         // SCD40 - CO2
