@@ -1,0 +1,15 @@
+# idf_component.yml
+
+# This file is used to define the dependencies for the project, which are
+# the ESP-IDF components that are used in the project.
+
+dependencies:
+  # I2C bus driver
+  esp-idf-lib/i2cdev: "^2.0.0"
+  # CO2 sensor (SCD40 / SCD41)
+  esp-idf-lib/scd4x: "^1.0.0"
+  # Temperature + Humidity (SHT41)
+  esp-idf-lib/sht4x: "^1.0.0"
+  # Pressure (BMP280)
+  esp-idf-lib/bmp280: "^1.0.0"
+
