@@ -1,5 +1,7 @@
 # idf_component.yml
 
+# https://github.com/esp-idf-lib/core
+
 # This file is used to define the dependencies for the project, which are
 # the ESP-IDF components that are used in the project.
 
