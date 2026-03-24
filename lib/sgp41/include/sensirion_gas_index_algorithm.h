@@ -1,4 +1,11 @@
 /*
+ * Copyright 2026 Simone Pelascini and Aurélien Bollin
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ */
+
+
+/*
  * Copyright (c) 2022, Sensirion AG
  * All rights reserved.
  *
