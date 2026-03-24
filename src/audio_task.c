@@ -18,6 +18,7 @@
 
 static const char *TAG = "[AUDIO]";
 
+/** @copydoc audio_task */
 void audio_task(void *pvParameters)
 {
     (void)pvParameters;
@@ -50,9 +51,9 @@ void audio_task(void *pvParameters)
         if (xSemaphoreTake(g_device_state_mutex, portMAX_DELAY) == pdTRUE)
         {
             g_device_state.noise_db = local_state.noise_db;
-            g_device_state.audio_last_update = xTaskGetTickCount();
-            g_device_state.audio_valid = (mic_err == ESP_OK);
-            g_device_state.audio_fault = (mic_err != ESP_OK);
+            g_device_state.inmp441_last_update = xTaskGetTickCount();
+            g_device_state.inmp441_valid = (mic_err == ESP_OK);
+            g_device_state.inmp441_fault = (mic_err != ESP_OK);
 
             xSemaphoreGive(g_device_state_mutex);
         }

@@ -10,6 +10,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+/** @copydoc logTaskStackUsage */
 void logTaskStackUsage(uint32_t *counter, uint32_t ceiling, const char *TAG, UBaseType_t task_stack_size)
 {
     if (++(*counter) % ceiling == 0)
@@ -22,10 +23,10 @@ void logTaskStackUsage(uint32_t *counter, uint32_t ceiling, const char *TAG, UBa
     }
 }
 
-
+/** @copydoc logTaskAlive */
 void logTaskAlive(const char *TAG, uint32_t *alive_counter, uint32_t ceiling)
 {
-    if (++(*alive_counter) % ceiling ==0)
+    if (++(*alive_counter) % ceiling == 0)
     {
         ESP_LOGI(TAG, "Task alive");
     }

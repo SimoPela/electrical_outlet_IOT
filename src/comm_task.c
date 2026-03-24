@@ -17,9 +17,10 @@
  #include "freertos/task.h"
  #include "freertos/semphr.h"
  
- static const char *TAG = "[COMM]";
- 
- void comm_task(void *pvParameters)
+static const char *TAG = "[COMM]";
+
+/** @copydoc comm_task */
+void comm_task(void *pvParameters)
  {
      (void)pvParameters;
  

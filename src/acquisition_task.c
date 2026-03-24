@@ -29,6 +29,7 @@
 
 static const char *TAG = "[ACQUISITION]";
 
+/** @copydoc acquisition_task */
 void acquisition_task(void *pvParameters)
 {
     (void)pvParameters;
@@ -72,9 +73,9 @@ void acquisition_task(void *pvParameters)
             last_as312 = now;
 
             local_state.motion_detected = as312_read_motion();
-            local_state.motion_last_update = now;
-            local_state.motion_valid = true;
-            local_state.motion_fault = false;
+            local_state.as312_last_update = now;
+            local_state.as312_valid = true;
+            local_state.as312_fault = false;
         }
 
         // MiCS-5524 - gas
@@ -90,15 +91,15 @@ void acquisition_task(void *pvParameters)
             if (voltage >= 0.0f && ppm >= 0.0f) {
                 local_state.gas_level_raw    = voltage; /* [V] */
                 local_state.gas_ppm          = ppm;     /* estimated CO ppm */
-                local_state.gas_last_update  = now;
-                local_state.gas_valid        = true;
-                local_state.gas_fault        = false;
+                local_state.mics5524_last_update  = now;
+                local_state.mics5524_valid        = true;
+                local_state.mics5524_fault        = false;
 
                 // Debug log
                 ESP_LOGD(TAG_DEBUG, "MiCS-5524: voltage=%.2f V, ppm=%.2f ppm", voltage, ppm);
             } else {
-                local_state.gas_valid  = false;
-                local_state.gas_fault  = true;
+                local_state.mics5524_valid  = false;
+                local_state.mics5524_fault  = true;
             }
         }
 
@@ -274,8 +275,8 @@ void acquisition_task(void *pvParameters)
             g_device_state.pm10_ug_m3 = local_state.pm10_ug_m3;
             g_device_state.light = local_state.light;
 
-            g_device_state.motion_last_update = local_state.motion_last_update;
-            g_device_state.gas_last_update = local_state.gas_last_update;
+            g_device_state.as312_last_update = local_state.as312_last_update;
+            g_device_state.mics5524_last_update = local_state.mics5524_last_update;
             g_device_state.sgp41_last_update = local_state.sgp41_last_update;
             g_device_state.sht41_last_update = local_state.sht41_last_update;
             g_device_state.bmp280_last_update = local_state.bmp280_last_update;
@@ -283,8 +284,8 @@ void acquisition_task(void *pvParameters)
             g_device_state.pms7003_last_update = local_state.pms7003_last_update;
             g_device_state.as7341_last_update = local_state.as7341_last_update;
 
-            g_device_state.motion_valid = local_state.motion_valid;
-            g_device_state.gas_valid = local_state.gas_valid;
+            g_device_state.as312_valid = local_state.as312_valid;
+            g_device_state.mics5524_valid = local_state.mics5524_valid;
             g_device_state.sgp41_valid = local_state.sgp41_valid;
             g_device_state.sht41_valid = local_state.sht41_valid;
             g_device_state.bmp280_valid = local_state.bmp280_valid;
@@ -292,8 +293,8 @@ void acquisition_task(void *pvParameters)
             g_device_state.pms7003_valid = local_state.pms7003_valid;
             g_device_state.as7341_valid = local_state.as7341_valid;
 
-            g_device_state.motion_fault = local_state.motion_fault;
-            g_device_state.gas_fault = local_state.gas_fault;
+            g_device_state.as312_fault = local_state.as312_fault;
+            g_device_state.mics5524_fault = local_state.mics5524_fault;
             g_device_state.sgp41_fault = local_state.sgp41_fault;
             g_device_state.sht41_fault = local_state.sht41_fault;
             g_device_state.bmp280_fault = local_state.bmp280_fault;

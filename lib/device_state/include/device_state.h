@@ -65,41 +65,41 @@ typedef struct
     // -----------------------------
     // Last update timestamps
     // -----------------------------
-    TickType_t motion_last_update;
-    TickType_t gas_last_update;
+    TickType_t as312_last_update;
+    TickType_t mics5524_last_update;
     TickType_t sgp41_last_update;
     TickType_t sht41_last_update;
     TickType_t bmp280_last_update;
     TickType_t scd40_last_update;
     TickType_t pms7003_last_update;
     TickType_t as7341_last_update;
-    TickType_t audio_last_update;
+    TickType_t inmp441_last_update;
 
     // -----------------------------
     // Validity flags
     // -----------------------------
-    bool motion_valid;
-    bool gas_valid;
+    bool as312_valid;
+    bool mics5524_valid;
     bool sgp41_valid;
     bool sht41_valid;
-    bool bmp280_valid;
+    bool bmp280_valid;    
     bool scd40_valid;
     bool pms7003_valid;
-    bool as7341_valid;
-    bool audio_valid;
+    bool as7341_valid;    
+    bool inmp441_valid;
 
     // -----------------------------
     // Fault flags
     // -----------------------------
-    bool motion_fault;
-    bool gas_fault;
+    bool as312_fault;
+    bool mics5524_fault;
     bool sgp41_fault;
     bool sht41_fault;
     bool bmp280_fault;
     bool scd40_fault;
     bool pms7003_fault;
     bool as7341_fault;
-    bool audio_fault;
+    bool inmp441_fault;
 
     // -----------------------------
     // System state
@@ -113,8 +113,8 @@ typedef struct
     // Alarm state
     // -----------------------------
     bool alarm_active;
-    bool gas_alarm;
-    bool motion_alarm;
+    bool mics5524_alarm;
+    bool as312_alarm;
 
 } device_state_t;
 

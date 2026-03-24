@@ -9,6 +9,8 @@
 #include "task_config.h"
 #include "device_state.h"
 
+#include "health.h"
+
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -20,11 +22,8 @@ void system_task(void *pvParameters)
     (void)pvParameters;
 
     // Counter used to log stack usage periodically
-    // (counter = 10, task period = 1000 ms -> log every 10 seconds)
     uint32_t counter = 0;
-
     // Counter used to print that the task is alive periodically
-    // (counter = 2, task period = 1000 ms -> log every 2 seconds)
     uint32_t alive_counter = 0;
 
     ESP_LOGI(TAG, "System task started");
@@ -52,40 +51,27 @@ void system_task(void *pvParameters)
             xSemaphoreGive(g_device_state_mutex);
         }
 
-        // --------------------------------------------------
-        // Sensor supervision logic
-        // For now only the motion sensor is checked.
-        // In the future, all sensors will be handled here.
-        // --------------------------------------------------
-
-        // Sensor reported invalid data
-        if (!state_copy.motion_valid)
-        {
-            local_state.degraded_mode = true;
-        }
-
-        // Sensor reported hardware fault
-        if (state_copy.motion_fault)
-        {
-            local_state.degraded_mode = true;
-        }
-
-        // Sensor stopped updating within the expected timeout
-        if ((now - state_copy.motion_last_update) > pdMS_TO_TICKS(MOTION_TIMEOUT_MS))
-        {
-            local_state.degraded_mode = true;
-        }
+        // Health checks (mutate local_state via pointers)
+        as312HealthCheck(&now, TAG, &state_copy, &local_state);
+        mics5524HealthCheck(&now, TAG, &state_copy, &local_state);
+        sht41HealthCheck(&now, TAG, &state_copy, &local_state);
+        sgp41HealthCheck(&now, TAG, &state_copy, &local_state);
+        bmp280HealthCheck(&now, TAG, &state_copy, &local_state);
+        scd40HealthCheck(&now, TAG, &state_copy, &local_state);
+        pms7003HealthCheck(&now, TAG, &state_copy, &local_state);
+        as7341HealthCheck(&now, TAG, &state_copy, &local_state);
+        inmp441HealthCheck(&now, TAG, &state_copy, &local_state);
 
         // --------------------------------------------------
         // Alarm logic
         // For now, motion does not generate an alarm.
         // This can be extended later with real alarm policies.
         // --------------------------------------------------
-        local_state.motion_alarm = false;
-        local_state.gas_alarm = false;
+        local_state.as312_alarm = false;
+        local_state.mics5524_alarm = false;
 
         // Global alarm flag
-        local_state.alarm_active = local_state.motion_alarm || local_state.gas_alarm;
+        local_state.alarm_active = local_state.as312_alarm || local_state.mics5524_alarm;
 
         // System is considered OK when not in degraded mode
         local_state.system_ok = !local_state.degraded_mode;
@@ -94,8 +80,8 @@ void system_task(void *pvParameters)
         if (xSemaphoreTake(g_device_state_mutex, portMAX_DELAY) == pdTRUE)
         {
             g_device_state.degraded_mode = local_state.degraded_mode;
-            g_device_state.motion_alarm = local_state.motion_alarm;
-            g_device_state.gas_alarm = local_state.gas_alarm;
+            g_device_state.as312_alarm = local_state.as312_alarm;
+            g_device_state.mics5524_alarm = local_state.mics5524_alarm;
             g_device_state.alarm_active = local_state.alarm_active;
             g_device_state.system_ok = local_state.system_ok;
             xSemaphoreGive(g_device_state_mutex);
@@ -106,11 +92,11 @@ void system_task(void *pvParameters)
                  local_state.system_ok,
                  local_state.degraded_mode,
                  local_state.alarm_active,
-                 local_state.motion_alarm,
-                 local_state.gas_alarm,
+                 local_state.as312_alarm,
+                 local_state.mics5524_alarm,
                  state_copy.motion_detected,
-                 state_copy.motion_valid,
-                 state_copy.motion_fault);
+                 state_copy.as312_valid,
+                 state_copy.as312_fault);
 
         // Log the stack usage periodically.
         // Once the stack size is validated, this can be removed.

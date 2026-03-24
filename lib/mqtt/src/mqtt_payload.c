@@ -168,25 +168,25 @@ int mqtt_payload_build_faults(char *buffer, size_t buffer_size, const device_sta
         buffer,
         buffer_size,
         "{"
-        "\"motion_fault\":%s,"
-        "\"gas_fault\":%s,"
+        "\"as312_fault\":%s,"
+        "\"mics5524_fault\":%s,"
         "\"sgp41_fault\":%s,"
         "\"sht41_fault\":%s,"
         "\"bmp280_fault\":%s,"
         "\"scd40_fault\":%s,"
         "\"pms7003_fault\":%s,"
         "\"as7341_fault\":%s,"
-        "\"audio_fault\":%s"  
+        "\"inmp441_fault\":%s"  
         "}",
-        state->motion_fault ? "true" : "false",
-        state->gas_fault ? "true" : "false",
+        state->as312_fault ? "true" : "false",
+        state->mics5524_fault ? "true" : "false",
         state->sgp41_fault ? "true" : "false",
         state->sht41_fault ? "true" : "false",
         state->bmp280_fault ? "true" : "false",
         state->scd40_fault ? "true" : "false",
         state->pms7003_fault ? "true" : "false",
         state->as7341_fault ? "true" : "false",
-        state->audio_fault ? "true" : "false");
+        state->inmp441_fault ? "true" : "false");
 
     return mqtt_payload_check_result(written, buffer_size);
 }
@@ -204,25 +204,25 @@ int mqtt_payload_build_validity(char *buffer, size_t buffer_size, const device_s
         buffer,
         buffer_size,
         "{"
-        "\"motion_valid\":%s,"
-        "\"gas_valid\":%s,"
+        "\"as312_valid\":%s,"
+        "\"mics5524_valid\":%s,"
         "\"sgp41_valid\":%s,"
         "\"sht41_valid\":%s,"
         "\"bmp280_valid\":%s,"
         "\"scd40_valid\":%s,"
         "\"pms7003_valid\":%s,"
         "\"as7341_valid\":%s,"
-        "\"audio_valid\":%s"
+        "\"inmp441_valid\":%s"
         "}",
-        state->motion_valid ? "true" : "false",
-        state->gas_valid ? "true" : "false",
+        state->as312_valid ? "true" : "false",
+        state->mics5524_valid ? "true" : "false",
         state->sgp41_valid ? "true" : "false",
         state->sht41_valid ? "true" : "false",
         state->bmp280_valid ? "true" : "false",
         state->scd40_valid ? "true" : "false",
         state->pms7003_valid ? "true" : "false",
         state->as7341_valid ? "true" : "false",
-        state->audio_valid ? "true" : "false");
+        state->inmp441_valid ? "true" : "false");
 
     return mqtt_payload_check_result(written, buffer_size);
 }
@@ -240,25 +240,25 @@ int mqtt_payload_build_last_update(char *buffer, size_t buffer_size, const devic
         buffer,
         buffer_size,
         "{"
-        "\"motion_last_update\":%lu,"
-        "\"gas_last_update\":%lu,"
+        "\"as312_last_update\":%lu,"
+        "\"mics5524_last_update\":%lu,"
         "\"sgp41_last_update\":%lu,"
         "\"sht41_last_update\":%lu,"
         "\"bmp280_last_update\":%lu,"
         "\"scd40_last_update\":%lu,"
         "\"pms7003_last_update\":%lu,"
         "\"as7341_last_update\":%lu,"
-        "\"audio_last_update\":%lu"
+        "\"inmp441_last_update\":%lu"
         "}",
-        (unsigned long)state->motion_last_update,
-        (unsigned long)state->gas_last_update,
+        (unsigned long)state->as312_last_update,
+        (unsigned long)state->mics5524_last_update,
         (unsigned long)state->sgp41_last_update,
         (unsigned long)state->sht41_last_update,
         (unsigned long)state->bmp280_last_update,
         (unsigned long)state->scd40_last_update,
         (unsigned long)state->pms7003_last_update,
         (unsigned long)state->as7341_last_update,
-        (unsigned long)state->audio_last_update);
+        (unsigned long)state->inmp441_last_update);
 
     return mqtt_payload_check_result(written, buffer_size);
 }
@@ -277,13 +277,13 @@ int mqtt_payload_build_alarm(char *buffer, size_t buffer_size, const device_stat
         buffer,
         buffer_size,
         "{"
-        "\"motion_alarm\":%s,"
-        "\"gas_alarm\":%s,"
+        "\"as312_alarm\":%s,"
+        "\"mics5524_alarm\":%s,"
         "\"motion_detected\":%s,"
         "\"alarm_active\":%s"
         "}",
-        state->motion_alarm ? "true" : "false",
-        state->gas_alarm ? "true" : "false",
+        state->as312_alarm ? "true" : "false",
+        state->mics5524_alarm ? "true" : "false",
         state->motion_detected ? "true" : "false",
         state->alarm_active ? "true" : "false");
 

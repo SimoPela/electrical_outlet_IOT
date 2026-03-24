@@ -49,8 +49,8 @@ typedef struct
     // -----------------------------
     // Last update timestamps
     // -----------------------------
-    TickType_t motion_last_update;
-    TickType_t gas_last_update;
+    TickType_t as312_last_update;
+    TickType_t mics5524_last_update;
     TickType_t sgp41_last_update;
     TickType_t sht41_last_update;
     TickType_t bmp280_last_update;
@@ -61,8 +61,8 @@ typedef struct
     // -----------------------------
     // Validity flags
     // -----------------------------
-    bool motion_valid;
-    bool gas_valid;
+    bool as312_valid;
+    bool mics5524_valid;
     bool sgp41_valid;
     bool sht41_valid;
     bool bmp280_valid;
@@ -73,8 +73,8 @@ typedef struct
     // -----------------------------
     // Fault flags
     // -----------------------------
-    bool motion_fault;
-    bool gas_fault;
+    bool as312_fault;
+    bool mics5524_fault;
     bool sgp41_fault;
     bool sht41_fault;
     bool bmp280_fault;
