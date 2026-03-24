@@ -31,6 +31,7 @@ esp_err_t sensor_init_all(void)
 
     ESP_RETURN_ON_ERROR(gpio_init_all(), TAG, "GPIO init failed");
     ESP_RETURN_ON_ERROR(adc_init_all(), TAG, "ADC init failed");
+    /* I2S0 RX on PIN_I2S_WS / PIN_I2S_SCK / PIN_I2S_SD — INMP441 (see inmp441_w, audio_task). */
     ESP_RETURN_ON_ERROR(i2s_init_all(), TAG, "I2S init failed");
     ESP_RETURN_ON_ERROR(uart_init_all(), TAG, "UART init failed");
     

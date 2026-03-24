@@ -9,6 +9,9 @@
 #include <task_config.h>
 #include <device_state.h>
 
+#include "inmp441_w.h"
+
+#include "esp_err.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -23,6 +26,9 @@ void audio_task(void *pvParameters)
     // Counter used to print that the task is alive every 2000 ms
     uint32_t alive_counter = 0;
 
+    // initialize all fields to 0
+    audio_local_state_t local_state = {0};
+
     ESP_LOGI(TAG, "Audio task started");
     // get the time of the last wakeup
     TickType_t xLastWakeTime = xTaskGetTickCount();
@@ -34,6 +40,26 @@ void audio_task(void *pvParameters)
         {
             ESP_LOGI(TAG, "Audio task alive");
             alive_counter = 0;
+        }
+
+        inmp441_data_t mic = {0};
+        esp_err_t mic_err = inmp441_w_read(&mic);
+
+        if (mic_err == ESP_OK) {
+            local_state.noise_db = mic.noise_db;
+            ESP_LOGI(TAG_DEBUG, "INMP441: noise_db=%.1f dB SPL (DS + offset)", local_state.noise_db);
+        } else {
+            ESP_LOGW(TAG, "INMP441 read failed: %s", esp_err_to_name(mic_err));
+        }
+
+        if (xSemaphoreTake(g_device_state_mutex, portMAX_DELAY) == pdTRUE)
+        {
+            g_device_state.noise_db = local_state.noise_db;
+            g_device_state.audio_last_update = xTaskGetTickCount();
+            g_device_state.audio_valid = (mic_err == ESP_OK);
+            g_device_state.audio_fault = (mic_err != ESP_OK);
+
+            xSemaphoreGive(g_device_state_mutex);
         }
 
         // Log the stack usage periodically. Once the stack size is tuned, this can be removed.

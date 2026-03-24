@@ -57,8 +57,7 @@ void acquisition_task(void *pvParameters)
     TickType_t last_bmp280   = now - pdMS_TO_TICKS(BMP280_INTERVAL_MS);
     TickType_t last_as7341   = now - pdMS_TO_TICKS(AS7341_INTERVAL_MS);
     TickType_t last_pms7003  = now - pdMS_TO_TICKS(PMS7003_INTERVAL_MS);
-
-    TickType_t last_scd40 = now - pdMS_TO_TICKS(SCD40_INTERVAL_MS);
+    TickType_t last_scd40    = now - pdMS_TO_TICKS(SCD40_INTERVAL_MS);
 
     for (;;)
     {

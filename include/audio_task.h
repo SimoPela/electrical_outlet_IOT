@@ -8,6 +8,13 @@
 #ifndef AUDIO_TASK_H
 #define AUDIO_TASK_H
 
+typedef struct{
+    // -----------------------------
+    // Audio state
+    // -----------------------------
+    float noise_db;
+} audio_local_state_t;
+
 void audio_task(void *pvParameters);
 
 #endif
