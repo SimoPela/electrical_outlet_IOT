@@ -37,6 +37,12 @@ typedef struct
 esp_err_t sgp41_init(void);
 
 /**
+ * @brief Re-run descriptor teardown and @ref sgp41_init (I2C / conditioning recovery).
+ * @return ESP_OK on success, ESP_FAIL on I2C/CRC error, or an ESP-IDF error code.
+ */
+esp_err_t sgp41_restore(void);
+
+/**
  * @brief Measure VOC / NOx indices.
  *
  * Reads raw SRAW signals, processes them through Sensirion's Gas Index

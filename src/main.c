@@ -70,9 +70,9 @@ void app_main(void)
     
     // Check if the device state mutex was created successfully
     ESP_LOGI(TAG, "Initializing device state mutex");
-    if (g_device_state_mutex == NULL)
+    if (g_device_state_mutex == NULL || g_sensor_driver_mutex == NULL)
     {
-        ESP_LOGE(TAG, "Failed to create device_state mutex");
+        ESP_LOGE(TAG, "Failed to create device_state or sensor driver mutex");
         abort();
     }
     else

@@ -28,6 +28,12 @@ typedef struct
 esp_err_t inmp441_w_init(void);
 
 /**
+ * @brief Rebuild the shared I2S RX path (@ref i2s_restore).
+ * @return ESP_OK on success, or an ESP-IDF error code.
+ */
+esp_err_t inmp441_w_restore(void);
+
+/**
  * @brief DMA-read one audio block, compute AC RMS, map to dB SPL.
  *
  * @param[out] out Filled on success; @c noise_db clamped to a safe display range in implementation.

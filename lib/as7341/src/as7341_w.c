@@ -54,6 +54,19 @@ esp_err_t as7341_w_init(void)
     return ESP_OK;
 }
 
+esp_err_t as7341_w_restore(void)
+{
+    if (g_as7341_initialized && g_as7341 != NULL) {
+        esp_err_t err = as7341_delete(g_as7341);
+        if (err != ESP_OK) {
+            ESP_LOGW(TAG, "as7341_delete: %s", esp_err_to_name(err));
+        }
+        g_as7341 = NULL;
+    }
+    g_as7341_initialized = false;
+    return as7341_w_init();
+}
+
 esp_err_t as7341_w_read(as7341_data_t *out)
 {
     ESP_RETURN_ON_FALSE(out != NULL, ESP_ERR_INVALID_ARG, TAG, "out is NULL");

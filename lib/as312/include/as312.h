@@ -13,11 +13,18 @@
 #define AS312_H
 
 #include <stdbool.h>
+#include "esp_err.h"
 
 /**
  * @brief Sample the PIR GPIO configured in board pinout.
  * @return true if motion is asserted by the sensor, false otherwise.
  */
 bool as312_read_motion(void);
+
+/**
+ * @brief Re-apply PIR GPIO configuration via @ref gpio_init_all.
+ * @return ESP_OK on success, or an ESP-IDF error code.
+ */
+esp_err_t as312_restore(void);
 
 #endif /* AS312_H */

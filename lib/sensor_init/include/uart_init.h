@@ -20,4 +20,10 @@
  */
 esp_err_t uart_init_all(void);
 
+/**
+ * @brief Remove the UART driver (if installed) and reinstall it.
+ * @return ESP_OK on success, or an ESP-IDF error code.
+ */
+esp_err_t uart_restore(void);
+
 #endif /* UART_INIT_H */

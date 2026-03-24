@@ -27,4 +27,10 @@ esp_err_t adc_init_all(void);
  */
 adc_oneshot_unit_handle_t adc_get_handle(void);
 
+/**
+ * @brief Tear down the oneshot unit and re-run @ref adc_init_all (recovery path).
+ * @return ESP_OK on success, or an ESP-IDF error code.
+ */
+esp_err_t adc_restore(void);
+
 #endif /* ADC_INIT_H */

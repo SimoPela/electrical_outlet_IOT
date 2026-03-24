@@ -54,3 +54,8 @@ esp_err_t gpio_init_all(void)
     ESP_LOGI(TAG, "GPIO initialized");
     return ESP_OK;
 }
+
+esp_err_t gpio_restore(void)
+{
+    return gpio_init_all();
+}

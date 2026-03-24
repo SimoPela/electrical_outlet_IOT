@@ -7,8 +7,13 @@
 
 #include "device_state.h"
 
+#include "esp_log.h"
+
 device_state_t g_device_state = {0};
 SemaphoreHandle_t g_device_state_mutex = NULL;
+SemaphoreHandle_t g_sensor_driver_mutex = NULL;
+
+static const char *TAG = "device_state";
 
 void device_state_init(void)
 {
@@ -102,4 +107,8 @@ void device_state_init(void)
     // Mutex
     // -----------------------------
     g_device_state_mutex = xSemaphoreCreateMutex();
+    g_sensor_driver_mutex = xSemaphoreCreateMutex();
+    if (g_sensor_driver_mutex == NULL) {
+        ESP_LOGE(TAG, "Failed to create g_sensor_driver_mutex");
+    }
 }

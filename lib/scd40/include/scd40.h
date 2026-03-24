@@ -31,6 +31,12 @@ typedef struct
 esp_err_t scd40_init(void);
 
 /**
+ * @brief Stop periodic mode (best effort), remove the I2C device, and re-run @ref scd40_init.
+ * @return ESP_OK on success, or an ESP-IDF error code.
+ */
+esp_err_t scd40_restore(void);
+
+/**
  * @brief Read a new SCD40 sample if available.
  *
  * @param[out] out Pointer to output struct

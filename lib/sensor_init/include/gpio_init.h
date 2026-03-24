@@ -20,4 +20,10 @@
  */
 esp_err_t gpio_init_all(void);
 
+/**
+ * @brief Re-apply board GPIO configuration (e.g. PIR input after a fault).
+ * @return ESP_OK on success, or an ESP-IDF error code.
+ */
+esp_err_t gpio_restore(void);
+
 #endif /* GPIO_INIT_H */

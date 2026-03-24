@@ -81,6 +81,11 @@ esp_err_t inmp441_w_init(void)
     return i2s_init_all();
 }
 
+esp_err_t inmp441_w_restore(void)
+{
+    return i2s_restore();
+}
+
 esp_err_t inmp441_w_read(inmp441_data_t *out)
 {
     ESP_RETURN_ON_FALSE(out != NULL, ESP_ERR_INVALID_ARG, TAG, "out is NULL");

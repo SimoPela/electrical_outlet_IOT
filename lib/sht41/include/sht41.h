@@ -29,6 +29,12 @@ typedef struct
 esp_err_t sht41_init(void);
 
 /**
+ * @brief Free the I2C descriptor and re-run @ref sht41_init.
+ * @return ESP_OK on success, or an ESP-IDF / driver error code.
+ */
+esp_err_t sht41_restore(void);
+
+/**
  * @brief Trigger a high-precision measurement and read the result.
  *
  * Blocks for ~10 ms while the sensor measures.

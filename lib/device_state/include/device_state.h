@@ -125,6 +125,13 @@ extern device_state_t g_device_state;
 extern SemaphoreHandle_t g_device_state_mutex;
 
 /**
+ * @brief Mutex serializing sensor driver I/O and @c *_restore() (acquisition, audio INMP441, health).
+ *
+ * Prevents @c health_try_restore_sensors from tearing down I2C / I2S while other tasks use the same drivers.
+ */
+extern SemaphoreHandle_t g_sensor_driver_mutex;
+
+/**
  * @brief Zero-initialize @c g_device_state and create @c g_device_state_mutex.
  *
  * Call once before any task uses the shared state.

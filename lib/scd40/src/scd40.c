@@ -171,6 +171,23 @@ esp_err_t scd40_init(void)
     return ESP_OK;
 }
 
+esp_err_t scd40_restore(void)
+{
+    if (g_handle != NULL) {
+        if (g_initialized) {
+            (void)scd40_send_cmd(CMD_STOP_PERIODIC);
+        }
+        esp_err_t err = i2c_master_bus_rm_device(g_handle);
+        if (err != ESP_OK) {
+            ESP_LOGW(TAG, "i2c_master_bus_rm_device: %s", esp_err_to_name(err));
+        }
+        g_handle = NULL;
+    }
+    g_initialized = false;
+    g_consec_fail = 0;
+    return scd40_init();
+}
+
 esp_err_t scd40_read(scd40_data_t *out)
 {
     ESP_RETURN_ON_FALSE(out != NULL, ESP_ERR_INVALID_ARG, TAG, "out is NULL");

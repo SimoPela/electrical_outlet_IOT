@@ -11,6 +11,7 @@
 
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
 #include "freertos/task.h"
 #include "esp_check.h"
 
@@ -100,6 +101,7 @@ void acquisition_task(void *pvParameters)
             } else {
                 local_state.mics5524_valid  = false;
                 local_state.mics5524_fault  = true;
+                local_state.mics5524_last_update = now;
             }
         }
 
@@ -120,6 +122,7 @@ void acquisition_task(void *pvParameters)
             } else {
                 local_state.sht41_valid = false;
                 local_state.sht41_fault = true;
+                local_state.sht41_last_update = now;
             }
         }
 
@@ -143,6 +146,7 @@ void acquisition_task(void *pvParameters)
             } else {
                 local_state.sgp41_valid = false;
                 local_state.sgp41_fault = true;
+                local_state.sgp41_last_update = now;
             }
         }
 
@@ -163,6 +167,7 @@ void acquisition_task(void *pvParameters)
             } else {
                 local_state.bmp280_valid = false;
                 local_state.bmp280_fault = true;
+                local_state.bmp280_last_update = now;
             }
         }
 
@@ -184,6 +189,7 @@ void acquisition_task(void *pvParameters)
             } else {
                 local_state.as7341_valid = false;
                 local_state.as7341_fault = true;
+                local_state.as7341_last_update = now;
             }
         }
 
@@ -252,7 +258,12 @@ void acquisition_task(void *pvParameters)
                 ESP_LOGE(TAG_DEBUG, "PMS7003 read error: %s", esp_err_to_name(err));
                 local_state.pms7003_valid = false;
                 local_state.pms7003_fault = true;
+                local_state.pms7003_last_update = now;
             }
+        }
+
+        if (g_sensor_driver_mutex != NULL) {
+            xSemaphoreGive(g_sensor_driver_mutex);
         }
 
         // Copy the complete local state into the shared device state

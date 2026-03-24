@@ -43,6 +43,18 @@ esp_err_t sht41_init(void)
     return ESP_OK;
 }
 
+esp_err_t sht41_restore(void)
+{
+    if (g_sht41_initialized) {
+        esp_err_t err = sht4x_free_desc(&g_sht41);
+        if (err != ESP_OK) {
+            ESP_LOGW(TAG, "sht4x_free_desc: %s", esp_err_to_name(err));
+        }
+        g_sht41_initialized = false;
+    }
+    return sht41_init();
+}
+
 esp_err_t sht41_read(sht41_data_t *out)
 {
     ESP_RETURN_ON_FALSE(out != NULL, ESP_ERR_INVALID_ARG, TAG, "out is NULL");

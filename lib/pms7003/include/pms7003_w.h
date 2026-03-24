@@ -34,6 +34,12 @@ typedef struct
 esp_err_t pms7003_w_init(void);
 
 /**
+ * @brief Run @c pms_deinit and re-run @ref pms7003_w_init (UART must remain installed).
+ * @return ESP_OK on success, or an ESP-IDF / driver error code.
+ */
+esp_err_t pms7003_w_restore(void);
+
+/**
  * @brief Read the latest PM data from the PMS7003.
  *
  * Reads any available UART data, finds the most recent valid 32-byte

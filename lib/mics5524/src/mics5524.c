@@ -69,6 +69,24 @@ esp_err_t mics5524_init(void)
     return ESP_OK; /* not fatal: the sensor can work without calibration */
 }
 
+esp_err_t mics5524_restore(bool reset_adc)
+{
+    if (reset_adc) {
+        esp_err_t err = adc_restore();
+        if (err != ESP_OK) {
+            return err;
+        }
+    }
+
+    if (s_cali_handle != NULL) {
+        adc_cali_delete_scheme_line_fitting(s_cali_handle);
+        s_cali_handle = NULL;
+    }
+    s_cali_ok = false;
+
+    return mics5524_init();
+}
+
 /* ------------------------------------------------------------------ */
 
 float mics5524_read_voltage(void)

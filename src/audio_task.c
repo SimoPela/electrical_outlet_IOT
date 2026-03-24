@@ -14,6 +14,7 @@
 #include "esp_err.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
 #include "freertos/task.h"
 
 static const char *TAG = "[AUDIO]";
@@ -38,8 +39,16 @@ void audio_task(void *pvParameters)
     {
         logTaskAlive(TAG, &alive_counter, 8);
 
+        if (g_sensor_driver_mutex != NULL) {
+            xSemaphoreTake(g_sensor_driver_mutex, portMAX_DELAY);
+        }
+
         inmp441_data_t mic = {0};
         esp_err_t mic_err = inmp441_w_read(&mic);
+
+        if (g_sensor_driver_mutex != NULL) {
+            xSemaphoreGive(g_sensor_driver_mutex);
+        }
 
         if (mic_err == ESP_OK) {
             local_state.noise_db = mic.noise_db;

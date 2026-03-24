@@ -136,6 +136,16 @@ esp_err_t sgp41_init(void)
     return ESP_OK;
 }
 
+esp_err_t sgp41_restore(void)
+{
+    esp_err_t err = i2c_dev_delete_mutex(&g_sgp41);
+    if (err != ESP_OK) {
+        ESP_LOGW(TAG, "i2c_dev_delete_mutex: %s", esp_err_to_name(err));
+    }
+    g_sgp41_initialized = false;
+    return sgp41_init();
+}
+
 esp_err_t sgp41_read(sgp41_data_t *out, float temperature, float humidity)
 {
     ESP_RETURN_ON_FALSE(out != NULL, ESP_ERR_INVALID_ARG, TAG, "out is NULL");

@@ -27,4 +27,10 @@ esp_err_t i2s_init_all(void);
  */
 i2s_chan_handle_t i2s_get_rx_channel(void);
 
+/**
+ * @brief Disable and delete the RX channel, then re-run @ref i2s_init_all.
+ * @return ESP_OK on success, or an ESP-IDF error code.
+ */
+esp_err_t i2s_restore(void);
+
 #endif /* I2S_INIT_H */

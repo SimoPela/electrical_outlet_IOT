@@ -49,3 +49,16 @@
  {
      return s_adc_handle;
  }
+
+ esp_err_t adc_restore(void)
+ {
+     if (s_adc_handle != NULL) {
+         esp_err_t err = adc_oneshot_del_unit(s_adc_handle);
+         s_adc_handle = NULL;
+         if (err != ESP_OK) {
+             ESP_LOGE(TAG, "adc_oneshot_del_unit failed: %s", esp_err_to_name(err));
+             return err;
+         }
+     }
+     return adc_init_all();
+ }

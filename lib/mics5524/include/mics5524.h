@@ -12,6 +12,7 @@
 #ifndef MICS5524_H
 #define MICS5524_H
 
+#include <stdbool.h>
 #include "esp_err.h"
 
 /**
@@ -19,6 +20,13 @@
  * @return ESP_OK on success, or an ESP-IDF error code.
  */
 esp_err_t mics5524_init(void);
+
+/**
+ * @brief Drop ADC calibration state and re-run @ref mics5524_init; optionally reset the shared ADC.
+ * @param reset_adc If true, call @ref adc_restore before recalibrating MiCS.
+ * @return ESP_OK on success, or an ESP-IDF error code.
+ */
+esp_err_t mics5524_restore(bool reset_adc);
 
 /**
  * @brief Average several ADC samples into a rail-referred voltage.

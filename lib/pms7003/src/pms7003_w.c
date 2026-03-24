@@ -51,6 +51,13 @@ esp_err_t pms7003_w_init(void)
     return ESP_OK;
 }
 
+esp_err_t pms7003_w_restore(void)
+{
+    pms_deinit();
+    g_initialized = false;
+    return pms7003_w_init();
+}
+
 esp_err_t pms7003_w_read(pms7003_data_t *out)
 {
     ESP_RETURN_ON_FALSE(out != NULL,     ESP_ERR_INVALID_ARG,   TAG, "out is NULL");

@@ -27,6 +27,12 @@
 esp_err_t as7341_w_init(void);
 
 /**
+ * @brief Delete the driver handle and re-run @ref as7341_w_init.
+ * @return ESP_OK on success, or an ESP-IDF / driver error code.
+ */
+esp_err_t as7341_w_restore(void);
+
+/**
  * @brief Read the 8 spectral channels (F1-F8) as basic counts.
  *
  * Triggers a measurement, waits for data ready, then reads and

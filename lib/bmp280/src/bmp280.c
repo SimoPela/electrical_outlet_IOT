@@ -51,6 +51,18 @@ esp_err_t bmp_init(void)
     return ESP_OK;
 }
 
+esp_err_t bmp_restore(void)
+{
+    if (g_bmp_initialized) {
+        esp_err_t err = bmp280_free_desc(&g_bmp);
+        if (err != ESP_OK) {
+            ESP_LOGW(TAG, "bmp280_free_desc: %s", esp_err_to_name(err));
+        }
+        g_bmp_initialized = false;
+    }
+    return bmp_init();
+}
+
 esp_err_t bmp_read(bmp_data_t *out)
 {
     ESP_RETURN_ON_FALSE(out != NULL, ESP_ERR_INVALID_ARG, TAG, "out is NULL");

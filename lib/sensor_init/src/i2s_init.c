@@ -11,6 +11,7 @@
 #include "esp_log.h"
 #include "esp_check.h"
 #include "driver/i2s_std.h"
+#include "driver/i2s_common.h"
 #include "driver/i2s_types.h"
 
 static const char *TAG = "I2S_INIT";
@@ -83,4 +84,21 @@ esp_err_t i2s_init_all(void)
 i2s_chan_handle_t i2s_get_rx_channel(void)
 {
     return s_rx_handle;
+}
+
+esp_err_t i2s_restore(void)
+{
+    if (s_rx_handle != NULL) {
+        esp_err_t err = i2s_channel_disable(s_rx_handle);
+        if (err != ESP_OK) {
+            ESP_LOGW(TAG, "i2s_channel_disable: %s", esp_err_to_name(err));
+        }
+        err = i2s_del_channel(s_rx_handle);
+        s_rx_handle = NULL;
+        if (err != ESP_OK) {
+            ESP_LOGE(TAG, "i2s_del_channel failed: %s", esp_err_to_name(err));
+            return err;
+        }
+    }
+    return i2s_init_all();
 }

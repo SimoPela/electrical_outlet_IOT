@@ -29,6 +29,12 @@ typedef struct
 esp_err_t bmp_init(void);
 
 /**
+ * @brief Free the I2C descriptor and re-run @ref bmp_init.
+ * @return ESP_OK on success, or an ESP-IDF / driver error code.
+ */
+esp_err_t bmp_restore(void);
+
+/**
  * @brief Read pressure and temperature from the BMP280.
  *
  * @param[out] out Pointer to the output structure.

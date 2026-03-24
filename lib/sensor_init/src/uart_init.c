@@ -17,8 +17,14 @@ static const char *TAG = "UART_INIT";
 #define PMS7003_BAUD_RATE       9600
 #define PMS7003_RX_BUF_SIZE     256
 
+static bool s_uart_installed = false;
+
 esp_err_t uart_init_all(void)
 {
+    if (s_uart_installed) {
+        return ESP_OK;
+    }
+
     uart_config_t uart_config = {
         .baud_rate = PMS7003_BAUD_RATE,
         .data_bits = UART_DATA_8_BITS,
@@ -50,6 +56,20 @@ esp_err_t uart_init_all(void)
         return err;
     }
 
+    s_uart_installed = true;
     ESP_LOGI(TAG, "UART initialized");
     return ESP_OK;
+}
+
+esp_err_t uart_restore(void)
+{
+    if (s_uart_installed) {
+        esp_err_t err = uart_driver_delete(PMS7003_UART_PORT);
+        s_uart_installed = false;
+        if (err != ESP_OK) {
+            ESP_LOGE(TAG, "uart_driver_delete failed: %s", esp_err_to_name(err));
+            return err;
+        }
+    }
+    return uart_init_all();
 }
