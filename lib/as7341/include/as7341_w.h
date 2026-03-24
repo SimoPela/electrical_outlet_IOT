@@ -4,6 +4,11 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  */
 
+/**
+ * @file as7341_w.h
+ * @brief AMS OSRAM AS7341 8-channel spectrometer driver wrapper (I2C).
+ */
+
 #ifndef AS7341_W_H
 #define AS7341_W_H
 

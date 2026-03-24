@@ -4,18 +4,24 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  */
 
+/**
+ * @file sgp41.h
+ * @brief Sensirion SGP41 VOC / NOx gas sensor with Sensirion Gas Index algorithm.
+ */
+
 #ifndef SGP41_H
 #define SGP41_H
 
 #include "esp_err.h"
 #include <stdint.h>
 
+/** @brief Processed indices and raw SRAW values from one measurement cycle. */
 typedef struct
 {
-    int32_t  voc_index; /* VOC Index 0-500 (0 during ~45 s blackout, 100 = typical) */
-    int32_t  nox_index; /* NOx Index 0-500 (0 during ~45 s blackout, 1 = typical)   */
-    uint16_t sraw_voc;  /* Raw VOC SRAW signal (diagnostics)  */
-    uint16_t sraw_nox;  /* Raw NOx SRAW signal (diagnostics)  */
+    int32_t  voc_index; /**< VOC index 0–500 (0 during ~45 s algorithm blackout; 100 = typical). */
+    int32_t  nox_index; /**< NOx index 0–500 (0 during blackout; 1 = typical). */
+    uint16_t sraw_voc;  /**< Raw VOC SRAW (diagnostics). */
+    uint16_t sraw_nox;  /**< Raw NOx SRAW (diagnostics). */
 } sgp41_data_t;
 
 /**

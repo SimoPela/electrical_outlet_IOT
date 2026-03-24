@@ -4,6 +4,10 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  */
 
+/**
+ * @file mics5524.h
+ * @brief MiCS-5524 combustible gas sensor: ADC voltage and heuristic CO ppm estimate.
+ */
 
 #ifndef MICS5524_H
 #define MICS5524_H
@@ -11,21 +15,21 @@
 #include "esp_err.h"
 
 /**
- * @brief Initializes the MICS5524 module (ADC calibration).
- *        Call once before any reading.
+ * @brief Calibrate ADC curve and prepare MiCS channel.
+ * @return ESP_OK on success, or an ESP-IDF error code.
  */
 esp_err_t mics5524_init(void);
 
 /**
- * @brief Reads the average voltage on the sensor's ADC pin.
- * @return Voltage in Volts [0.0 .. 3.3], or -1.0f in case of error.
+ * @brief Average several ADC samples into a rail-referred voltage.
+ * @return Voltage [V] in typical 0…3.3 range, or @c -1.0f on error.
  */
 float mics5524_read_voltage(void);
 
 /**
- * @brief Estimates CO concentration in ppm from the Rs/R0 curve.
- * @return Estimated ppm, or -1.0f in case of error.
- * @note  R0 must be calibrated in clean air in the .c source file.
+ * @brief Map sensor resistance ratio to an estimated CO ppm (uncalibrated baseline in @c .c).
+ * @return Estimated ppm, or @c -1.0f on error.
+ * @note Requires clean-air @c R0 calibration in the implementation for meaningful absolute ppm.
  */
 float mics5524_read_ppm(void);
 

@@ -4,6 +4,10 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  */
 
+/**
+ * @file device_state.h
+ * @brief Global device snapshot shared across FreeRTOS tasks (mutex-protected).
+ */
 
 #ifndef __DEVICE_STATE_H__
 #define __DEVICE_STATE_H__
@@ -12,20 +16,23 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 
-// Number of spectral channels measured by the AS7341
+/** @brief Number of spectral channels from the AS7341 (F1–F8). */
 #define AS7341_CHANNELS 8
 
-// AS7341 spectral data structure
+/** @brief AS7341 basic counts per channel. */
 typedef struct
 {
-    float channels[AS7341_CHANNELS];
+    float channels[AS7341_CHANNELS]; /**< Channel values @c [0..AS7341_CHANNELS-1]. */
 } as7341_data_t;
 
+/**
+ * @brief Single source of truth for measurements, validity, faults, and system flags.
+ *
+ * Updated by @c acquisition_task and @c audio_task; read by @c system_task and @c comm_task.
+ * All access must go through @c g_device_state_mutex unless documented otherwise.
+ */
 typedef struct
 {
-    // -----------------------------
-    // Sensor measurements
-    // -----------------------------
     float co2_ppm;
     float temperature_scd40;
     float humidity_scd40;
@@ -111,9 +118,17 @@ typedef struct
 
 } device_state_t;
 
+/** @brief Global live device state. */
 extern device_state_t g_device_state;
+
+/** @brief Mutex guarding @c g_device_state (short critical sections). */
 extern SemaphoreHandle_t g_device_state_mutex;
 
+/**
+ * @brief Zero-initialize @c g_device_state and create @c g_device_state_mutex.
+ *
+ * Call once before any task uses the shared state.
+ */
 void device_state_init(void);
 
 #endif // __DEVICE_STATE_H__

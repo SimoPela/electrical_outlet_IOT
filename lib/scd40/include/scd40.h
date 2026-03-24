@@ -4,6 +4,10 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  */
 
+/**
+ * @file scd40.h
+ * @brief Driver API for the Sensirion SCD40 CO₂ / RH / T sensor (I2C).
+ */
 
 #ifndef SCD40_H
 #define SCD40_H
@@ -11,11 +15,12 @@
 #include "esp_err.h"
 #include <stdbool.h>
 
+/** @brief One sample from the SCD40 periodic measurement. */
 typedef struct
 {
-    float co2_ppm;
-    float temperature_c;
-    float humidity_percent;
+    float co2_ppm;           /**< CO₂ concentration [ppm]. */
+    float temperature_c;   /**< Compensated temperature [°C]. */
+    float humidity_percent; /**< Compensated relative humidity [%RH]. */
 } scd40_data_t;
 
 /**

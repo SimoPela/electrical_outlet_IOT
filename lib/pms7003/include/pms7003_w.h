@@ -2,10 +2,11 @@
  * Copyright 2026 Simone Pelascini and Aurélien Bollin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
- *
- * Thin wrapper over the PMS7003 low-level driver.
- * Provides the same init/read API style used by the other sensor
- * wrappers in this project.
+ */
+
+/**
+ * @file pms7003_w.h
+ * @brief Project wrapper around @c pms7003.h: init/read API and atmospheric PM values.
  */
 
 #ifndef PMS7003_W_H
@@ -13,6 +14,7 @@
 
 #include "esp_err.h"
 
+/** @brief PM mass concentrations (atmospheric environment fields from PMS frame). */
 typedef struct
 {
     float pm1_0_ug_m3;  /* PM1.0  atmospheric concentration [µg/m³] */

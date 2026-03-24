@@ -6,14 +6,13 @@
 
 
 /**
- * @file pms.h
+ * @file pms7003.h
  * @author Marko Petrov (markopetrov690@gmail.com)
- * @brief ESP-IDF component for Plantower PMSX003 air quality sensors
+ * @brief ESP-IDF driver for Plantower PMSX003-series particulate sensors (UART).
  * @version 1.0
  * @date 2025-09-28
- * 
+ *
  * @copyright Copyright (c) 2025
- * 
  */
 
  #ifndef PMS7003_H

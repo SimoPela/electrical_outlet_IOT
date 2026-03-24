@@ -4,70 +4,68 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  */
 
+/**
+ * @file esp32_pinout.h
+ * @brief GPIO assignments for the breadboard ESP32 environmental node.
+ */
 
 #ifndef ESP32_PINOUT_H
 #define ESP32_PINOUT_H
 
 #include "driver/gpio.h"
 
-/*
- * ============================================================
- * I2C BUS - Environmental sensors
- * SCD40, BMP280, AS7341, SGP41, SHT41
- * ============================================================
+/**
+ * @name I2C (SCD40, BMP280, AS7341, SGP41, SHT41)
+ * @{
  */
 #define PIN_I2C_SDA             GPIO_NUM_21
 #define PIN_I2C_SCL             GPIO_NUM_22
+/** @} */
 
-/*
- * ============================================================
- * UART - PMS7003 particulate sensor
- * ============================================================
+/**
+ * @name UART — PMS7003
+ * @{
  */
  #define PIN_PMS7003_TX_SENSOR   GPIO_NUM_16   // Sensor TX -> ESP32 RX
  #define PIN_PMS7003_RX_SENSOR   GPIO_NUM_17   // Sensor RX -> ESP32 TX
  #define PIN_PMS7003_SET         GPIO_NUM_4
  #define PIN_PMS7003_RESET       GPIO_NUM_5
+/** @} */
 
-/*
- * ============================================================
- * GPIO - PIR AS312
- * ============================================================
+/**
+ * @name GPIO — AS312 PIR
+ * @{
  */
 #define PIN_PIR_OUT             GPIO_NUM_27
+/** @} */
 
-/*
- * ============================================================
- * I2S - INMP441 microphone
- * ============================================================
+/**
+ * @name I2S — INMP441
+ * @{
  */
  #define PIN_I2S_WS             GPIO_NUM_25   // word select / LRCLK
  #define PIN_I2S_SCK            GPIO_NUM_26   // bit clock / BCLK
  #define PIN_I2S_SD             GPIO_NUM_33   // serial data from mic
+/** @} */
 
-/*
- * ============================================================
- * ADC - MICS-5524 gas sensor
- * ============================================================
+/**
+ * @name ADC — MiCS-5524
+ * @{
  */
 #define PIN_MICS_ADC            GPIO_NUM_34
 // #define PIN_MICS_EN             GPIO_NUM_32   // optional, if connected
+/** @} */
 
-/*
- * ============================================================
- * GPIO - RGB LED
- * ============================================================
+/**
+ * @name GPIO — RGB status LED
+ * @{
  */
 #define PIN_LED_R               GPIO_NUM_13
 #define PIN_LED_G               GPIO_NUM_12
 #define PIN_LED_B               GPIO_NUM_14
+/** @} */
 
-/*
- * ============================================================
- * Optional grouped structure
- * Useful if you want to pass pin config around modules
- * ============================================================
- */
+/** @brief Optional aggregate of all board GPIO numbers. */
 typedef struct
 {
     gpio_num_t i2c_sda;
@@ -90,6 +88,7 @@ typedef struct
     gpio_num_t led_b;
 } board_pins_t;
 
+/** @brief Default pin map matching the macros above. */
 static const board_pins_t BOARD_PINS = {
     .i2c_sda = PIN_I2C_SDA,
     .i2c_scl = PIN_I2C_SCL,

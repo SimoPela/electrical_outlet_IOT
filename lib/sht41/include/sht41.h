@@ -4,15 +4,21 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  */
 
+/**
+ * @file sht41.h
+ * @brief Sensirion SHT41 humidity and temperature driver (I2C).
+ */
+
 #ifndef SHT41_H
 #define SHT41_H
 
 #include "esp_err.h"
 
+/** @brief One high-precision measurement from SHT41. */
 typedef struct
 {
-    float temperature_c;    /* Temperature [°C]        */
-    float humidity_percent; /* Relative humidity [%RH] */
+    float temperature_c;     /**< Temperature [°C]. */
+    float humidity_percent; /**< Relative humidity [%RH]. */
 } sht41_data_t;
 
 /**

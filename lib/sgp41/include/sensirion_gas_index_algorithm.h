@@ -36,6 +36,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file sensirion_gas_index_algorithm.h
+ * @brief Sensirion Gas Index algorithm (VOC / NOx) — vendor C library used by @c sgp41.c.
+ */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -121,6 +126,7 @@ extern "C" {
     (8.f)
 #define GasIndexAlgorithm_MEAN_VARIANCE_ESTIMATOR__FIX16_MAX (32767.f)
 
+/** @brief Algorithm state object (VOC or NOx); initialize with @ref GasIndexAlgorithm_init. */
 typedef struct {
     int mAlgorithm_Type;
     float mSamplingInterval;
@@ -165,36 +171,56 @@ typedef struct {
     float m_Adaptive_Lowpass___X3;
 } GasIndexAlgorithmParams;
 
+/**
+ * @brief Initialize algorithm parameters for VOC or NOx.
+ * @param[in,out] params State structure to initialize.
+ * @param[in] algorithm_type @c GasIndexAlgorithm_ALGORITHM_TYPE_VOC or @c GasIndexAlgorithm_ALGORITHM_TYPE_NOX.
+ */
 void GasIndexAlgorithm_init(GasIndexAlgorithmParams* params,
                              int32_t algorithm_type);
 
+/**
+ * @brief Same as @ref GasIndexAlgorithm_init with explicit sampling interval [s].
+ */
 void GasIndexAlgorithm_init_with_sampling_interval(
     GasIndexAlgorithmParams* params, int32_t algorithm_type,
     float sampling_interval);
 
+/** @brief Reset internal estimator state in @p params. */
 void GasIndexAlgorithm_reset(GasIndexAlgorithmParams* params);
 
+/** @brief Read persistent algorithm substates (for save/restore). */
 void GasIndexAlgorithm_get_states(const GasIndexAlgorithmParams* params,
                                    float* state0, float* state1);
 
+/** @brief Restore persistent algorithm substates. */
 void GasIndexAlgorithm_set_states(GasIndexAlgorithmParams* params, float state0,
                                    float state1);
 
+/** @brief Apply vendor tuning parameters to the algorithm instance. */
 void GasIndexAlgorithm_set_tuning_parameters(
     GasIndexAlgorithmParams* params, int32_t index_offset,
     int32_t learning_time_offset_hours, int32_t learning_time_gain_hours,
     int32_t gating_max_duration_minutes, int32_t std_initial,
     int32_t gain_factor);
 
+/** @brief Read back tuning parameters. */
 void GasIndexAlgorithm_get_tuning_parameters(
     const GasIndexAlgorithmParams* params, int32_t* index_offset,
     int32_t* learning_time_offset_hours, int32_t* learning_time_gain_hours,
     int32_t* gating_max_duration_minutes, int32_t* std_initial,
     int32_t* gain_factor);
 
+/** @brief Get configured sampling interval [s]. */
 void GasIndexAlgorithm_get_sampling_interval(
     const GasIndexAlgorithmParams* params, float* sampling_interval);
 
+/**
+ * @brief Feed one raw SRAW sample; writes gas index 0–500 to @p gas_index.
+ * @param[in,out] params Algorithm state.
+ * @param[in] sraw Raw sensor value from SGP41.
+ * @param[out] gas_index Output index after processing.
+ */
 void GasIndexAlgorithm_process(GasIndexAlgorithmParams* params, int32_t sraw,
                                 int32_t* gas_index);
 

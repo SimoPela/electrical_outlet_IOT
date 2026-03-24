@@ -4,15 +4,21 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  */
 
+/**
+ * @file bmp.h
+ * @brief Bosch BMP280 pressure and temperature driver (I2C).
+ */
+
 #ifndef BMP_H
 #define BMP_H
 
 #include "esp_err.h"
 
+/** @brief Compensated BMP280 measurement pair. */
 typedef struct
 {
-    float pressure_hpa;    /* Pressure [hPa]  */
-    float temperature_c;   /* Temperature [°C] */
+    float pressure_hpa;   /**< Atmospheric pressure [hPa]. */
+    float temperature_c;  /**< Die temperature [°C]. */
 } bmp_data_t;
 
 /**

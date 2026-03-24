@@ -4,6 +4,10 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  */
 
+/**
+ * @file acquisition_task.h
+ * @brief FreeRTOS acquisition task: local sensor snapshot type and task declaration.
+ */
 
 #ifndef __ACQUISITION_TASK_H__
 #define __ACQUISITION_TASK_H__
@@ -12,11 +16,13 @@
 #include "freertos/FreeRTOS.h"
 #include "device_state.h"
 
+/**
+ * @brief Task-local buffer for sensor reads before commit to @c g_device_state.
+ *
+ * Mirrors measurement, timestamp, validity, and fault fields needed for the acquisition loop.
+ */
 typedef struct
 {
-    // -----------------------------
-    // Sensor measurements
-    // -----------------------------
     bool motion_detected;
     float gas_level_raw;
     float gas_ppm;
@@ -78,6 +84,10 @@ typedef struct
 
 } acquisition_local_state_t;
 
+/**
+ * @brief FreeRTOS task entry: polls sensors on a tick schedule and copies results to @c g_device_state.
+ * @param pvParameters Unused (NULL).
+ */
 void acquisition_task(void *pvParameters);
 
 #endif // __ACQUISITION_TASK_H__
