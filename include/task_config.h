@@ -65,12 +65,26 @@
 #define TAG_DEBUG "[DEBUG]"
 
 /**
- * @brief Log stack high-water mark for the calling task (every 10 invocations).
+ * @brief Log stack high-water mark for the calling task every @p ceiling invocations.
  *
- * @param[in,out] counter Call counter; incremented each time; log when @c (*counter % 10) == 0.
- * @param[in] TAG ESP-IDF log tag string.
+ * @param[in,out] counter Incremented each call; logs when @c (++*counter % ceiling) == 0 (avoid @p ceiling == 0).
+ * @param[in] ceiling Period between log lines (e.g. 10 or 50 depending on task loop rate).
+ * @param[in] TAG Reserved for call-site consistency; current implementation logs with @c TAG_DEBUG.
  * @param[in] task_stack_size Total stack size of this task in words (for “used” display).
  */
-void logTaskStackUsage(uint32_t *counter, const char *TAG, UBaseType_t task_stack_size);
+void logTaskStackUsage(uint32_t *counter, uint32_t ceiling, const char *TAG, UBaseType_t task_stack_size);
+
+/**
+ * @brief Periodic “task alive” heartbeat at @c ESP_LOGI level using the given @p TAG.
+ *
+ * @param[in] TAG ESP-IDF log tag for the message (visible at default @c INFO level).
+ * @param[in,out] alive_counter Incremented each call; logs when @c (++*alive_counter % ceiling) == 0.
+ * @param[in] ceiling Number of calls between two “Task alive” lines.
+ *
+ * @note @p ceiling must not be 0.
+ * @note First log occurs when the counter reaches @p ceiling, not on the first call (after increment).
+ */
+void logTaskAlive(const char *TAG, uint32_t *alive_counter, uint32_t ceiling);
+
 
 #endif // __TASK_CONFIG_H__

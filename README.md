@@ -135,7 +135,7 @@ flowchart TD
 | `comm_task` | MQTT periodic publish, availability, alarms | 4096 | 3 | 5000 ms |
 | `system_task` | Health / degraded mode / flags (motion supervised today) | 4096 | 4 | 2000 ms |
 
-Stack high-water marks are logged periodically via `logTaskStackUsage()` in `src/task_config.c`.
+Stack high-water marks are logged periodically via `logTaskStackUsage()` in `src/task_config.c`. Each task passes a **`ceiling`** value: a log line is emitted when the call counter is a multiple of `ceiling` (e.g. `10` every 10 loop iterations, `50` for a faster loop like acquisition). Messages use **`ESP_LOGD`** with `TAG_DEBUG`.
 
 ### Task and data flow
 
@@ -299,16 +299,19 @@ PDFs under `datasheet/` include: **SHT4x**, **SCD4x**, **SGP41**, **BMP280**, **
 Periodic **stack usage** logging:
 
 ```c
-void logTaskStackUsage(uint32_t *counter, const char *TAG, UBaseType_t task_stack_size)
+void logTaskStackUsage(uint32_t *counter, uint32_t ceiling, const char *TAG,
+                       UBaseType_t task_stack_size)
 {
-    if (++(*counter) % 10 == 0) {
+    if (++(*counter) % ceiling == 0) {
         UBaseType_t stack_remaining = uxTaskGetStackHighWaterMark(NULL);
         UBaseType_t stack_used = task_stack_size - stack_remaining;
-        ESP_LOGI(TAG, "Stack used: %u words | remaining: %u words",
+        ESP_LOGD(TAG_DEBUG, "Stack used: %u words | remaining: %u words",
                  stack_used, stack_remaining);
     }
 }
 ```
+
+The `TAG` argument is kept for consistency with task call sites; the message is tagged with `TAG_DEBUG` so stack dumps appear when debug logging is enabled for that tag.
 
 ---
 

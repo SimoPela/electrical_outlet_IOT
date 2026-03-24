@@ -16,7 +16,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-static const char *TAG = "AUDIO";
+static const char *TAG = "[AUDIO]";
 
 void audio_task(void *pvParameters)
 {
@@ -33,21 +33,16 @@ void audio_task(void *pvParameters)
     // get the time of the last wakeup
     TickType_t xLastWakeTime = xTaskGetTickCount();
 
-    for (;;) {
-        // Print that the task is alive every 2000 ms
-        alive_counter++;
-        if (alive_counter >= 8)
-        {
-            ESP_LOGI(TAG, "Audio task alive");
-            alive_counter = 0;
-        }
+    for (;;)
+    {
+        logTaskAlive(TAG, &alive_counter, 8);
 
         inmp441_data_t mic = {0};
         esp_err_t mic_err = inmp441_w_read(&mic);
 
         if (mic_err == ESP_OK) {
             local_state.noise_db = mic.noise_db;
-            ESP_LOGI(TAG_DEBUG, "INMP441: noise_db=%.1f dB SPL (DS + offset)", local_state.noise_db);
+            ESP_LOGD(TAG, "INMP441: noise_db=%.1f dB SPL (DS + offset)", local_state.noise_db);
         } else {
             ESP_LOGW(TAG, "INMP441 read failed: %s", esp_err_to_name(mic_err));
         }
@@ -63,7 +58,7 @@ void audio_task(void *pvParameters)
         }
 
         // Log the stack usage periodically. Once the stack size is tuned, this can be removed.
-        logTaskStackUsage(&counter, TAG, STACK_AUDIO_WORDS);
+        logTaskStackUsage(&counter, 10, TAG, STACK_AUDIO_WORDS);
         
         // wait for 500ms
         vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(AUDIO_TASK_INTERVAL_MS));

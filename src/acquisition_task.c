@@ -27,7 +27,7 @@
 #include <math.h>
 #include <inttypes.h>
 
-static const char *TAG = "ACQUISITION";
+static const char *TAG = "[ACQUISITION]";
 
 void acquisition_task(void *pvParameters)
 {
@@ -61,13 +61,7 @@ void acquisition_task(void *pvParameters)
 
     for (;;)
     {
-        // Print that the task is alive every 2000 ms
-        alive_counter++;
-        if (alive_counter >= 20)
-        {
-            ESP_LOGI(TAG, "Acquisition task alive");
-            alive_counter = 0;
-        }
+        logTaskAlive(TAG, &alive_counter, 20);
 
         // Update current time
         now = xTaskGetTickCount();
@@ -101,7 +95,7 @@ void acquisition_task(void *pvParameters)
                 local_state.gas_fault        = false;
 
                 // Debug log
-                ESP_LOGI(TAG_DEBUG, "MiCS-5524: voltage=%.2f V, ppm=%.2f ppm", voltage, ppm);
+                ESP_LOGD(TAG_DEBUG, "MiCS-5524: voltage=%.2f V, ppm=%.2f ppm", voltage, ppm);
             } else {
                 local_state.gas_valid  = false;
                 local_state.gas_fault  = true;
@@ -121,7 +115,7 @@ void acquisition_task(void *pvParameters)
                 local_state.sht41_valid         = true;
                 local_state.sht41_fault         = false;
                 // Debug log
-                ESP_LOGI(TAG_DEBUG, "SHT41: temperature=%.1f°C, humidity=%.1f%%", local_state.temperature_c, local_state.humidity_percent);
+                ESP_LOGD(TAG_DEBUG, "SHT41: temperature=%.1f°C, humidity=%.1f%%", local_state.temperature_c, local_state.humidity_percent);
             } else {
                 local_state.sht41_valid = false;
                 local_state.sht41_fault = true;
@@ -143,7 +137,7 @@ void acquisition_task(void *pvParameters)
                 local_state.sgp41_last_update   = now;
                 local_state.sgp41_valid         = true;
                 local_state.sgp41_fault         = false;
-                ESP_LOGI(TAG_DEBUG, "SGP41: VOC=%"PRId32"  NOx=%"PRId32"  (sraw %u / %u)",
+                ESP_LOGD(TAG_DEBUG, "SGP41: VOC=%"PRId32"  NOx=%"PRId32"  (sraw %u / %u)",
                          sgp.voc_index, sgp.nox_index, sgp.sraw_voc, sgp.sraw_nox);
             } else {
                 local_state.sgp41_valid = false;
@@ -164,7 +158,7 @@ void acquisition_task(void *pvParameters)
                 local_state.bmp280_valid       = true;
                 local_state.bmp280_fault       = false;
                 // Debug log
-                ESP_LOGI(TAG_DEBUG, "BMP280: P=%.2f hPa  T=%.1f°C", bmp.pressure_hpa, bmp.temperature_c);
+                ESP_LOGD(TAG_DEBUG, "BMP280: P=%.2f hPa  T=%.1f°C", bmp.pressure_hpa, bmp.temperature_c);
             } else {
                 local_state.bmp280_valid = false;
                 local_state.bmp280_fault = true;
@@ -183,7 +177,7 @@ void acquisition_task(void *pvParameters)
                 local_state.as7341_valid       = true;
                 local_state.as7341_fault       = false;
                 // Debug log
-                ESP_LOGI(TAG_DEBUG, "AS7341: light=%.0f, %.0f, %.0f, %.0f, %.0f, %.0f, %.0f, %.0f",
+                ESP_LOGD(TAG_DEBUG, "AS7341: light=%.0f, %.0f, %.0f, %.0f, %.0f, %.0f, %.0f, %.0f",
                          as.channels[0], as.channels[1], as.channels[2], as.channels[3],
                          as.channels[4], as.channels[5], as.channels[6], as.channels[7]);
             } else {
@@ -210,7 +204,7 @@ void acquisition_task(void *pvParameters)
                 local_state.scd40_fault       = false;
 
                 // Debug log
-                ESP_LOGI(TAG_DEBUG,
+                ESP_LOGD(TAG_DEBUG,
                         "SCD40: co2=%.0f ppm  T=%.1f°C  RH=%.1f%%",
                         scd.co2_ppm,
                         scd.temperature_c,
@@ -245,7 +239,7 @@ void acquisition_task(void *pvParameters)
                 local_state.pms7003_valid       = true;
                 local_state.pms7003_fault       = false;
 
-                ESP_LOGI(TAG_DEBUG, "PMS7003: PM1.0=%.0f  PM2.5=%.0f  PM10=%.0f µg/m³",
+                ESP_LOGD(TAG_DEBUG, "PMS7003: PM1.0=%.0f  PM2.5=%.0f  PM10=%.0f µg/m³",
                          pm.pm1_0_ug_m3, pm.pm2_5_ug_m3, pm.pm10_ug_m3);
             }
             else if (err == ESP_ERR_NOT_FINISHED)
@@ -311,7 +305,7 @@ void acquisition_task(void *pvParameters)
         }
 
         // Log the stack usage periodically
-        logTaskStackUsage(&counter, TAG, STACK_ACQUISITION_WORDS);
+        logTaskStackUsage(&counter, 50, TAG, STACK_ACQUISITION_WORDS);
 
         // Wait for 100 ms
         vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(ACQUISITION_TASK_INTERVAL_MS));

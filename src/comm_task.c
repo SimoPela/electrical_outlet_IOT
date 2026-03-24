@@ -17,7 +17,7 @@
  #include "freertos/task.h"
  #include "freertos/semphr.h"
  
- static const char *TAG = "COMM";
+ static const char *TAG = "[COMM]";
  
  void comm_task(void *pvParameters)
  {
@@ -35,12 +35,7 @@
  
      for (;;)
      {
-         alive_counter++;
-         if (alive_counter >= 5)
-         {
-             ESP_LOGI(TAG, "Communication task alive");
-             alive_counter = 0;
-         }
+         logTaskAlive(TAG, &alive_counter, 5);
  
          device_state_t state_copy = {0};
  
@@ -52,7 +47,7 @@
          else
          {
              ESP_LOGW(TAG, "Failed to lock device state mutex");
-             logTaskStackUsage(&counter, TAG, STACK_COMM_WORDS);
+             logTaskStackUsage(&counter, 10, TAG, STACK_COMM_WORDS);
              vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(COMM_TASK_INTERVAL_MS));
              continue;
          }
@@ -95,7 +90,7 @@
          last_alarm_active = state_copy.alarm_active;
          last_mqtt_connected = state_copy.mqtt_connected;
  
-         logTaskStackUsage(&counter, TAG, STACK_COMM_WORDS);
+         logTaskStackUsage(&counter, 10, TAG, STACK_COMM_WORDS);
          vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(COMM_TASK_INTERVAL_MS));
      }
  }

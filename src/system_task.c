@@ -13,7 +13,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-static const char *TAG = "SYSTEM";
+static const char *TAG = "[SYSTEM]";
 
 void system_task(void *pvParameters)
 {
@@ -34,13 +34,7 @@ void system_task(void *pvParameters)
 
     for (;;)
     {
-        // Print that the task is alive every 2 seconds
-        alive_counter++;
-        if (alive_counter >= 2)
-        {
-            ESP_LOGI(TAG, "System task alive");
-            alive_counter = 0;
-        }
+        logTaskAlive(TAG, &alive_counter, 2);
 
         // Local snapshot of the shared device state
         device_state_t state_copy = {0};
@@ -107,7 +101,7 @@ void system_task(void *pvParameters)
             xSemaphoreGive(g_device_state_mutex);
         }
 
-        ESP_LOGI(TAG,
+        ESP_LOGD(TAG_DEBUG,
                  "system_ok=%d degraded=%d alarm_active=%d motion_alarm=%d gas_alarm=%d motion=%d valid=%d fault=%d",
                  local_state.system_ok,
                  local_state.degraded_mode,
@@ -120,7 +114,7 @@ void system_task(void *pvParameters)
 
         // Log the stack usage periodically.
         // Once the stack size is validated, this can be removed.
-        logTaskStackUsage(&counter, TAG, STACK_SYSTEM_WORDS);
+        logTaskStackUsage(&counter, 10, TAG, STACK_SYSTEM_WORDS);
 
         // Run the task periodically every 1 second
         vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(SYSTEM_TASK_INTERVAL_MS));
