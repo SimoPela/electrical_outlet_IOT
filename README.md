@@ -6,8 +6,7 @@
   <img src="img/protoype.JPG" alt="Breadboard prototype: ESP32 dev board with environmental sensors, PMS7003, PIR, RGB LED, and INMP441 microphone" width="720">
 </p>
 
-<p align="center"><em>Breadboard bring-up: ESP32 dev module, I2C sensor cluster, UART particulate sensor, I2S MEMS mic, ADC gas sensor, PIR, and RGB status LED.<br>
-Note: one module is tape-labeled “AS7342”; firmware targets the <strong>AS7341</strong> spectral sensor.</em></p>
+<p align="center"><em>Breadboard bring-up: ESP32 dev module, I2C sensor cluster, UART particulate sensor, I2S MEMS mic, ADC gas sensor, PIR, and RGB status LED.</em></p>
 
 ---
 
