@@ -64,10 +64,12 @@ void system_task(void *pvParameters)
         inmp441HealthCheck(&now, TAG, &state_copy, &local_state);
         ESP_LOGD(TAG, "Health checks completed");
 
+        /* 
         ESP_LOGD(TAG, "Trying to restore sensors");
         health_try_restore_sensors(TAG, &local_state);
         ESP_LOGD(TAG, "Sensors restored");
-
+        */
+        
         // alarm logic
         local_state.as312_alarm = false;
         local_state.mics5524_alarm = false;

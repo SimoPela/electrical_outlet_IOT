@@ -50,8 +50,8 @@ void app_main(void)
 
 
     // debug system info
-    esp_log_level_set("*", ESP_LOG_INFO); // not debug mode
-    //esp_log_level_set("*", ESP_LOG_DEBUG);
+    //esp_log_level_set("*", ESP_LOG_INFO); // not debug mode
+    esp_log_level_set("*", ESP_LOG_DEBUG);
 
     // Initialize the device state (structure to store the current state of the device measurements and system flags)
     device_state_init();
