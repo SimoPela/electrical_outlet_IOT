@@ -69,22 +69,47 @@ esp_err_t mics5524_init(void)
     return ESP_OK; /* not fatal: the sensor can work without calibration */
 }
 
-esp_err_t mics5524_restore(bool reset_adc)
+/** L1: drop line-fitting cali and rebuild; keeps the oneshot ADC unit (cheap). */
+static esp_err_t mics5524_restore_l1(void)
 {
-    if (reset_adc) {
-        esp_err_t err = adc_restore();
-        if (err != ESP_OK) {
-            return err;
-        }
-    }
-
     if (s_cali_handle != NULL) {
         adc_cali_delete_scheme_line_fitting(s_cali_handle);
         s_cali_handle = NULL;
     }
     s_cali_ok = false;
-
     return mics5524_init();
+}
+
+/** Quick probe: one raw read on the MiCS channel (validates ADC path). */
+static esp_err_t mics5524_adc_probe(void)
+{
+    adc_oneshot_unit_handle_t adc = adc_get_handle();
+    if (adc == NULL) {
+        return ESP_ERR_INVALID_STATE;
+    }
+    int raw = 0;
+    return adc_oneshot_read(adc, MICS_ADC_CHANNEL, &raw);
+}
+
+esp_err_t mics5524_restore(void)
+{
+    ESP_LOGW(TAG, "restore L1: refresh calibration");
+    esp_err_t err = mics5524_restore_l1();
+    if (err != ESP_OK) {
+        return err;
+    }
+
+    err = mics5524_adc_probe();
+    if (err == ESP_OK) {
+        return ESP_OK;
+    }
+
+    ESP_LOGW(TAG, "restore L1 insufficient, L2: adc_restore + recalibrate");
+    err = adc_restore();
+    if (err != ESP_OK) {
+        return err;
+    }
+    return mics5524_restore_l1();
 }
 
 /* ------------------------------------------------------------------ */

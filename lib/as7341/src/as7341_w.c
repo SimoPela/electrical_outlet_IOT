@@ -57,7 +57,19 @@ esp_err_t as7341_w_init(void)
 esp_err_t as7341_w_restore(void)
 {
     if (g_as7341_initialized && g_as7341 != NULL) {
-        esp_err_t err = as7341_delete(g_as7341);
+        ESP_LOGW(TAG, "restore L1: power cycle");
+        (void)as7341_disable_spectral_measurement(g_as7341);
+        esp_err_t err = as7341_disable_power(g_as7341);
+        if (err == ESP_OK) {
+            vTaskDelay(pdMS_TO_TICKS(20));
+            err = as7341_enable_power(g_as7341);
+            if (err == ESP_OK) {
+                return ESP_OK;
+            }
+        }
+        ESP_LOGW(TAG, "restore L1 failed, L2: as7341_delete + init");
+
+        err = as7341_delete(g_as7341);
         if (err != ESP_OK) {
             ESP_LOGW(TAG, "as7341_delete: %s", esp_err_to_name(err));
         }

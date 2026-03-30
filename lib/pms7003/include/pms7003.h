@@ -108,11 +108,7 @@
  #include <freertos/timers.h>
  #include <esp_err.h>
  #include <esp_log.h>
- 
- #ifdef __cplusplus
- extern "C" {
- #endif
- 
+ #include <esp_check.h>
  
  /**
   * @brief PMS sensor type
@@ -304,13 +300,13 @@
   * @brief Get data field from parsed PMS data frame
   *
   * @param field PMS filed ID
-  * @return Data from parsed PMS frame
+  * @param[out] out Data from parsed PMS frame
+  * @retval ESP_OK on success
+  * @retval ESP_ERR_INVALID_ARG if field is invalid
+  * @retval ESP_ERR_INVALID_STATE if sensor is not in active state or passive mode
+  * @retval ESP_FAIL if send command fails
   */
- int16_t pms_get_data(pms_field_t field);
- 
- 
- #ifdef __cplusplus
- }
- #endif
+  esp_err_t pms_get_data(pms_field_t field, uint16_t *out);
+
  
  #endif // PMS7003_H

@@ -99,18 +99,9 @@ static esp_err_t sgp41_init_desc(void)
     return i2c_dev_create_mutex(&g_sgp41);
 }
 
-esp_err_t sgp41_init(void)
+/** Conditioning + Gas Index reset (shared by init and L1 restore). Caller must hold no lock. */
+static esp_err_t sgp41_conditioning_and_gas_index(void)
 {
-    if (g_sgp41_initialized)
-        return ESP_OK;
-
-    esp_err_t err = sgp41_init_desc();
-    if (err != ESP_OK)
-    {
-        ESP_LOGE(TAG, "init_desc failed: %s", esp_err_to_name(err));
-        return err;
-    }
-
     uint8_t cmd[8];
     build_cmd(cmd, SGP41_CMD_CONDITIONING, SGP41_DEFAULT_RH, SGP41_DEFAULT_T);
 
@@ -130,6 +121,43 @@ esp_err_t sgp41_init(void)
 
     GasIndexAlgorithm_init(&g_voc_params, GasIndexAlgorithm_ALGORITHM_TYPE_VOC);
     GasIndexAlgorithm_init(&g_nox_params, GasIndexAlgorithm_ALGORITHM_TYPE_NOX);
+    return ESP_OK;
+}
+
+/** Heater-off (datasheet §6.6); best-effort before re-conditioning. */
+static esp_err_t sgp41_heater_off_cmd(void)
+{
+    uint8_t ho[3] = { (uint8_t)(SGP41_CMD_HEATER_OFF >> 8),
+                      (uint8_t)(SGP41_CMD_HEATER_OFF & 0xFF),
+                      0 };
+    ho[2] = sgp41_crc8(ho, 2);
+
+    I2C_DEV_TAKE_MUTEX(&g_sgp41);
+    esp_err_t err = i2c_dev_write(&g_sgp41, NULL, 0, ho, sizeof(ho));
+    I2C_DEV_GIVE_MUTEX(&g_sgp41);
+    if (err == ESP_OK) {
+        vTaskDelay(pdMS_TO_TICKS(2));
+    }
+    return err;
+}
+
+esp_err_t sgp41_init(void)
+{
+    if (g_sgp41_initialized) {
+        return ESP_OK;
+    }
+
+    esp_err_t err = sgp41_init_desc();
+    if (err != ESP_OK)
+    {
+        ESP_LOGE(TAG, "init_desc failed: %s", esp_err_to_name(err));
+        return err;
+    }
+
+    err = sgp41_conditioning_and_gas_index();
+    if (err != ESP_OK) {
+        return err;
+    }
 
     g_sgp41_initialized = true;
     ESP_LOGI(TAG, "SGP41 initialized (indices valid after ~45 s blackout)");
@@ -138,6 +166,16 @@ esp_err_t sgp41_init(void)
 
 esp_err_t sgp41_restore(void)
 {
+    if (g_sgp41_initialized) {
+        ESP_LOGW(TAG, "restore L1: heater off + re-conditioning");
+        (void)sgp41_heater_off_cmd();
+        esp_err_t err = sgp41_conditioning_and_gas_index();
+        if (err == ESP_OK) {
+            return ESP_OK;
+        }
+        ESP_LOGW(TAG, "restore L1 failed, L2: i2c_dev teardown + full init");
+    }
+
     esp_err_t err = i2c_dev_delete_mutex(&g_sgp41);
     if (err != ESP_OK) {
         ESP_LOGW(TAG, "i2c_dev_delete_mutex: %s", esp_err_to_name(err));

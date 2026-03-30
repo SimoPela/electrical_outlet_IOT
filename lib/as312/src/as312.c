@@ -10,6 +10,8 @@
 
 #include "driver/gpio.h"
 #include "esp_log.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 static const char *TAG = "AS312";
 
@@ -40,5 +42,14 @@ bool as312_read_motion(void)
 
 esp_err_t as312_restore(void)
 {
+    /*
+     * L1 — reset the PIR pad (helps if the pin latched odd state).
+     * L2 — full input reconfigure via as312_init().
+     */
+    ESP_LOGW(TAG, "restore L1: gpio_reset_pin(PIR)");
+    gpio_reset_pin(PIN_PIR_OUT);
+    vTaskDelay(pdMS_TO_TICKS(10));
+
+    ESP_LOGW(TAG, "restore L2: reconfigure PIR GPIO");
     return as312_init();
 }

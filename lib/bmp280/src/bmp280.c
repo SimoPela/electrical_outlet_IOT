@@ -54,10 +54,15 @@ esp_err_t bmp_init(void)
 esp_err_t bmp_restore(void)
 {
     if (g_bmp_initialized) {
-        esp_err_t err = bmp280_free_desc(&g_bmp);
-        if (err != ESP_OK) {
-            ESP_LOGW(TAG, "bmp280_free_desc: %s", esp_err_to_name(err));
+        ESP_LOGW(TAG, "restore L1: bmp280_init (soft re-init on same descriptor)");
+        bmp280_params_t params;
+        bmp280_init_default_params(&params);
+        esp_err_t err = bmp280_init(&g_bmp, &params);
+        if (err == ESP_OK) {
+            return ESP_OK;
         }
+        ESP_LOGW(TAG, "restore L1 failed, L2: bmp280_free_desc + init");
+        (void)bmp280_free_desc(&g_bmp);
         g_bmp_initialized = false;
     }
     return bmp_init();

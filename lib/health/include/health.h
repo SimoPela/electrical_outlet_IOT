@@ -26,15 +26,16 @@
  * @name Sensor supervision timeouts (milliseconds)
  * @{
  */
-#define AS312_TIMEOUT_MS      35000
-#define MICS5524_TIMEOUT_MS   35000
-#define SGP41_TIMEOUT_MS      35000
-#define SHT41_TIMEOUT_MS      35000
-#define BMP280_TIMEOUT_MS     35000
-#define SCD40_TIMEOUT_MS      35000
-#define PMS7003_TIMEOUT_MS    35000
-#define AS7341_TIMEOUT_MS     35000
-#define INMP441_TIMEOUT_MS    35000
+#define AS312_TIMEOUT_MS      45000
+#define MICS5524_TIMEOUT_MS   45000
+#define SGP41_TIMEOUT_MS      45000
+#define SHT41_TIMEOUT_MS      45000
+#define BMP280_TIMEOUT_MS     45000
+#define SCD40_TIMEOUT_MS      45000
+#define PMS7003_TIMEOUT_MS    45000
+#define AS7341_TIMEOUT_MS     45000
+#define INMP441_TIMEOUT_MS    45000
+#define ALL_SENSORS_TIMEOUT_MS 45000
 /** @} */
 
 /**
@@ -151,16 +152,62 @@ void inmp441HealthCheck(TickType_t *now, const char *TAG,
                         const device_state_t *state_copy, health_local_state_t *local_state);
 
 
-
+/**
+ * @brief Restore AS312.
+ * @param[in] TAG Log tag.
+ * @return ESP_OK on success, or an ESP-IDF error code.
+ */
 esp_err_t as312HealthRestore(const char *TAG); //TODO
-void mics5524HealthRestore(const char *TAG); //TODO
-void sht41HealthRestore(const char *TAG); //TODO
-void sgp41HealthRestore(const char *TAG); //TODO
-void bmp280HealthRestore(const char *TAG); //TODO
-void scd40HealthRestore(const char *TAG); //TODO
-void pms7003HealthRestore(const char *TAG); //TODO
-void as7341HealthRestore(const char *TAG); //TODO
-void inmp441HealthRestore(const char *TAG); //TODO
+
+/**
+ * @brief Restore MiCS-5524.
+ * @param[in] TAG Log tag.
+ * @return ESP_OK on success, or an ESP-IDF error code.
+ */
+esp_err_t mics5524HealthRestore(const char *TAG); //TODO
+
+/**
+ * @brief Restore SHT41.
+ * @param[in] TAG Log tag.
+ * @return ESP_OK on success, or an ESP-IDF error code.
+ */
+esp_err_t sht41HealthRestore(const char *TAG); //TODO
+/**
+ * @brief Restore SGP41.
+ * @param[in] TAG Log tag.
+ * @return ESP_OK on success, or an ESP-IDF error code.
+ */
+esp_err_t sgp41HealthRestore(const char *TAG); //TODO
+/**
+ * @brief Restore BMP280.
+ * @param[in] TAG Log tag.
+ * @return ESP_OK on success, or an ESP-IDF error code.
+ */
+esp_err_t bmp280HealthRestore(const char *TAG); //TODO
+/**
+ * @brief Restore SCD40.
+ * @param[in] TAG Log tag.
+ * @return ESP_OK on success, or an ESP-IDF error code.
+ */
+esp_err_t scd40HealthRestore(const char *TAG); //TODO
+/**
+ * @brief Restore PMS7003.
+ * @param[in] TAG Log tag.
+ * @return ESP_OK on success, or an ESP-IDF error code.
+ */
+esp_err_t pms7003HealthRestore(const char *TAG); //TODO
+/**
+ * @brief Restore AS7341.
+ * @param[in] TAG Log tag.
+ * @return ESP_OK on success, or an ESP-IDF error code.
+ */
+esp_err_t as7341HealthRestore(const char *TAG); //TODO
+/**
+ * @brief Restore INMP441.
+ * @param[in] TAG Log tag.
+ * @return ESP_OK on success, or an ESP-IDF error code.
+ */
+esp_err_t inmp441HealthRestore(const char *TAG); //TODO
 
 
 
@@ -174,6 +221,12 @@ void inmp441HealthRestore(const char *TAG); //TODO
 void sensorHealthCheck(const char *TAG,TickType_t *now,
                        const device_state_t *state_copy, health_local_state_t *local_state );
 
-void sensorHealthRestore(const char *TAG, health_local_state_t *local_state); //TODO
+/**
+ * @brief Sensor health restore, restore all sensors.
+ * @param[in] TAG Log tag.
+ * @param[in] local_state Local state.
+ * @param[in] now Current tick.
+ */
+void sensorHealthRestore(const char *TAG, health_local_state_t *local_state, TickType_t *now); 
 
 #endif /* HEALTH_H */

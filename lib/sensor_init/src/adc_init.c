@@ -5,10 +5,12 @@
  */
 
 
- #include "adc_init.h"
- #include "esp_log.h"
- #include "esp_check.h"
- #include "esp_adc/adc_oneshot.h"
+#include "adc_init.h"
+#include "esp_log.h"
+#include "esp_check.h"
+#include "esp_adc/adc_oneshot.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
  
  static const char *TAG = "ADC_INIT";
  static adc_oneshot_unit_handle_t s_adc_handle = NULL;
@@ -50,15 +52,17 @@
      return s_adc_handle;
  }
 
- esp_err_t adc_restore(void)
- {
-     if (s_adc_handle != NULL) {
-         esp_err_t err = adc_oneshot_del_unit(s_adc_handle);
-         s_adc_handle = NULL;
-         if (err != ESP_OK) {
-             ESP_LOGE(TAG, "adc_oneshot_del_unit failed: %s", esp_err_to_name(err));
-             return err;
-         }
-     }
-     return adc_init_all();
- }
+esp_err_t adc_restore(void)
+{
+    if (s_adc_handle != NULL) {
+        esp_err_t err = adc_oneshot_del_unit(s_adc_handle);
+        s_adc_handle = NULL;
+        if (err != ESP_OK) {
+            ESP_LOGE(TAG, "adc_oneshot_del_unit failed: %s", esp_err_to_name(err));
+            return err;
+        }
+    }
+    /* Brief settle, analogous to PMS delay between teardown and reinit. */
+    vTaskDelay(pdMS_TO_TICKS(20));
+    return adc_init_all();
+}

@@ -10,7 +10,10 @@
 
 #include "sht4x.h"
 #include "esp_log.h"
+#include <inttypes.h>
 #include "esp_check.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #include <stdbool.h>
 
 static const char *TAG = "SHT41";
@@ -46,10 +49,14 @@ esp_err_t sht41_init(void)
 esp_err_t sht41_restore(void)
 {
     if (g_sht41_initialized) {
-        esp_err_t err = sht4x_free_desc(&g_sht41);
-        if (err != ESP_OK) {
-            ESP_LOGW(TAG, "sht4x_free_desc: %s", esp_err_to_name(err));
+        ESP_LOGW(TAG, "restore L1: sht4x_reset (soft)");
+        esp_err_t err = sht4x_reset(&g_sht41);
+        if (err == ESP_OK) {
+            vTaskDelay(pdMS_TO_TICKS(2));
+            return ESP_OK;
         }
+        ESP_LOGW(TAG, "restore L1 failed, L2: free_desc + init");
+        (void)sht4x_free_desc(&g_sht41);
         g_sht41_initialized = false;
     }
     return sht41_init();

@@ -226,56 +226,64 @@ void inmp441HealthCheck(TickType_t *now, const char *TAG,
 esp_err_t as312HealthRestore(const char *TAG)
 {
     ESP_LOGD(TAG, "Restoring AS312");
-    ESP_RETURN_ON_ERROR(as312_restore(), TAG, "AS312 restore failed");
+    ESP_RETURN_ON_ERROR(as312_restore(), TAG, "AS312 restore failed"); //Works
     return ESP_OK;
 }
 
-void mics5524HealthRestore(const char *TAG)
+esp_err_t mics5524HealthRestore(const char *TAG)
 {
     ESP_LOGD(TAG, "Restoring MiCS-5524");
-    //TODO: implement this
+    ESP_RETURN_ON_ERROR(mics5524_restore(), TAG, "MiCS-5524 restore failed");
+    return ESP_OK;
 }
 
-void sht41HealthRestore(const char *TAG)
+esp_err_t sht41HealthRestore(const char *TAG)
 {
     ESP_LOGD(TAG, "Restoring SHT41");
-    //TODO: implement this
+    ESP_RETURN_ON_ERROR(sht41_restore(), TAG, "SHT41 restore failed");
+    return ESP_OK;
 }
 
-void sgp41HealthRestore(const char *TAG)
+esp_err_t sgp41HealthRestore(const char *TAG)
 {
     ESP_LOGD(TAG, "Restoring SGP41");
-    //TODO: implement this
+    ESP_RETURN_ON_ERROR(sgp41_restore(), TAG, "SGP41 restore failed");
+    return ESP_OK;
 }
 
-void bmp280HealthRestore(const char *TAG)
+esp_err_t bmp280HealthRestore(const char *TAG)
 {
     ESP_LOGD(TAG, "Restoring BMP280");
-    //TODO: implement this
+    ESP_RETURN_ON_ERROR(bmp_restore(), TAG, "BMP280 restore failed");
+    return ESP_OK;
 }
 
-void scd40HealthRestore(const char *TAG)
+esp_err_t scd40HealthRestore(const char *TAG)
 {
     ESP_LOGD(TAG, "Restoring SCD40");
-    //TODO: implement this
+    ESP_RETURN_ON_ERROR(scd40_restore(), TAG, "SCD40 restore failed");
+    return ESP_OK;
 }
 
-void pms7003HealthRestore(const char *TAG)
+esp_err_t pms7003HealthRestore(const char *TAG) //Works
 {
     ESP_LOGD(TAG, "Restoring PMS7003");
-    //TODO: implement this
+    ESP_RETURN_ON_ERROR(pms7003_w_restore(), TAG, "PMS7003 restore failed");
+    return ESP_OK;
 }
 
-void as7341HealthRestore(const char *TAG)
+esp_err_t as7341HealthRestore(const char *TAG)
 {
     ESP_LOGD(TAG, "Restoring AS7341");
-    //TODO: implement this
+    ESP_RETURN_ON_ERROR(as7341_w_restore(), TAG, "AS7341 restore failed");
+    return ESP_OK;
 }
 
-void inmp441HealthRestore(const char *TAG)
+esp_err_t inmp441HealthRestore(const char *TAG)
 {
     ESP_LOGD(TAG, "Restoring INMP441");
-    //TODO: implement this
+    ESP_RETURN_ON_ERROR(inmp441_w_restore(), TAG, "INMP441 restore failed");
+    return ESP_OK;
 }
 
 
@@ -285,6 +293,9 @@ void inmp441HealthRestore(const char *TAG)
 void sensorHealthCheck(const char *TAG, TickType_t *now,
                        const device_state_t *state_copy, health_local_state_t *local_state)
 {
+    if(*now < pdMS_TO_TICKS(ALL_SENSORS_TIMEOUT_MS)) {
+        return;
+    }
     ESP_LOGD(TAG, "Starting health checks");
     as312HealthCheck(now, TAG, state_copy, local_state);
     mics5524HealthCheck(now, TAG, state_copy, local_state);
@@ -298,8 +309,11 @@ void sensorHealthCheck(const char *TAG, TickType_t *now,
     ESP_LOGD(TAG, "Health checks completed");
 }
 
-void sensorHealthRestore(const char *TAG, health_local_state_t *local_state)
+void sensorHealthRestore(const char *TAG, health_local_state_t *local_state, TickType_t *now)
 {
+    if(*now < pdMS_TO_TICKS(ALL_SENSORS_TIMEOUT_MS)) {
+        return;
+    }
     ESP_LOGD(TAG, "Starting sensor restore");
     if (local_state->degraded_as312) {  
         as312HealthRestore(TAG);

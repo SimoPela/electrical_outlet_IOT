@@ -53,11 +53,11 @@ void system_task(void *pvParameters)
             xSemaphoreGive(g_device_state_mutex);
         }
 
-        // Health checks of all sensors
+        // Health checks of all sensors (after ALL_SENSORS_TIMEOUT_MS seconds to avoid premature checks)
         sensorHealthCheck(TAG, &now, &state_copy, &local_state);
 
-        // Sensor Restore if needed
-        sensorHealthRestore(TAG,&local_state); // TODO: implement this
+        // Sensor Restore if needed (after ALL_SENSORS_TIMEOUT_MS seconds to avoid premature restores)
+        sensorHealthRestore(TAG,&local_state, &now); // TODO: implement this
         
 
         // alarm logic

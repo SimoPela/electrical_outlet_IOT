@@ -173,6 +173,23 @@ esp_err_t scd40_init(void)
 
 esp_err_t scd40_restore(void)
 {
+    if (g_handle != NULL && g_initialized) {
+        ESP_LOGW(TAG, "restore L1: stop + reinit + start_periodic (keep I2C dev)");
+        (void)scd40_send_cmd(CMD_STOP_PERIODIC);
+        vTaskDelay(pdMS_TO_TICKS(100));
+
+        esp_err_t err = scd40_send_cmd(CMD_REINIT);
+        vTaskDelay(pdMS_TO_TICKS(30));
+        if (err == ESP_OK) {
+            err = scd40_start_periodic();
+            if (err == ESP_OK) {
+                g_consec_fail = 0;
+                return ESP_OK;
+            }
+        }
+        ESP_LOGW(TAG, "restore L1 failed, L2: rm_device + full init");
+    }
+
     if (g_handle != NULL) {
         if (g_initialized) {
             (void)scd40_send_cmd(CMD_STOP_PERIODIC);

@@ -83,6 +83,19 @@ esp_err_t inmp441_w_init(void)
 
 esp_err_t inmp441_w_restore(void)
 {
+    i2s_chan_handle_t rx = i2s_get_rx_channel();
+    if (rx != NULL) {
+        ESP_LOGW(TAG, "restore L1: I2S RX disable / enable");
+        esp_err_t err = i2s_channel_disable(rx);
+        if (err == ESP_OK) {
+            vTaskDelay(pdMS_TO_TICKS(10));
+            err = i2s_channel_enable(rx);
+            if (err == ESP_OK) {
+                return ESP_OK;
+            }
+        }
+        ESP_LOGW(TAG, "restore L1 failed, L2: i2s_restore (delete + rebuild)");
+    }
     return i2s_restore();
 }
 

@@ -71,5 +71,11 @@ esp_err_t uart_restore(void)
             return err;
         }
     }
-    return uart_init_all();
+
+    esp_err_t err = uart_init_all();
+    if (err == ESP_OK) {
+        /* Same idea as PMS: drop stale bytes before the next frame parse. */
+        uart_flush_input(PMS7003_UART_PORT);
+    }
+    return err;
 }

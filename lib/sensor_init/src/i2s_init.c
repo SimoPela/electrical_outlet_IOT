@@ -13,6 +13,8 @@
 #include "driver/i2s_std.h"
 #include "driver/i2s_common.h"
 #include "driver/i2s_types.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 static const char *TAG = "I2S_INIT";
 
@@ -99,6 +101,7 @@ esp_err_t i2s_restore(void)
             ESP_LOGE(TAG, "i2s_del_channel failed: %s", esp_err_to_name(err));
             return err;
         }
+        vTaskDelay(pdMS_TO_TICKS(50));
     }
     return i2s_init_all();
 }

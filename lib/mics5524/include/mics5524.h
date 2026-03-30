@@ -22,11 +22,10 @@
 esp_err_t mics5524_init(void);
 
 /**
- * @brief Drop ADC calibration state and re-run @ref mics5524_init; optionally reset the shared ADC.
- * @param reset_adc If true, call @ref adc_restore before recalibrating MiCS.
+ * @brief MiCS / ADC recovery: L1 recalibration only, L2 full ADC unit reset.
  * @return ESP_OK on success, or an ESP-IDF error code.
  */
-esp_err_t mics5524_restore(bool reset_adc);
+esp_err_t mics5524_restore(void);
 
 /**
  * @brief Average several ADC samples into a rail-referred voltage.
