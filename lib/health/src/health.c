@@ -14,14 +14,13 @@
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "esp_check.h"
 
 #include <stdbool.h>
 
 #ifndef HEALTH_RESTORE_BURST_INTERVAL_MS
 #define HEALTH_RESTORE_BURST_INTERVAL_MS 10000
 #endif
-
-static TickType_t s_last_restore_burst_tick;
 
 void as312HealthCheck(TickType_t *now, const char *TAG,
                       const device_state_t *state_copy, health_local_state_t *local_state)
@@ -224,71 +223,110 @@ void inmp441HealthCheck(TickType_t *now, const char *TAG,
     }
 }
 
-void health_try_restore_sensors(const char *log_tag, const health_local_state_t *local_state)
+esp_err_t as312HealthRestore(const char *TAG)
 {
-    if (local_state == NULL || g_sensor_driver_mutex == NULL) {
-        return;
-    }
+    ESP_LOGD(TAG, "Restoring AS312");
+    ESP_RETURN_ON_ERROR(as312_restore(), TAG, "AS312 restore failed");
+    return ESP_OK;
+}
 
-    TickType_t now = xTaskGetTickCount();
-    if (s_last_restore_burst_tick != 0 &&
-        (now - s_last_restore_burst_tick) < pdMS_TO_TICKS(HEALTH_RESTORE_BURST_INTERVAL_MS)) {
-        return;
-    }
+void mics5524HealthRestore(const char *TAG)
+{
+    ESP_LOGD(TAG, "Restoring MiCS-5524");
+    //TODO: implement this
+}
 
-    if (xSemaphoreTake(g_sensor_driver_mutex, pdMS_TO_TICKS(5000)) != pdTRUE) {
-        ESP_LOGW(log_tag, "sensor restore skipped (bus busy)");
-        return;
-    }
+void sht41HealthRestore(const char *TAG)
+{
+    ESP_LOGD(TAG, "Restoring SHT41");
+    //TODO: implement this
+}
 
-    bool attempted = false;
-    esp_err_t err;
+void sgp41HealthRestore(const char *TAG)
+{
+    ESP_LOGD(TAG, "Restoring SGP41");
+    //TODO: implement this
+}
 
-#define HR_OK(code, call) \
-    do { \
-        err = (call); \
-        if (err != ESP_OK) { \
-            ESP_LOGW(log_tag, "sensor restore %d: %s", (code), esp_err_to_name(err)); \
-        } \
-        attempted = true; \
-    } while (0)
+void bmp280HealthRestore(const char *TAG)
+{
+    ESP_LOGD(TAG, "Restoring BMP280");
+    //TODO: implement this
+}
 
-    if (local_state->degraded_as312) {
-        HR_OK(1, as312_restore());
+void scd40HealthRestore(const char *TAG)
+{
+    ESP_LOGD(TAG, "Restoring SCD40");
+    //TODO: implement this
+}
+
+void pms7003HealthRestore(const char *TAG)
+{
+    ESP_LOGD(TAG, "Restoring PMS7003");
+    //TODO: implement this
+}
+
+void as7341HealthRestore(const char *TAG)
+{
+    ESP_LOGD(TAG, "Restoring AS7341");
+    //TODO: implement this
+}
+
+void inmp441HealthRestore(const char *TAG)
+{
+    ESP_LOGD(TAG, "Restoring INMP441");
+    //TODO: implement this
+}
+
+
+
+
+
+void sensorHealthCheck(const char *TAG, TickType_t *now,
+                       const device_state_t *state_copy, health_local_state_t *local_state)
+{
+    ESP_LOGD(TAG, "Starting health checks");
+    as312HealthCheck(now, TAG, state_copy, local_state);
+    mics5524HealthCheck(now, TAG, state_copy, local_state);
+    sht41HealthCheck(now, TAG, state_copy, local_state);
+    sgp41HealthCheck(now, TAG, state_copy, local_state);
+    bmp280HealthCheck(now, TAG, state_copy, local_state);
+    scd40HealthCheck(now, TAG, state_copy, local_state);
+    pms7003HealthCheck(now, TAG, state_copy, local_state);
+    as7341HealthCheck(now, TAG, state_copy, local_state);
+    inmp441HealthCheck(now, TAG, state_copy, local_state);
+    ESP_LOGD(TAG, "Health checks completed");
+}
+
+void sensorHealthRestore(const char *TAG, health_local_state_t *local_state)
+{
+    ESP_LOGD(TAG, "Starting sensor restore");
+    if (local_state->degraded_as312) {  
+        as312HealthRestore(TAG);
     }
     if (local_state->degraded_mics5524) {
-        HR_OK(2, mics5524_restore(true));
+        mics5524HealthRestore(TAG);
     }
     if (local_state->degraded_sht41) {
-        HR_OK(3, sht41_restore());
+        sht41HealthRestore(TAG);
     }
     if (local_state->degraded_sgp41) {
-        HR_OK(4, sgp41_restore());
+        sgp41HealthRestore(TAG);
     }
     if (local_state->degraded_bmp280) {
-        HR_OK(5, bmp_restore());
+        bmp280HealthRestore(TAG);
     }
     if (local_state->degraded_scd40) {
-        HR_OK(6, scd40_restore());
+        scd40HealthRestore(TAG);
     }
     if (local_state->degraded_pms7003) {
-        err = uart_restore();
-        if (err != ESP_OK) {
-            ESP_LOGW(log_tag, "sensor restore %d: %s", 7, esp_err_to_name(err));
-        }
-        HR_OK(8, pms7003_w_restore());
+        pms7003HealthRestore(TAG);
     }
     if (local_state->degraded_as7341) {
-        HR_OK(9, as7341_w_restore());
+        as7341HealthRestore(TAG);
     }
     if (local_state->degraded_inmp441) {
-        HR_OK(10, inmp441_w_restore());
+        inmp441HealthRestore(TAG);
     }
-#undef HR_OK
-
-    if (attempted) {
-        s_last_restore_burst_tick = now;
-    }
-
-    xSemaphoreGive(g_sensor_driver_mutex);
+    ESP_LOGD(TAG, "Sensor restore completed");
 }

@@ -7,8 +7,31 @@
 
 #include "as312.h"
 #include "esp32_pinout.h"
-#include "gpio_init.h"
+
 #include "driver/gpio.h"
+#include "esp_log.h"
+
+static const char *TAG = "AS312";
+
+esp_err_t as312_init(void)
+{
+    gpio_config_t pir_cfg = {
+        .pin_bit_mask = (1ULL << PIN_PIR_OUT),
+        .mode = GPIO_MODE_INPUT,
+        .pull_up_en = GPIO_PULLUP_DISABLE,
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,   // oppure ENABLE se ti serve
+        .intr_type = GPIO_INTR_DISABLE
+    };
+
+    esp_err_t err = gpio_config(&pir_cfg);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to configure PIR GPIO: %s", esp_err_to_name(err));
+        return err;
+    }
+
+    ESP_LOGI(TAG, "AS312 initialized");
+    return ESP_OK;
+}
 
 bool as312_read_motion(void)
 {
@@ -17,5 +40,5 @@ bool as312_read_motion(void)
 
 esp_err_t as312_restore(void)
 {
-    return gpio_init_all();
+    return as312_init();
 }

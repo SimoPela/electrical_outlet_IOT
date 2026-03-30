@@ -26,15 +26,15 @@
  * @name Sensor supervision timeouts (milliseconds)
  * @{
  */
-#define AS312_TIMEOUT_MS      15000
-#define MICS5524_TIMEOUT_MS   15000
-#define SGP41_TIMEOUT_MS      15000
-#define SHT41_TIMEOUT_MS      15000
-#define BMP280_TIMEOUT_MS     15000
-#define SCD40_TIMEOUT_MS      15000
-#define PMS7003_TIMEOUT_MS    15000
-#define AS7341_TIMEOUT_MS     15000
-#define INMP441_TIMEOUT_MS    15000
+#define AS312_TIMEOUT_MS      35000
+#define MICS5524_TIMEOUT_MS   35000
+#define SGP41_TIMEOUT_MS      35000
+#define SHT41_TIMEOUT_MS      35000
+#define BMP280_TIMEOUT_MS     35000
+#define SCD40_TIMEOUT_MS      35000
+#define PMS7003_TIMEOUT_MS    35000
+#define AS7341_TIMEOUT_MS     35000
+#define INMP441_TIMEOUT_MS    35000
 /** @} */
 
 /**
@@ -70,7 +70,7 @@ void as312HealthCheck(TickType_t *now, const char *TAG,
 
 /**
  * @brief MiCS-5524: invalid, fault, or stale ( @ref MICS5524_TIMEOUT_MS ).
- * @param[in,out] now Current tick (unused).
+ * @param[in,out] now Current tick.
  * @param[in] TAG Log tag.
  * @param[in] state_copy Device snapshot.
  * @param[in,out] local_state Output flags.
@@ -80,7 +80,7 @@ void mics5524HealthCheck(TickType_t *now, const char *TAG,
 
 /**
  * @brief SHT41: invalid, fault, or stale ( @ref SHT41_TIMEOUT_MS ).
- * @param[in,out] now Current tick (unused).
+ * @param[in,out] now Current tick.
  * @param[in] TAG Log tag.
  * @param[in] state_copy Device snapshot.
  * @param[in,out] local_state @c degraded_mode may be set.
@@ -90,7 +90,7 @@ void sht41HealthCheck(TickType_t *now, const char *TAG,
 
 /**
  * @brief SGP41: invalid, fault, or stale ( @ref SGP41_TIMEOUT_MS ).
- * @param[in,out] now Current tick (unused).
+ * @param[in,out] now Current tick.
  * @param[in] TAG Log tag.
  * @param[in] state_copy Device snapshot.
  * @param[in,out] local_state @c degraded_mode may be set.
@@ -100,7 +100,7 @@ void sgp41HealthCheck(TickType_t *now, const char *TAG,
 
 /**
  * @brief BMP280: invalid, fault, or stale ( @ref BMP280_TIMEOUT_MS ).
- * @param[in,out] now Current tick (unused).
+ * @param[in,out] now Current tick.
  * @param[in] TAG Log tag.
  * @param[in] state_copy Device snapshot.
  * @param[in,out] local_state @c degraded_mode may be set.
@@ -110,7 +110,7 @@ void bmp280HealthCheck(TickType_t *now, const char *TAG,
 
 /**
  * @brief SCD40: invalid, fault, or stale ( @ref SCD40_TIMEOUT_MS ).
- * @param[in,out] now Current tick (unused).
+ * @param[in,out] now Current tick.
  * @param[in] TAG Log tag.
  * @param[in] state_copy Device snapshot.
  * @param[in,out] local_state @c degraded_mode may be set.
@@ -120,7 +120,7 @@ void scd40HealthCheck(TickType_t *now, const char *TAG,
 
 /**
  * @brief PMS7003: invalid, fault, or stale ( @ref PMS7003_TIMEOUT_MS ).
- * @param[in,out] now Current tick (unused).
+ * @param[in,out] now Current tick.
  * @param[in] TAG Log tag.
  * @param[in] state_copy Device snapshot.
  * @param[in,out] local_state @c degraded_mode may be set.
@@ -130,7 +130,7 @@ void pms7003HealthCheck(TickType_t *now, const char *TAG,
 
 /**
  * @brief AS7341: invalid, fault, or stale ( @ref AS7341_TIMEOUT_MS ).
- * @param[in,out] now Current tick (unused).
+ * @param[in,out] now Current tick.
  * @param[in] TAG Log tag.
  * @param[in] state_copy Device snapshot.
  * @param[in,out] local_state @c degraded_mode may be set.
@@ -140,7 +140,7 @@ void as7341HealthCheck(TickType_t *now, const char *TAG,
 
 /**
  * @brief INMP441 / audio path: invalid, fault, or stale ( @ref INMP441_TIMEOUT_MS ).
- * @param[in,out] now Current tick (unused).
+ * @param[in,out] now Current tick.
  * @param[in] TAG Log tag.
  * @param[in] state_copy Device snapshot (@c inmp441_* fields from @c audio_task).
  * @param[in,out] local_state @c degraded_mode may be set.
@@ -150,19 +150,30 @@ void as7341HealthCheck(TickType_t *now, const char *TAG,
 void inmp441HealthCheck(TickType_t *now, const char *TAG,
                         const device_state_t *state_copy, health_local_state_t *local_state);
 
+
+
+esp_err_t as312HealthRestore(const char *TAG); //TODO
+void mics5524HealthRestore(const char *TAG); //TODO
+void sht41HealthRestore(const char *TAG); //TODO
+void sgp41HealthRestore(const char *TAG); //TODO
+void bmp280HealthRestore(const char *TAG); //TODO
+void scd40HealthRestore(const char *TAG); //TODO
+void pms7003HealthRestore(const char *TAG); //TODO
+void as7341HealthRestore(const char *TAG); //TODO
+void inmp441HealthRestore(const char *TAG); //TODO
+
+
+
 /**
- * @brief Attempt hardware recovery for each sensor whose @c degraded_* flag is set.
- *
- * Uses @c xTaskGetTickCount() and enforces a minimum interval between restore bursts
- * to avoid hammering the bus while acquisition tasks may still be using drivers.
- *
- * On failure only, logs @c "sensor restore %%d: …" with a numeric id:
- * 1 AS312, 2 MiCS-5524, 3 SHT41, 4 SGP41, 5 BMP280, 6 SCD40, 7 UART (PMS path),
- * 8 PMS7003, 9 AS7341, 10 INMP441 / I2S.
- *
- * @param log_tag ESP-IDF log tag (e.g. task tag).
- * @param[in] local_state Same struct as for the @c *HealthCheck functions; only read here.
+ * @brief Sensor health check, check all sensors.
+ * @param[in,out] now Current tick (unused).
+ * @param[in] TAG Log tag.
+ * @param[in] state_copy Device snapshot.
+ * @param[in,out] local_state @c degraded_mode may be set.
  */
-void health_try_restore_sensors(const char *log_tag, const health_local_state_t *local_state);
+void sensorHealthCheck(const char *TAG,TickType_t *now,
+                       const device_state_t *state_copy, health_local_state_t *local_state );
+
+void sensorHealthRestore(const char *TAG, health_local_state_t *local_state); //TODO
 
 #endif /* HEALTH_H */

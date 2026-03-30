@@ -11,6 +11,8 @@
 
 #include "health.h"
 
+#include "rgbled.h"
+
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -51,25 +53,13 @@ void system_task(void *pvParameters)
             xSemaphoreGive(g_device_state_mutex);
         }
 
-        // Health checks (mutate local_state via pointers)
-        ESP_LOGD(TAG, "Starting health checks");
-        as312HealthCheck(&now, TAG, &state_copy, &local_state);
-        mics5524HealthCheck(&now, TAG, &state_copy, &local_state);
-        sht41HealthCheck(&now, TAG, &state_copy, &local_state);
-        sgp41HealthCheck(&now, TAG, &state_copy, &local_state);
-        bmp280HealthCheck(&now, TAG, &state_copy, &local_state);
-        scd40HealthCheck(&now, TAG, &state_copy, &local_state);
-        pms7003HealthCheck(&now, TAG, &state_copy, &local_state);
-        as7341HealthCheck(&now, TAG, &state_copy, &local_state);
-        inmp441HealthCheck(&now, TAG, &state_copy, &local_state);
-        ESP_LOGD(TAG, "Health checks completed");
+        // Health checks of all sensors
+        sensorHealthCheck(TAG, &now, &state_copy, &local_state);
 
-        /* 
-        ESP_LOGD(TAG, "Trying to restore sensors");
-        health_try_restore_sensors(TAG, &local_state);
-        ESP_LOGD(TAG, "Sensors restored");
-        */
+        // Sensor Restore if needed
+        sensorHealthRestore(TAG,&local_state); // TODO: implement this
         
+
         // alarm logic
         local_state.as312_alarm = false;
         local_state.mics5524_alarm = false;

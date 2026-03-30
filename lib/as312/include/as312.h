@@ -16,13 +16,18 @@
 #include "esp_err.h"
 
 /**
+ * @brief Initialize the PIR GPIO configured in board pinout.
+ * @return ESP_OK on success, or an ESP-IDF error code.
+ */
+esp_err_t as312_init(void);
+/**
  * @brief Sample the PIR GPIO configured in board pinout.
  * @return true if motion is asserted by the sensor, false otherwise.
  */
 bool as312_read_motion(void);
 
 /**
- * @brief Re-apply PIR GPIO configuration via @ref gpio_init_all.
+ * @brief Re-apply PIR GPIO configuration.
  * @return ESP_OK on success, or an ESP-IDF error code.
  */
 esp_err_t as312_restore(void);

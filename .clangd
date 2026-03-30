@@ -1,2 +1,67 @@
+# compile_commands : pio run -t compiledb
+# BuiltinHeaders: QueryDriver → en-têtes newlib du GCC Xtensa (sinon clangd utilise les builtins hôte → endian.h cassé).
 CompileFlags:
-  CompilationDatabase: build
+  CompilationDatabase: .
+  Compiler: xtensa-esp32-elf-gcc
+  BuiltinHeaders: QueryDriver
+  Add:
+    # Clangd utilise le triple hôte : sans __XTENSA__, spinlock.h inclut les headers RISC-V (faux pour ESP32).
+    - -D__XTENSA__=1
+    # Évite de mélanger /usr/include (glibc) avec newlib Xtensa → __GLIBC_USE / endian.
+    - -nostdinc
+    # CLANGD_PIO_TOOLCHAIN_BEGIN
+    - -isystem
+    - /home/simopela/.platformio/packages/toolchain-xtensa-esp-elf/lib/gcc/xtensa-esp-elf/14.2.0/include
+    - -isystem
+    - /home/simopela/.platformio/packages/toolchain-xtensa-esp-elf/lib/gcc/xtensa-esp-elf/14.2.0/include-fixed
+    - -isystem
+    - /home/simopela/.platformio/packages/toolchain-xtensa-esp-elf/xtensa-esp-elf/include
+    # CLANGD_PIO_TOOLCHAIN_END
+    # CLANGD_LIB_INCLUDES_BEGIN
+    - -I
+    - /home/simopela/Documents/electrical_outlet_IOT/lib/as312/include
+    - -I
+    - /home/simopela/Documents/electrical_outlet_IOT/lib/as7341/include
+    - -I
+    - /home/simopela/Documents/electrical_outlet_IOT/lib/bmp280/include
+    - -I
+    - /home/simopela/Documents/electrical_outlet_IOT/lib/config/include
+    - -I
+    - /home/simopela/Documents/electrical_outlet_IOT/lib/device_state/include
+    - -I
+    - /home/simopela/Documents/electrical_outlet_IOT/lib/health/include
+    - -I
+    - /home/simopela/Documents/electrical_outlet_IOT/lib/inmp441/include
+    - -I
+    - /home/simopela/Documents/electrical_outlet_IOT/lib/mics5524/include
+    - -I
+    - /home/simopela/Documents/electrical_outlet_IOT/lib/mqtt/include
+    - -I
+    - /home/simopela/Documents/electrical_outlet_IOT/lib/network/include
+    - -I
+    - /home/simopela/Documents/electrical_outlet_IOT/lib/pms7003/include
+    - -I
+    - /home/simopela/Documents/electrical_outlet_IOT/lib/rgbled/include
+    - -I
+    - /home/simopela/Documents/electrical_outlet_IOT/lib/scd40/include
+    - -I
+    - /home/simopela/Documents/electrical_outlet_IOT/lib/sensor_init/include
+    - -I
+    - /home/simopela/Documents/electrical_outlet_IOT/lib/sgp41/include
+    - -I
+    - /home/simopela/Documents/electrical_outlet_IOT/lib/sht41/include
+    # CLANGD_LIB_INCLUDES_END
+  Remove:
+    - -mlongcalls
+    - -fstrict-volatile-bitfields
+    - -fno-tree-switch-conversion
+    - -fno-shrink-wrap
+    - -fno-jump-tables
+
+Diagnostics:
+  UnusedIncludes: None
+  ClangTidy:
+    Remove: "*"
+  Suppress:
+    - drv_unknown_argument
+    - drv_unknown_argument_with_suggestion

@@ -13,7 +13,6 @@
 #include "esp_log.h"
 #include "esp_check.h"
 
-#include "gpio_init.h"
 #include "adc_init.h"
 #include "uart_init.h"
 #include "i2s_init.h"
