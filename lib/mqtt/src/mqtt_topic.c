@@ -33,19 +33,9 @@ int mqtt_topic_build(char *buffer, size_t size, const char *device_id, const cha
 
 /* ---- Helpers ---- */
 
-int mqtt_topic_state(char *buffer, size_t size, const char *device_id)
-{
-    return mqtt_topic_build(buffer, size, device_id, "state");
-}
-
 int mqtt_topic_environment(char *buffer, size_t size, const char *device_id)
 {
     return mqtt_topic_build(buffer, size, device_id, "telemetry/environment");
-}
-
-int mqtt_topic_audio(char *buffer, size_t size, const char *device_id)
-{
-    return mqtt_topic_build(buffer, size, device_id, "telemetry/audio");
 }
 
 int mqtt_topic_system(char *buffer, size_t size, const char *device_id)
@@ -53,27 +43,7 @@ int mqtt_topic_system(char *buffer, size_t size, const char *device_id)
     return mqtt_topic_build(buffer, size, device_id, "status/system");
 }
 
-int mqtt_topic_faults(char *buffer, size_t size, const char *device_id)
-{
-    return mqtt_topic_build(buffer, size, device_id, "status/faults");
-}
-
-int mqtt_topic_validity(char *buffer, size_t size, const char *device_id)
-{
-    return mqtt_topic_build(buffer, size, device_id, "status/validity");
-}
-
-int mqtt_topic_last_update(char *buffer, size_t size, const char *device_id)
-{
-    return mqtt_topic_build(buffer, size, device_id, "status/last_update");
-}
-
 int mqtt_topic_alarm(char *buffer, size_t size, const char *device_id)
 {
     return mqtt_topic_build(buffer, size, device_id, "event/alarm");
-}
-
-int mqtt_topic_availability(char *buffer, size_t size, const char *device_id)
-{
-    return mqtt_topic_build(buffer, size, device_id, "availability");
 }

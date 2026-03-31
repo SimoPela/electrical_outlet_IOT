@@ -5,13 +5,11 @@
  */
 
 
-#include "mqtt_publish_internal.h"
+#include "mqtt_publish.h"
 #include "mqtt_topic.h"
 #include "mqtt_payload.h"
-#include "esp_log.h"
-#include <stdio.h>
-
 #include "app_config.h"
+#include "esp_log.h"
 
 static const char *TAG = "MQTT_PUBLISH";
 
@@ -65,4 +63,49 @@ int mqtt_publish_with_builder(esp_mqtt_client_handle_t client,
     }
 
     return mqtt_publish_raw(client, topic, payload, qos, retain);
+}
+
+int mqtt_publish_system(esp_mqtt_client_handle_t client, const char *device_id, const device_state_t *state)
+{
+    char topic[APP_MQTT_TOPIC_MAX_LEN];
+    char payload[APP_MQTT_PAYLOAD_MAX_LEN];
+
+    if (mqtt_topic_system(topic, sizeof(topic), device_id) < 0)
+    {
+        return -1;
+    }
+
+    if (mqtt_payload_build_system(payload, sizeof(payload), state, state->mqtt_connected) < 0)
+    {
+        return -1;
+    }
+
+    return mqtt_publish_raw(client, topic, payload, APP_QOS_1, APP_RETAIN_1);
+}
+
+int mqtt_publish_environment(esp_mqtt_client_handle_t client, const char *device_id, const device_state_t *state)
+{
+    return mqtt_publish_with_builder(client, device_id,
+                                     mqtt_topic_environment,
+                                     mqtt_payload_build_environment,
+                                     state, APP_QOS_0, APP_RETAIN_0);
+}
+
+int mqtt_publish_alarm(esp_mqtt_client_handle_t client, const char *device_id, const device_state_t *state)
+{
+    return mqtt_publish_with_builder(client, device_id,
+                    mqtt_topic_alarm,
+                    mqtt_payload_build_alarm,
+                    state, APP_QOS_1, APP_RETAIN_0);
+}
+
+int mqtt_publish_all_periodic(esp_mqtt_client_handle_t client, const char *device_id, const device_state_t *state)
+{
+    int rc = 0;
+
+    rc |= mqtt_publish_system(client, device_id, state);
+    rc |= mqtt_publish_environment(client, device_id, state);
+    rc |= mqtt_publish_alarm(client, device_id, state);
+
+    return rc;
 }

@@ -19,10 +19,13 @@ build/
 *.pio.map
 
 # secret files
-lib/config/src/app_config.h
+lib/config/include/app_config.h
 
 # temporary files (copyright issues)
 raport/
 
 # idf component
 managed_components/
+
+# mqtt instructions
+mqtt_use.md

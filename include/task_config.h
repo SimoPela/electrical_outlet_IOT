@@ -46,10 +46,18 @@
 #define SGP41_INTERVAL_MS      1000
 #define SHT41_INTERVAL_MS      2000
 #define BMP280_INTERVAL_MS     2000
-#define AS7341_INTERVAL_MS     3000
+#define AS7341_INTERVAL_MS     1000
 #define SCD40_INTERVAL_MS      2500 // poll faster than the 5 s cycle to catch the data-ready window
 #define PMS7003_INTERVAL_MS    5000
 /** @} */
+
+/**
+ * @name mqtt polling intervals (milliseconds)
+ * @{
+ */
+ #define MQTT_ENVIRONMENT_INTERVAL_MS 1000
+ #define MQTT_SYSTEM_INTERVAL_MS 10000
+ /** @} */
 
 /**
  * @name Application task loop periods (milliseconds)
@@ -57,8 +65,8 @@
  */
 #define ACQUISITION_TASK_INTERVAL_MS 100
 #define AUDIO_TASK_INTERVAL_MS 500
-#define SYSTEM_TASK_INTERVAL_MS 2000
-#define COMM_TASK_INTERVAL_MS 5000
+#define SYSTEM_TASK_INTERVAL_MS 100
+#define COMM_TASK_INTERVAL_MS 100
 /** @} */
 
 /** @brief Log tag string used for verbose sensor debug lines. */
