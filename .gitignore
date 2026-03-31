@@ -28,4 +28,4 @@ raport/
 managed_components/
 
 # mqtt instructions
-mqtt_use.mdlib/config/include/app_config.h
+mqtt_use.md 
