@@ -23,9 +23,9 @@
  */
 typedef struct
 {
-    bool motion_detected;
-    float gas_level_raw;
-    float gas_ppm;
+    bool  as312_motion_detected;
+    float mics5524_gas_level_raw;
+    float mics5524_gas_ppm;
 
     float voc_index;
     float nox_index;

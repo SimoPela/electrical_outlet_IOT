@@ -229,4 +229,11 @@ void sensorHealthCheck(const char *TAG,TickType_t *now,
  */
 void sensorHealthRestore(const char *TAG, health_local_state_t *local_state, TickType_t *now); 
 
+/**
+ * @brief System health check.
+ * @param[in] TAG Log tag.
+ * @param[in,out] local_state Local state.
+ */
+void systemHealthCheck(const char *TAG, health_local_state_t *local_state);
+
 #endif /* HEALTH_H */

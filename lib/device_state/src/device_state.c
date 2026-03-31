@@ -39,15 +39,15 @@ void device_state_init(void)
 
     g_device_state.noise_db = 0.0f;
 
-    g_device_state.gas_level_raw = 0.0f;
-    g_device_state.gas_ppm = 0.0f;
+    g_device_state.mics5524_gas_level_raw = 0.0f;
+    g_device_state.mics5524_gas_ppm = 0.0f;
 
     for (int i = 0; i < AS7341_CHANNELS; i++)
     {
         g_device_state.light.channels[i] = 0.0f;
     }
 
-    g_device_state.motion_detected = false;
+    g_device_state.as312_motion_detected = false;
 
     // -----------------------------
     // Last update timestamps
@@ -99,7 +99,6 @@ void device_state_init(void)
     // -----------------------------
     // Alarm state
     // -----------------------------
-    g_device_state.alarm_active = false;
     g_device_state.mics5524_alarm = false;
     g_device_state.as312_alarm = false;
 

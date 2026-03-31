@@ -73,7 +73,7 @@ void acquisition_task(void *pvParameters)
         {
             last_as312 = now;
 
-            local_state.motion_detected = as312_read_motion();
+            local_state.as312_motion_detected = as312_read_motion();
             local_state.as312_last_update = now;
             local_state.as312_valid = true;
             local_state.as312_fault = false;
@@ -90,8 +90,8 @@ void acquisition_task(void *pvParameters)
             float ppm     = mics5524_read_ppm();
 
             if (voltage >= 0.0f && ppm >= 0.0f) {
-                local_state.gas_level_raw    = voltage; /* [V] */
-                local_state.gas_ppm          = ppm;     /* estimated CO ppm */
+                local_state.mics5524_gas_level_raw    = voltage; /* [V] */
+                local_state.mics5524_gas_ppm          = ppm;     /* estimated CO ppm */
                 local_state.mics5524_last_update  = now;
                 local_state.mics5524_valid        = true;
                 local_state.mics5524_fault        = false;
@@ -269,9 +269,9 @@ void acquisition_task(void *pvParameters)
         // Copy the complete local state into the shared device state
         if (xSemaphoreTake(g_device_state_mutex, portMAX_DELAY) == pdTRUE)
         {
-            g_device_state.motion_detected = local_state.motion_detected;
-            g_device_state.gas_level_raw = local_state.gas_level_raw;
-            g_device_state.gas_ppm = local_state.gas_ppm;
+            g_device_state.as312_motion_detected = local_state.as312_motion_detected;
+            g_device_state.mics5524_gas_level_raw = local_state.mics5524_gas_level_raw;
+            g_device_state.mics5524_gas_ppm = local_state.mics5524_gas_ppm;
             g_device_state.voc_index = local_state.voc_index;
             g_device_state.nox_index = local_state.nox_index;
             g_device_state.temperature_c = local_state.temperature_c;

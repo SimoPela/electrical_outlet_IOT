@@ -52,10 +52,10 @@ typedef struct
 
     as7341_data_t light;
 
-    float gas_level_raw;
-    float gas_ppm;
+    float mics5524_gas_level_raw;
+    float mics5524_gas_ppm;
 
-    bool motion_detected;
+    bool as312_motion_detected;
 
     // -----------------------------
     // Audio state
@@ -112,7 +112,6 @@ typedef struct
     // -----------------------------
     // Alarm state
     // -----------------------------
-    bool alarm_active;
     bool mics5524_alarm;
     bool as312_alarm;
 

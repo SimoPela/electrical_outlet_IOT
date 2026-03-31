@@ -19,6 +19,8 @@ CompileFlags:
     # CLANGD_PIO_TOOLCHAIN_END
     # CLANGD_LIB_INCLUDES_BEGIN
     - -I
+    - /home/simopela/Documents/electrical_outlet_IOT/lib/alarm/include
+    - -I
     - /home/simopela/Documents/electrical_outlet_IOT/lib/as312/include
     - -I
     - /home/simopela/Documents/electrical_outlet_IOT/lib/as7341/include

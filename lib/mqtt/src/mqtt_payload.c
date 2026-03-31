@@ -37,14 +37,10 @@ int mqtt_payload_build_state(char *buffer, size_t buffer_size, const device_stat
         buffer_size,
         "{"
         "\"system_ok\":%s,"
-        "\"degraded_mode\":%s,"
-        "\"alarm_active\":%s,"
-        "\"motion_detected\":%s"
+        "\"degraded_mode\":%s"
         "}",
         state->system_ok ? "true" : "false",
-        state->degraded_mode ? "true" : "false",
-        state->alarm_active ? "true" : "false",
-        state->motion_detected ? "true" : "false");
+        state->degraded_mode ? "true" : "false");
 
     return mqtt_payload_check_result(written, buffer_size);
 }
@@ -63,13 +59,11 @@ int mqtt_payload_build_system(char *buffer, size_t buffer_size, const device_sta
         "{"
         "\"system_ok\":%s,"
         "\"degraded_mode\":%s,"
-        "\"alarm_active\":%s,"
         "\"wifi_connected\":%s,"
         "\"mqtt_connected\":%s"
         "}",
         state->system_ok ? "true" : "false",
         state->degraded_mode ? "true" : "false",
-        state->alarm_active ? "true" : "false",
         state->wifi_connected ? "true" : "false",
         state->mqtt_connected ? "true" : "false");
 
@@ -129,8 +123,8 @@ int mqtt_payload_build_environment(char *buffer, size_t buffer_size, const devic
         state->light.channels[5],
         state->light.channels[6],
         state->light.channels[7],
-        state->gas_level_raw,
-        state->gas_ppm);
+        state->mics5524_gas_level_raw,
+        state->mics5524_gas_ppm);
 
     return mqtt_payload_check_result(written, buffer_size);
 }
@@ -278,14 +272,10 @@ int mqtt_payload_build_alarm(char *buffer, size_t buffer_size, const device_stat
         buffer_size,
         "{"
         "\"as312_alarm\":%s,"
-        "\"mics5524_alarm\":%s,"
-        "\"motion_detected\":%s,"
-        "\"alarm_active\":%s"
+        "\"mics5524_alarm\":%s"
         "}",
         state->as312_alarm ? "true" : "false",
-        state->mics5524_alarm ? "true" : "false",
-        state->motion_detected ? "true" : "false",
-        state->alarm_active ? "true" : "false");
+        state->mics5524_alarm ? "true" : "false");
 
     return mqtt_payload_check_result(written, buffer_size);
 }

@@ -27,7 +27,8 @@ void comm_task(void *pvParameters)
      uint32_t counter = 0;
      uint32_t alive_counter = 0;
  
-     bool last_alarm_active = false;
+     bool last_alarm_as312_active = false;
+     bool last_alarm_mics5524_active = false;
      bool last_mqtt_connected = false;
  
      ESP_LOGI(TAG, "Communication task started");
@@ -70,9 +71,19 @@ void comm_task(void *pvParameters)
                  ESP_LOGW(TAG, "One or more periodic publishes failed");
              }
  
-             if (state_copy.alarm_active && !last_alarm_active)
+             if (state_copy.as312_alarm && !last_alarm_as312_active)
              {
-                 ESP_LOGW(TAG, "Alarm activated, publishing event");
+                 ESP_LOGW(TAG, "Alarm activated as312, publishing event");
+ 
+                 if (mqtt_publish_alarm(g_mqtt_client, APP_DEVICE_ID, &state_copy) < 0)
+                 {
+                     ESP_LOGW(TAG, "Failed to publish alarm event");
+                 }
+             }
+
+             if (state_copy.mics5524_alarm && !last_alarm_mics5524_active)
+             {
+                 ESP_LOGW(TAG, "Alarm activated mics5524, publishing event");
  
                  if (mqtt_publish_alarm(g_mqtt_client, APP_DEVICE_ID, &state_copy) < 0)
                  {
@@ -88,7 +99,8 @@ void comm_task(void *pvParameters)
              } 
          }
  
-         last_alarm_active = state_copy.alarm_active;
+         last_alarm_as312_active = state_copy.as312_alarm;
+         last_alarm_mics5524_active = state_copy.mics5524_alarm;
          last_mqtt_connected = state_copy.mqtt_connected;
  
          logTaskStackUsage(&counter, 10, TAG, STACK_COMM_WORDS);

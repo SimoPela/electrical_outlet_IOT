@@ -286,10 +286,6 @@ esp_err_t inmp441HealthRestore(const char *TAG)
     return ESP_OK;
 }
 
-
-
-
-
 void sensorHealthCheck(const char *TAG, TickType_t *now,
                        const device_state_t *state_copy, health_local_state_t *local_state)
 {
@@ -343,4 +339,11 @@ void sensorHealthRestore(const char *TAG, health_local_state_t *local_state, Tic
         inmp441HealthRestore(TAG);
     }
     ESP_LOGD(TAG, "Sensor restore completed");
+}
+
+void systemHealthCheck(const char *TAG, health_local_state_t *local_state)
+{
+    ESP_LOGD(TAG, "Starting system health check");
+    local_state->system_ok = !local_state->degraded_mode;
+    ESP_LOGD(TAG, "System health check completed");
 }
