@@ -101,6 +101,7 @@ void device_state_init(void)
     // -----------------------------
     g_device_state.mics5524_alarm = false;
     g_device_state.as312_alarm = false;
+    g_device_state.co2_alarm_level = NULL;
 
     // -----------------------------
     // Mutex

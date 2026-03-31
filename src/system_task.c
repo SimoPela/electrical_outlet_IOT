@@ -61,7 +61,7 @@ void system_task(void *pvParameters)
         sensorHealthCheck(TAG, &now, &state_copy, &health_local_state);
 
         // Sensor Restore if needed (after ALL_SENSORS_TIMEOUT_MS seconds to avoid premature restores)
-        sensorHealthRestore(TAG,&health_local_state, &now); // TODO: implement this
+        // sensorHealthRestore(TAG,&health_local_state, &now); // TODO: implement this
 
         // System health check
         systemHealthCheck(TAG, &health_local_state);
@@ -76,15 +76,17 @@ void system_task(void *pvParameters)
             g_device_state.as312_alarm = alarm_local_state.as312_alarm;
             g_device_state.mics5524_alarm = alarm_local_state.mics5524_alarm;
             g_device_state.system_ok = health_local_state.system_ok;
+            g_device_state.co2_alarm_level = alarm_local_state.co2_alarm_level;
             xSemaphoreGive(g_device_state_mutex);
         }
 
         ESP_LOGD(TAG_DEBUG,
-                 "system_ok=%d degraded=%d as312_alarm=%d mics5524_alarm=%d",
+                 "system_ok=%d degraded=%d as312_alarm=%d mics5524_alarm=%d co2_alarm_level=%s",
                  health_local_state.system_ok,
                  health_local_state.degraded_mode,
                  alarm_local_state.as312_alarm,
-                 alarm_local_state.mics5524_alarm);
+                 alarm_local_state.mics5524_alarm,
+                 alarm_local_state.co2_alarm_level);
 
         // Log the stack usage periodically.
         // Once the stack size is validated, this can be removed.

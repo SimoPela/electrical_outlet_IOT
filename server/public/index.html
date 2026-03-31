@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ESP32 Environmental Dashboard</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="topbar">
+        <div>
+          <h1>ESP32 Environmental Dashboard</h1>
+          <p class="hint">Live telemetry from MQTT topics</p>
+        </div>
+        <div id="status-pill" class="status-pill">Waiting for data</div>
+      </header>
+
+      <section class="grid">
+        <article class="panel">
+          <h2>System & Alarms</h2>
+          <div id="system-alarm" class="kv"></div>
+        </article>
+
+        <article class="panel">
+          <h2>Environment Snapshot</h2>
+          <div id="env-snapshot" class="kv"></div>
+        </article>
+      </section>
+
+      <section class="grid">
+        <article class="panel panel-chart">
+          <h2>Trends (last 60 samples)</h2>
+          <canvas id="trend-chart"></canvas>
+        </article>
+        <article class="panel panel-chart">
+          <h2>AS7341 Light Spectrum (F1..F8)</h2>
+          <canvas id="spectrum-chart"></canvas>
+          <p class="small-note">Centers: 415, 445, 480, 515, 555, 590, 630, 680 nm</p>
+        </article>
+      </section>
+
+      <section class="panel">
+        <h2>Raw Payload / Meta</h2>
+        <div id="meta" class="kv"></div>
+      </section>
+    </main>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="./app.js"></script>
+  </body>
+  </html>

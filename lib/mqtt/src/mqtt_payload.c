@@ -127,9 +127,11 @@ int mqtt_payload_build_alarm(char *buffer, size_t buffer_size, const device_stat
         "{"
         "\"as312_alarm\":%s,"
         "\"mics5524_alarm\":%s,"
+        "\"co2_alarm_level\":%s"
         "}",
         state->as312_alarm ? "true" : "false",
-        state->mics5524_alarm ? "true" : "false");
+        state->mics5524_alarm ? "true" : "false",
+        state->co2_alarm_level);
 
     return mqtt_payload_check_result(written, buffer_size);
 }

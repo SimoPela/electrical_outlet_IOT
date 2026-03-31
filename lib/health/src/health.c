@@ -292,7 +292,7 @@ void sensorHealthCheck(const char *TAG, TickType_t *now,
     if(*now < pdMS_TO_TICKS(ALL_SENSORS_TIMEOUT_MS)) {
         return;
     }
-    ESP_LOGD(TAG, "Starting health checks");
+    //ESP_LOGD(TAG, "Starting health checks");
     as312HealthCheck(now, TAG, state_copy, local_state);
     mics5524HealthCheck(now, TAG, state_copy, local_state);
     sht41HealthCheck(now, TAG, state_copy, local_state);
@@ -302,7 +302,7 @@ void sensorHealthCheck(const char *TAG, TickType_t *now,
     pms7003HealthCheck(now, TAG, state_copy, local_state);
     as7341HealthCheck(now, TAG, state_copy, local_state);
     inmp441HealthCheck(now, TAG, state_copy, local_state);
-    ESP_LOGD(TAG, "Health checks completed");
+    //ESP_LOGD(TAG, "Health checks completed");
 }
 
 void sensorHealthRestore(const char *TAG, health_local_state_t *local_state, TickType_t *now)
@@ -310,7 +310,7 @@ void sensorHealthRestore(const char *TAG, health_local_state_t *local_state, Tic
     if(*now < pdMS_TO_TICKS(ALL_SENSORS_TIMEOUT_MS)) {
         return;
     }
-    ESP_LOGD(TAG, "Starting sensor restore");
+    //ESP_LOGD(TAG, "Starting sensor restore");
     if (local_state->degraded_as312) {  
         as312HealthRestore(TAG);
     }
@@ -338,12 +338,12 @@ void sensorHealthRestore(const char *TAG, health_local_state_t *local_state, Tic
     if (local_state->degraded_inmp441) {
         inmp441HealthRestore(TAG);
     }
-    ESP_LOGD(TAG, "Sensor restore completed");
+    //ESP_LOGD(TAG, "Sensor restore completed");
 }
 
 void systemHealthCheck(const char *TAG, health_local_state_t *local_state)
 {
-    ESP_LOGD(TAG, "Starting system health check");
+    //ESP_LOGD(TAG, "Starting system health check");
     local_state->system_ok = !local_state->degraded_mode;
-    ESP_LOGD(TAG, "System health check completed");
+    //ESP_LOGD(TAG, "System health check completed");
 }

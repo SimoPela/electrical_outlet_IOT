@@ -29,3 +29,7 @@ managed_components/
 
 # mqtt instructions
 mqtt_use.md 
+
+# server
+server/node_modules/
+server/.env

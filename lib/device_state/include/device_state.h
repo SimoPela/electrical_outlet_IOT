@@ -114,6 +114,7 @@ typedef struct
     // -----------------------------
     bool mics5524_alarm;
     bool as312_alarm;
+    const char *co2_alarm_level;
 
 } device_state_t;
 
