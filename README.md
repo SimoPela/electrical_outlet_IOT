@@ -1,332 +1,258 @@
-# Electrical Outlet IoT — Environmental Sensor Node
+# Electrical Outlet IoT
 
-**Embedded indoor air-quality and comfort monitor** designed to eventually fit a **standard wall-outlet form factor** (target: Swiss T13-style plate). The firmware runs on **Espressif ESP32** (ESP-IDF / FreeRTOS), aggregates many environmental sensors, estimates **ambient noise (dB SPL)** from a digital MEMS microphone, and publishes telemetry over **Wi-Fi / MQTT**.
+![Status](https://img.shields.io/badge/status-in%20progress-yellow)
+![Maintained](https://img.shields.io/badge/maintained-yes-brightgreen)
+![License](https://img.shields.io/badge/license-Apache%202.0-blue)
+![Authors](https://img.shields.io/badge/authors-Simone%20Pelascini%20and%20Aurélien%20Bollin-blue)
+
+
+ESP32-based environmental monitoring firmware plus a lightweight web dashboard for live MQTT telemetry.
+
+The project is built around an ESP32 running ESP-IDF/FreeRTOS, collecting indoor environment data from multiple sensors (air quality, climate, particulate matter, light spectrum, motion, gas, and audio level), then publishing JSON payloads to MQTT. A Node.js dashboard subscribes to these topics and visualizes live values and trends.
 
 <p align="center">
-  <img src="img/protoype.JPG" alt="Breadboard prototype: ESP32 dev board with environmental sensors, PMS7003, PIR, RGB LED, and INMP441 microphone" width="720">
+  <img src="img/protoype.JPG" alt="Breadboard prototype with ESP32 and environmental sensors" width="720">
 </p>
 
-<p align="center"><em>Breadboard bring-up: ESP32 dev module, I2C sensor cluster, UART particulate sensor, I2S MEMS mic, ADC gas sensor, PIR, and RGB status LED.</em></p>
+---
+
+## Features
+
+- Multi-sensor acquisition on I2C, UART, I2S, ADC, and GPIO.
+- FreeRTOS architecture with dedicated acquisition, audio, system, and communication tasks.
+- Shared mutex-protected runtime state (`g_device_state`) with validity/fault flags and timestamps.
+- Wi-Fi station mode with automatic reconnect and MQTT telemetry publishing.
+- System health evaluation and alarm logic (motion, gas threshold, CO2 level bands).
+- Real-time web dashboard (Express + Socket.IO + Chart.js) driven by MQTT messages.
 
 ---
 
-## At a glance
+## Hardware and Sensors
 
-| Area | Details |
-|------|---------|
-| **MCU** | ESP32 (`esp32dev` / PlatformIO, ESP-IDF 5.x) |
-| **RTOS** | FreeRTOS — four application tasks + driver stack |
-| **Buses** | I2C (shared), UART (PMS7003), I2S Philips 24-bit mono (INMP441), ADC (MiCS-5524), GPIO (PIR, LED) |
-| **Cloud edge** | Wi-Fi station, MQTT client (JSON telemetry) |
-| **Repo layout** | `src/` application, `include/` app headers, `lib/` sensor drivers & services, `datasheet/` PDFs, `img/` photos |
+### Controller
+- ESP32 DevKit-style board (`platformio.ini`: `board = esp32dev`, framework `espidf`).
+
+### Sensor set
+- `SCD40`: CO2, temperature, humidity (I2C)
+- `SHT41`: temperature, humidity (I2C)
+- `SGP41`: VOC/NOx indices (I2C, optional compensation from SHT41)
+- `BMP280`: pressure, temperature (I2C)
+- `AS7341`: 8-channel visible spectrum (I2C)
+- `PMS7003`: PM1.0 / PM2.5 / PM10 (UART)
+- `MiCS-5524`: gas raw voltage + estimated ppm (ADC)
+- `AS312`: PIR motion sensor (GPIO)
+- `INMP441`: noise level estimate in dB SPL (I2S)
+- RGB status LED (GPIO)
+
+### Default pinout
+Defined in `lib/config/include/esp32_pinout.h`:
+
+- I2C SDA/SCL: GPIO `21` / `22`
+- PMS7003 TX/RX (sensor side): GPIO `16` / `17`
+- PMS7003 SET/RESET: GPIO `4` / `5`
+- PIR output: GPIO `27`
+- I2S WS/SCK/SD: GPIO `25` / `26` / `33`
+- MiCS-5524 ADC: GPIO `34`
+- RGB LED R/G/B: GPIO `13` / `12` / `14`
 
 ---
 
-## Quick start
+## Firmware Architecture
 
+### Boot flow
+`app_main()` in `src/main.c` performs:
+
+1. `device_state_init()`
+2. `sensor_init_all()`
+3. `network_app_init()` and wait for Wi-Fi connection
+4. `mqtt_app_start()`
+5. Task creation: `acquisition_task`, `audio_task`, `comm_task`, `system_task`
+
+If sensor/network init fails, startup aborts.
+
+### FreeRTOS tasks
+Task definitions are configured in `include/task_config.h`.
+
+| Task | Main role | Priority | Stack (words) | Loop period |
+|---|---|---:|---:|---:|
+| `acquisition_task` | Poll environmental sensors and update shared state | 2 | 4096 | 100 ms |
+| `audio_task` | Read INMP441 and update noise metrics | 2 | 4096 | 500 ms |
+| `comm_task` | Publish MQTT system/environment/alarm payloads | 3 | 4096 | 100 ms |
+| `system_task` | Evaluate health and alarm state | 4 | 4096 | 100 ms |
+
+The firmware uses periodic polling instead of interrupt-driven sampling for most sensors.
+`acquisition_task` runs every 100 ms and checks per-sensor deadlines (for example 1000 ms, 2000 ms, 2500 ms, 5000 ms depending on the sensor). When a deadline is reached, it reads that sensor, updates local values, then commits a synchronized snapshot to the shared device state.
+In parallel, `audio_task` handles the INMP441 capture pipeline at its own cadence, while `system_task` computes health/alarm flags and `comm_task` publishes MQTT payloads from a consistent state snapshot.
+
+```mermaid
+flowchart LR
+    subgraph RTOS[FreeRTOS Runtime]
+        ACQ["acquisition_task (100 ms loop)\n- deadline-based polling\n- multi-sensor reads"]
+        AUD["audio_task (500 ms loop)\n- INMP441 read\n- noise_db update"]
+        SYS["system_task (100 ms loop)\n- health checks\n- alarm logic"]
+        COM["comm_task (100 ms loop)\n- MQTT publish scheduler"]
+    end
+
+    DS[("g_device_state\n(mutex-protected shared snapshot)")]
+    BRK["MQTT broker"]
+
+    ACQ -->|"poll sensors + write measurements"| DS
+    AUD -->|"write audio metrics"| DS
+    SYS <-->|"read/write system flags"| DS
+    COM -->|"read snapshot"| DS
+    COM -->|"publish JSON payloads"| BRK
+```
+
+### Shared runtime state
+`lib/device_state/include/device_state.h` defines:
+
+- `g_device_state` (`device_state_t`): all sensor values, validity/fault flags, timestamps, connectivity flags, alarm status.
+- `g_device_state_mutex`: protects shared state access.
+- `g_sensor_driver_mutex`: serializes sensor driver access and restore operations.
+
+### Health and alarms
+Implemented in:
+- `lib/health/src/health.c`
+- `lib/alarm/src/alarm.c`
+
+Current logic includes:
+- degraded mode/system status based on validity/fault/freshness checks,
+- motion alarm from PIR,
+- gas alarm when MiCS-5524 estimated ppm is above threshold,
+- CO2 qualitative level (`optimal`, `good`, `moderate`, `poor`, `very poor`, `critical`).
+
+---
+
+## MQTT Interface
+
+Topic builders are implemented in `lib/mqtt/src/mqtt_topic.c`.
+
+Published topics:
+
+- `devices/<device_id>/telemetry/environment`
+- `devices/<device_id>/status/system`
+- `devices/<device_id>/event/alarm`
+
+Payload builders are in `lib/mqtt/src/mqtt_payload.c`:
+
+- **Environment payload**: CO2, temperatures, humidities, pressure, VOC/NOx, PM values, light channels, gas values, noise dB.
+- **System payload**: `system_ok`, `degraded_mode`, `wifi_connected`, `mqtt_connected`, `status`.
+- **Alarm payload**: `as312_alarm`, `mics5524_alarm`, `co2_alarm_level`.
+
+---
+
+## Repository Structure
+
+```text
+.
+├── src/                    # app_main and FreeRTOS task implementations
+├── include/                # task headers and timing/priority configuration
+├── lib/
+│   ├── config/             # app config template and ESP32 pin mapping
+│   ├── sensor_init/        # centralized peripheral/sensor initialization
+│   ├── device_state/       # shared state and mutexes
+│   ├── network/            # Wi-Fi connection management
+│   ├── mqtt/               # topic/payload/publish/client logic
+│   ├── health/             # system health checks
+│   ├── alarm/              # alarm decision logic
+│   ├── inmp441/            # audio wrapper and dB estimate
+│   └── ...                 # individual sensor drivers
+├── server/                 # Node.js + Socket.IO live dashboard
+├── scripts/                # build helper scripts (clangd/toolchain patching)
+├── datasheet/              # sensor datasheets
+└── platformio.ini          # PlatformIO environment
+```
+
+---
+
+## Getting Started
+
+### 1) Firmware (ESP32)
+
+### Prerequisites
+- [PlatformIO Core](https://platformio.org/install)
+- ESP32 board connected over USB
+
+### Configuration
+1. Create/update `lib/config/include/app_config.h` using `lib/config/include/app_config_template.h`.
+2. Set:
+   - `APP_WIFI_SSID`
+   - `APP_WIFI_PASSWORD`
+   - `APP_MQTT_BROKER_URI`
+   - `APP_MQTT_USERNAME`
+   - `APP_MQTT_PASSWORD`
+   - `APP_DEVICE_ID`
+3. If needed, adjust GPIO mapping in `lib/config/include/esp32_pinout.h`.
+4. Update serial upload settings in `platformio.ini` (`upload_port`, optionally `upload_speed`).
+
+### Build, flash, monitor
 ```bash
 pio run
 pio run -t upload
 pio device monitor -b 115200
 ```
 
-Configure Wi-Fi and MQTT in `lib/config/include/app_config.h` (use secrets management appropriate for your deployment; do not commit real credentials to public forks).
-
----
-
-## Measured quantities
-
-| Quantity | Sensor | Interface |
-|----------|--------|-----------|
-| CO₂, T, RH (on-chip) | Sensirion **SCD40** | I2C |
-| VOC / NOx index | Sensirion **SGP41** | I2C (compensated with SHT41 when available) |
-| PM1 / PM2.5 / PM10 | Plantower **PMS7003** | UART |
-| Temperature / humidity | Sensirion **SHT41** | I2C |
-| Pressure / temperature | Bosch **BMP280** | I2C |
-| Visible spectrum (8 channels) | AMS **AS7341** | I2C |
-| Motion | **AS312** PIR | GPIO |
-| Noise level (SPL estimate) | **INMP441** | I2S |
-| Combustible gas (raw + estimated ppm) | **MiCS-5524** | ADC |
-| Status | RGB LED | GPIO / PWM-capable pins |
-
-An alternate **high-end analog mic path** (e.g. ICS-40730 + external ADC) was considered; the current prototype standardizes on **INMP441** for simplicity and digital integrity.
-
----
-
-## Hardware platform
-
-### Controller
-
-- **ESP32** (dual-core, Wi-Fi) on a classic **ESP32 DevKit**-style board (`board = esp32dev` in PlatformIO).
-
-### Prototype pin assignment (see `lib/config/include/esp32_pinout.h`)
-
-| Function | GPIO |
-|----------|------|
-| I2C SDA / SCL | 21 / 22 |
-| PMS7003 UART RX / TX (ESP view) | 17 / 16 |
-| PMS7003 SET / RESET | 4 / 5 |
-| PIR OUT | 27 |
-| I2S WS / BCLK / DIN | 25 / 26 / 33 |
-| MiCS-5524 ADC | 34 |
-| RGB LED R / G / B | 13 / 12 / 14 |
-
-### Enclosure target (Swiss T13–class plate)
-
-- Front plate ≈ **86 × 86 mm**
-- Wall recess ≈ **55–60 mm** diameter
-- Box depth ≈ **45–60 mm**
-
----
-
-## System overview
-
-```mermaid
-flowchart TB
-    subgraph MCU[ESP32]
-        FW[FreeRTOS firmware]
-    end
-
-    subgraph SENS[Sensors & inputs]
-        I2C[I2C bus: SCD40 SHT41 SGP41 BMP280 AS7341]
-        UART[UART: PMS7003]
-        I2S[I2S: INMP441]
-        ADC[ADC: MiCS-5524]
-        PIR[GPIO: AS312 PIR]
-        LED[GPIO: RGB LED]
-    end
-
-    subgraph OUT[Outputs]
-        MQTT[MQTT broker]
-    end
-
-    FW <-->|I2C| I2C
-    FW <-->|UART| UART
-    FW <-->|I2S| I2S
-    FW --> ADC
-    FW --> PIR
-    FW --> LED
-    FW <-->|Wi-Fi| MQTT
-```
-
----
-
-## Firmware architecture
-
-The design favors **few cooperative tasks** instead of one task per sensor: lower context-switch cost, simpler locking, and predictable timing. Sensor polling uses **deadline-style timestamps** inside `acquisition_task`; the **audio path** stays isolated because I2S has different latency and buffer requirements than I2C/UART.
-
-### Boot sequence (`app_main`)
-
-```mermaid
-flowchart TD
-    A[Boot] --> B[device_state_init]
-    B --> C[sensor_init_all]
-    C --> D[Network init + wait Wi-Fi]
-    D --> E[mqtt_app_start]
-    E --> F[Create tasks: acquisition, audio, comm, system]
-```
-
-### Tasks
-
-| Task | Role | Stack (words) | Priority | Period |
-|------|------|----------------|----------|--------|
-| `acquisition_task` | Polls all environmental sensors; commits to `g_device_state` | 4096 | 2 | 100 ms loop |
-| `audio_task` | I2S read, RMS / dB SPL, updates `noise_db` + audio flags | 4096 | 2 | 500 ms |
-| `comm_task` | MQTT periodic publish, availability, alarms | 4096 | 3 | 5000 ms |
-| `system_task` | Health / degraded mode / flags (motion supervised today) | 4096 | 4 | 2000 ms |
-
-Stack high-water marks are logged periodically via `logTaskStackUsage()` in `src/task_config.c`. Each task passes a **`ceiling`** value: a log line is emitted when the call counter is a multiple of `ceiling` (e.g. `10` every 10 loop iterations, `50` for a faster loop like acquisition). Messages use **`ESP_LOGD`** with `TAG_DEBUG`.
-
-### Task and data flow
-
-```mermaid
-flowchart LR
-    ACQ[acquisition_task]
-    AUD[audio_task]
-    SYS[system_task]
-    COM[comm_task]
-    DS[(g_device_state)]
-    BRK[MQTT broker]
-
-    ACQ -->|write measurements| DS
-    AUD -->|write noise_db + flags| DS
-    SYS -->|read snapshot / write system_ok degraded_mode alarms| DS
-    COM -->|read snapshot| DS
-    COM -->|publish JSON| BRK
-```
-
----
-
-## Shared state: `device_state_t`
-
-All tasks coordinate through **`g_device_state`** protected by **`g_device_state_mutex`**. Acquisition (and audio) **do not hold the mutex while talking to hardware**; they refresh a **task-local** copy (`acquisition_local_state_t`) and perform a **short critical section** to copy into `g_device_state`.
-
-Representative fields (see `lib/device_state/include/device_state.h` for the full structure):
-
-```c
-typedef struct {
-    float co2_ppm;
-    float temperature_scd40;
-    float humidity_scd40;
-    float temperature_c;
-    float humidity_percent;
-    float bmp280_pressure_hpa;
-    float bmp280_temperature_c;
-    float voc_index;
-    float nox_index;
-    float pm1_0_ug_m3, pm2_5_ug_m3, pm10_ug_m3;
-    as7341_data_t light;   /* 8 spectral channels */
-    float gas_level_raw;
-    float gas_ppm;
-    bool motion_detected;
-    float noise_db;
-    /* last_update ticks, per-sensor valid/fault, wifi/mqtt, system_ok, alarms, ... */
-} device_state_t;
-```
-
-Commit pattern (conceptually):
-
-```text
-read sensors into local_state   // no mutex
-take mutex
-copy local_state → g_device_state
-give mutex
-```
-
----
-
-## Acquisition scheduling
-
-Per-sensor intervals are defined in `include/task_config.h`:
-
-| Sensor / group | Interval |
-|----------------|----------|
-| AS312 (motion) | 100 ms |
-| MiCS-5524 | 1000 ms |
-| SGP41 | 1000 ms |
-| SHT41 | 2000 ms |
-| BMP280 | 2000 ms |
-| AS7341 | 3000 ms |
-| SCD40 | 2500 ms (polls around sensor cycle; handles `ESP_ERR_NOT_FINISHED`) |
-| PMS7003 | 5000 ms (handles stabilization / incomplete frames) |
-
-**Sensor init** (`lib/sensor_init/src/sensor_init.c`) brings up GPIO, ADC, UART, I2S, `i2cdev` for I2C, then each device driver. Non-fatal init failures are logged and skipped so bring-up can proceed with a subset of sensors.
-
----
-
-## Audio: INMP441 and SPL estimate
-
-- **I2S**: Philips stereo format, **24-bit**, **mono**, **16 kHz**; `mclk_multiple` set for ESP-IDF 24-bit rules (`I2S_MCLK_MULTIPLE_384`).
-- **Critical detail**: DMA provides **32-bit words** with the **24-bit sample left-aligned**. Correct scaling uses an **arithmetic right shift by 8**, not masking the low 24 bits (see [ESP-IDF discussion #15721](https://github.com/espressif/esp-idf/issues/15721)).
-
-```c
-/* After i2s_channel_read into int32_t samples: */
-static int32_t sample_s24_from_i2s_word(int32_t raw)
-{
-    return raw >> 8;
-}
-```
-
-- **SPL**: RMS is computed **after removing DC** (mean subtraction). Level is mapped using the **INMP441 datasheet** reference (1 kHz, 94 dB SPL → digital peak code), then a **calibratable offset** `INMP441_SPL_OFFSET_DB` in `lib/inmp441/src/inmp441_w.c` to align with an external **A-weighted** meter. Expect small residual errors versus a Class 1 meter due to weighting, mounting, and self-noise.
-
----
-
-## System supervision (`system_task`)
-
-Today, supervision focuses on the **motion channel**: invalid data, driver fault, or **stale updates** (`MOTION_TIMEOUT_MS`, 15 s in `include/system_task.h`) force **degraded** mode. **Absence of motion is not a fault** — only sensor health matters. Alarm lines exist (`motion_alarm`, `gas_alarm`, `alarm_active`) for extension; current policy keeps alarms inactive while scaffolding is validated.
-
----
-
-## MQTT and `comm_task`
-
-- **Single owner** of the MQTT client (started in `mqtt_app_start()` before tasks run).
-- `comm_task` snapshots `g_device_state`, calls **`mqtt_publish_all_periodic()`** and related helpers under `lib/mqtt/`.
-- Typical topic layout (device id from `APP_DEVICE_ID`):
-
-```text
-devices/<device_id>/state
-devices/<device_id>/telemetry/environment
-devices/<device_id>/telemetry/audio
-devices/<device_id>/status/system
-devices/<device_id>/event/alarm
-devices/<device_id>/availability
-devices/<device_id>/command
-```
-
-Debug subscription (example on a LAN broker):
-
+Other useful commands:
 ```bash
-mosquitto_sub -h <broker_host> -t "#" -v
+# clean build
+pio run -t clean
+# erase flash
+pio run -t erase
+# generate compiledb database for IDE indexing
+pio run -t compiledb
 ```
 
----
+### 2) Dashboard server
 
-## Repository layout
+The dashboard is located in `server/` and subscribes to MQTT topics, then forwards updates to browser clients via Socket.IO.
 
-```text
-src/              Application entry (main.c), FreeRTOS tasks
-include/          Task headers, board-independent app configuration hooks
-lib/
-  as312, as7341, bmp280, mics5524, pms7003, scd40, sgp41, sht41  Sensor drivers
-  inmp441/        I2S microphone + SPL estimation
-  sensor_init/    Central peripheral init (GPIO, ADC, UART, I2S, i2cdev)
-  device_state/   Shared state + mutex
-  mqtt/           Topics, JSON payloads, publish helpers
-  network/        Wi-Fi connection manager
-  config/         Pinout, app_config (Wi-Fi/MQTT — secure for production)
-datasheet/        Vendor PDFs for listed sensors
-img/              Project photos (prototype)
-circuit_pcb/      KiCad-related assets (separate from firmware build)
+### Prerequisites
+- Node.js 18+ recommended
+
+### Setup
+```bash
+cd server
+npm install
+cp .env.example .env
 ```
 
----
+Edit `.env`:
+- `MQTT_BROKER_URL`
+- `MQTT_USERNAME`
+- `MQTT_PASSWORD`
+- `PORT` (default `3000`)
+- `ALARM_ON_MS` (temporary alarm display duration)
 
-## Datasheets (local copies)
-
-PDFs under `datasheet/` include: **SHT4x**, **SCD4x**, **SGP41**, **BMP280**, **AS7341**, **PMS7003**, **INMP441**, **MiCS-5524**, **AS312 PIR**.
-
----
-
-## Logging (ESP-IDF)
-
-| Macro | Use |
-|-------|-----|
-| `ESP_LOGE` | Hard failures |
-| `ESP_LOGW` | Recoverable / degraded |
-| `ESP_LOGI` | Normal lifecycle |
-| `ESP_LOGD` / `ESP_LOGV` | Verbose sensor traces |
-
-Periodic **stack usage** logging:
-
-```c
-void logTaskStackUsage(uint32_t *counter, uint32_t ceiling, const char *TAG,
-                       UBaseType_t task_stack_size)
-{
-    if (++(*counter) % ceiling == 0) {
-        UBaseType_t stack_remaining = uxTaskGetStackHighWaterMark(NULL);
-        UBaseType_t stack_used = task_stack_size - stack_remaining;
-        ESP_LOGD(TAG_DEBUG, "Stack used: %u words | remaining: %u words",
-                 stack_used, stack_remaining);
-    }
-}
+### Run
+```bash
+npm start
 ```
 
-The `TAG` argument is kept for consistency with task call sites; the message is tagged with `TAG_DEBUG` so stack dumps appear when debug logging is enabled for that tag.
+Open: `http://localhost:3000`
 
 ---
 
-## Roadmap
+## Development Notes
 
-- Mechanical integration into **outlet-depth** enclosure and **production PCB** (see `circuit_pcb/`).
-- Extend **system_task** supervision to all sensors (validity, fault, freshness) with consistent timeouts.
-- Hardening: **secure credential storage**, **OTA**, and optional **Home Assistant** auto-discovery.
+- Build options and monitor/upload defaults are in `platformio.ini`.
+- `scripts/update_clangd_toolchain.py` updates `.clangd` include sections after build for better IDE indexing.
+- Sensor polling and publish intervals are centralized in `include/task_config.h`.
+- Debug logs use ESP-IDF logging macros (`ESP_LOGE/W/I/D`).
+
+---
+
+## Security Notes
+
+- Do not commit real Wi-Fi/MQTT credentials.
+- Keep secrets only in local config files (`app_config.h`, `server/.env`) and exclude them from public history.
 
 ---
 
 ## License
 
-Apache License 2.0 — see file headers in `src/` and `lib/`.
+This project is licensed under the Apache License 2.0 (see source headers).
 
 ## Authors
 
-Simone Pelascini, Aurélien Bollin (see copyright notices in source files).
+- Simone Pelascini
+- Aurélien Bollin
