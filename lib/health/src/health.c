@@ -1,3 +1,23 @@
+/*
+ * Copyright 2026 Simone Pelascini and Aurélien Bollin
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ */
+
+/**
+ * @file health.c
+ * @brief Per-sensor health check implementations.
+ *
+ * Each @c *HealthCheck function tests the matching sensor's validity flag,
+ * fault flag, and timestamp age.  A positive result sets @c degraded_mode
+ * on @c health_local_state_t.  Checks are skipped before the sensor has
+ * published its first timestamp (@c *_last_update == 0).
+ *
+ * The aggregate @ref sensorHealthCheck is skipped entirely before the system
+ * has been running for @c ALL_SENSORS_TIMEOUT_MS to avoid false degradation
+ * during cold-start stabilization.
+ */
+
 #include "health.h"
 
 #include "as312.h"
@@ -22,6 +42,7 @@
 #define HEALTH_RESTORE_BURST_INTERVAL_MS 10000
 #endif
 
+/** @copydoc as312HealthCheck */
 void as312HealthCheck(TickType_t *now, const char *TAG,
                       const device_state_t *state_copy, health_local_state_t *local_state)
 {
@@ -45,6 +66,7 @@ void as312HealthCheck(TickType_t *now, const char *TAG,
     }
 }
 
+/** @copydoc mics5524HealthCheck */
 void mics5524HealthCheck(TickType_t *now, const char *TAG,
                          const device_state_t *state_copy, health_local_state_t *local_state)
 {
@@ -65,6 +87,7 @@ void mics5524HealthCheck(TickType_t *now, const char *TAG,
     }
 }
 
+/** @copydoc sht41HealthCheck */
 void sht41HealthCheck(TickType_t *now, const char *TAG,
                       const device_state_t *state_copy, health_local_state_t *local_state)
 {
@@ -88,6 +111,7 @@ void sht41HealthCheck(TickType_t *now, const char *TAG,
     }
 }
 
+/** @copydoc sgp41HealthCheck */
 void sgp41HealthCheck(TickType_t *now, const char *TAG,
                       const device_state_t *state_copy, health_local_state_t *local_state)
 {
@@ -111,6 +135,7 @@ void sgp41HealthCheck(TickType_t *now, const char *TAG,
     }
 }
 
+/** @copydoc bmp280HealthCheck */
 void bmp280HealthCheck(TickType_t *now, const char *TAG,
                        const device_state_t *state_copy, health_local_state_t *local_state)
 {
@@ -134,6 +159,7 @@ void bmp280HealthCheck(TickType_t *now, const char *TAG,
     }
 }
 
+/** @copydoc scd40HealthCheck */
 void scd40HealthCheck(TickType_t *now, const char *TAG,
                       const device_state_t *state_copy, health_local_state_t *local_state)
 {
@@ -157,6 +183,7 @@ void scd40HealthCheck(TickType_t *now, const char *TAG,
     }
 }
 
+/** @copydoc pms7003HealthCheck */
 void pms7003HealthCheck(TickType_t *now, const char *TAG,
                         const device_state_t *state_copy, health_local_state_t *local_state)
 {
@@ -177,6 +204,7 @@ void pms7003HealthCheck(TickType_t *now, const char *TAG,
     }
 }
 
+/** @copydoc as7341HealthCheck */
 void as7341HealthCheck(TickType_t *now, const char *TAG,
                        const device_state_t *state_copy, health_local_state_t *local_state)
 {
@@ -200,6 +228,7 @@ void as7341HealthCheck(TickType_t *now, const char *TAG,
     }
 }
 
+/** @copydoc inmp441HealthCheck */
 void inmp441HealthCheck(TickType_t *now, const char *TAG,
                         const device_state_t *state_copy, health_local_state_t *local_state)
 {
@@ -223,76 +252,13 @@ void inmp441HealthCheck(TickType_t *now, const char *TAG,
     }
 }
 
-esp_err_t as312HealthRestore(const char *TAG)
-{
-    ESP_LOGD(TAG, "Restoring AS312");
-    ESP_RETURN_ON_ERROR(as312_restore(), TAG, "AS312 restore failed"); //Works
-    return ESP_OK;
-}
-
-esp_err_t mics5524HealthRestore(const char *TAG)
-{
-    ESP_LOGD(TAG, "Restoring MiCS-5524");
-    ESP_RETURN_ON_ERROR(mics5524_restore(), TAG, "MiCS-5524 restore failed");
-    return ESP_OK;
-}
-
-esp_err_t sht41HealthRestore(const char *TAG)
-{
-    ESP_LOGD(TAG, "Restoring SHT41");
-    ESP_RETURN_ON_ERROR(sht41_restore(), TAG, "SHT41 restore failed");
-    return ESP_OK;
-}
-
-esp_err_t sgp41HealthRestore(const char *TAG)
-{
-    ESP_LOGD(TAG, "Restoring SGP41");
-    ESP_RETURN_ON_ERROR(sgp41_restore(), TAG, "SGP41 restore failed");
-    return ESP_OK;
-}
-
-esp_err_t bmp280HealthRestore(const char *TAG)
-{
-    ESP_LOGD(TAG, "Restoring BMP280");
-    ESP_RETURN_ON_ERROR(bmp_restore(), TAG, "BMP280 restore failed");
-    return ESP_OK;
-}
-
-esp_err_t scd40HealthRestore(const char *TAG)
-{
-    ESP_LOGD(TAG, "Restoring SCD40");
-    ESP_RETURN_ON_ERROR(scd40_restore(), TAG, "SCD40 restore failed");
-    return ESP_OK;
-}
-
-esp_err_t pms7003HealthRestore(const char *TAG) //Works
-{
-    ESP_LOGD(TAG, "Restoring PMS7003");
-    ESP_RETURN_ON_ERROR(pms7003_w_restore(), TAG, "PMS7003 restore failed");
-    return ESP_OK;
-}
-
-esp_err_t as7341HealthRestore(const char *TAG)
-{
-    ESP_LOGD(TAG, "Restoring AS7341");
-    ESP_RETURN_ON_ERROR(as7341_w_restore(), TAG, "AS7341 restore failed");
-    return ESP_OK;
-}
-
-esp_err_t inmp441HealthRestore(const char *TAG)
-{
-    ESP_LOGD(TAG, "Restoring INMP441");
-    ESP_RETURN_ON_ERROR(inmp441_w_restore(), TAG, "INMP441 restore failed");
-    return ESP_OK;
-}
-
+/** @copydoc sensorHealthCheck */
 void sensorHealthCheck(const char *TAG, TickType_t *now,
                        const device_state_t *state_copy, health_local_state_t *local_state)
 {
     if(*now < pdMS_TO_TICKS(ALL_SENSORS_TIMEOUT_MS)) {
         return;
     }
-    //ESP_LOGD(TAG, "Starting health checks");
     as312HealthCheck(now, TAG, state_copy, local_state);
     mics5524HealthCheck(now, TAG, state_copy, local_state);
     sht41HealthCheck(now, TAG, state_copy, local_state);
@@ -302,48 +268,11 @@ void sensorHealthCheck(const char *TAG, TickType_t *now,
     pms7003HealthCheck(now, TAG, state_copy, local_state);
     as7341HealthCheck(now, TAG, state_copy, local_state);
     inmp441HealthCheck(now, TAG, state_copy, local_state);
-    //ESP_LOGD(TAG, "Health checks completed");
 }
 
-void sensorHealthRestore(const char *TAG, health_local_state_t *local_state, TickType_t *now)
-{
-    if(*now < pdMS_TO_TICKS(ALL_SENSORS_TIMEOUT_MS)) {
-        return;
-    }
-    //ESP_LOGD(TAG, "Starting sensor restore");
-    if (local_state->degraded_as312) {  
-        as312HealthRestore(TAG);
-    }
-    if (local_state->degraded_mics5524) {
-        mics5524HealthRestore(TAG);
-    }
-    if (local_state->degraded_sht41) {
-        sht41HealthRestore(TAG);
-    }
-    if (local_state->degraded_sgp41) {
-        sgp41HealthRestore(TAG);
-    }
-    if (local_state->degraded_bmp280) {
-        bmp280HealthRestore(TAG);
-    }
-    if (local_state->degraded_scd40) {
-        scd40HealthRestore(TAG);
-    }
-    if (local_state->degraded_pms7003) {
-        pms7003HealthRestore(TAG);
-    }
-    if (local_state->degraded_as7341) {
-        as7341HealthRestore(TAG);
-    }
-    if (local_state->degraded_inmp441) {
-        inmp441HealthRestore(TAG);
-    }
-    //ESP_LOGD(TAG, "Sensor restore completed");
-}
-
+/** @copydoc systemHealthCheck */
 void systemHealthCheck(const char *TAG, health_local_state_t *local_state)
 {
-    //ESP_LOGD(TAG, "Starting system health check");
+    (void)TAG;
     local_state->system_ok = !local_state->degraded_mode;
-    //ESP_LOGD(TAG, "System health check completed");
 }

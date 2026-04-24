@@ -4,6 +4,10 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  */
 
+/**
+ * @file adc_init.c
+ * @brief ADC1 oneshot unit initializer and shared handle for analog sensors.
+ */
 
 #include "adc_init.h"
 #include "esp_log.h"
@@ -11,47 +15,50 @@
 #include "esp_adc/adc_oneshot.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
- 
- static const char *TAG = "ADC_INIT";
- static adc_oneshot_unit_handle_t s_adc_handle = NULL;
- 
- esp_err_t adc_init_all(void)
- {
-     if (s_adc_handle != NULL) {
-         return ESP_OK;
-     }
- 
-     adc_oneshot_unit_init_cfg_t unit_cfg = {
-         .unit_id = ADC_UNIT_1,
-         .ulp_mode = ADC_ULP_MODE_DISABLE
-     };
- 
-     ESP_RETURN_ON_ERROR(
-         adc_oneshot_new_unit(&unit_cfg, &s_adc_handle),
-         TAG,
-         "Failed to create ADC oneshot unit"
-     );
- 
-     adc_oneshot_chan_cfg_t chan_cfg = {
-         .atten = ADC_ATTEN_DB_12,
-         .bitwidth = ADC_BITWIDTH_12
-     };
- 
-     ESP_RETURN_ON_ERROR(
-         adc_oneshot_config_channel(s_adc_handle, ADC_CHANNEL_6, &chan_cfg),
-         TAG,
-         "Failed to configure ADC channel 6"
-     );
- 
-     ESP_LOGI(TAG, "ADC initialized");
-     return ESP_OK;
- }
- 
- adc_oneshot_unit_handle_t adc_get_handle(void)
- {
-     return s_adc_handle;
- }
 
+static const char *TAG = "ADC_INIT";
+static adc_oneshot_unit_handle_t s_adc_handle = NULL;
+
+/** @copydoc adc_init_all */
+esp_err_t adc_init_all(void)
+{
+    if (s_adc_handle != NULL) {
+        return ESP_OK;
+    }
+
+    adc_oneshot_unit_init_cfg_t unit_cfg = {
+        .unit_id = ADC_UNIT_1,
+        .ulp_mode = ADC_ULP_MODE_DISABLE
+    };
+
+    ESP_RETURN_ON_ERROR(
+        adc_oneshot_new_unit(&unit_cfg, &s_adc_handle),
+        TAG,
+        "Failed to create ADC oneshot unit"
+    );
+
+    adc_oneshot_chan_cfg_t chan_cfg = {
+        .atten = ADC_ATTEN_DB_12,
+        .bitwidth = ADC_BITWIDTH_12
+    };
+
+    ESP_RETURN_ON_ERROR(
+        adc_oneshot_config_channel(s_adc_handle, ADC_CHANNEL_6, &chan_cfg),
+        TAG,
+        "Failed to configure ADC channel 6"
+    );
+
+    ESP_LOGI(TAG, "ADC initialized");
+    return ESP_OK;
+}
+
+/** @copydoc adc_get_handle */
+adc_oneshot_unit_handle_t adc_get_handle(void)
+{
+    return s_adc_handle;
+}
+
+/** @copydoc adc_restore */
 esp_err_t adc_restore(void)
 {
     if (s_adc_handle != NULL) {
@@ -62,7 +69,7 @@ esp_err_t adc_restore(void)
             return err;
         }
     }
-    /* Brief settle, analogous to PMS delay between teardown and reinit. */
+    /* Brief settle before reinitializing. */
     vTaskDelay(pdMS_TO_TICKS(20));
     return adc_init_all();
 }

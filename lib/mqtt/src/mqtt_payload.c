@@ -4,6 +4,10 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  */
 
+/**
+ * @file mqtt_payload.c
+ * @brief JSON payload builders for device-centric MQTT topics.
+ */
 
 #include "mqtt_payload.h"
 #include <stdio.h>
@@ -11,8 +15,14 @@
 
 static const char *TAG = "MQTT_PAYLOAD";
 
-// this function checks the result of the snprintf function
-static int mqtt_payload_check_result(int written, size_t buffer_size) 
+/**
+ * @brief Validate the return value of @c snprintf and log on overflow or error.
+ *
+ * @param[in] written     Return value of @c snprintf.
+ * @param[in] buffer_size Capacity of the target buffer.
+ * @return @p written on success, @c -1 on truncation or encoding error.
+ */
+static int mqtt_payload_check_result(int written, size_t buffer_size)
 {
     if (written < 0 || (size_t)written >= buffer_size)
     {
@@ -23,6 +33,7 @@ static int mqtt_payload_check_result(int written, size_t buffer_size)
     return written;
 }
 
+/** @copydoc mqtt_payload_build_system */
 int mqtt_payload_build_system(char *buffer, size_t buffer_size, const device_state_t *state, bool online)
 {
     if (!buffer || !state || buffer_size == 0)
@@ -50,7 +61,7 @@ int mqtt_payload_build_system(char *buffer, size_t buffer_size, const device_sta
     return mqtt_payload_check_result(written, buffer_size);
 }
 
-// this function builds the payload for the environment topic
+/** @copydoc mqtt_payload_build_environment */
 int mqtt_payload_build_environment(char *buffer, size_t buffer_size, const device_state_t *state)
 {
     if (!buffer || !state || buffer_size == 0)
@@ -111,7 +122,7 @@ int mqtt_payload_build_environment(char *buffer, size_t buffer_size, const devic
     return mqtt_payload_check_result(written, buffer_size);
 }
 
-// this function builds the payload for the alarm topic
+/** @copydoc mqtt_payload_build_alarm */
 int mqtt_payload_build_alarm(char *buffer, size_t buffer_size, const device_state_t *state)
 {
     if (!buffer || !state || buffer_size == 0)

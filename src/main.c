@@ -4,40 +4,31 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  */
 
- // test that lib work
+/**
+ * @file main.c
+ * @brief Application entry point: peripheral init, Wi-Fi, MQTT, and FreeRTOS task creation.
+ */
+
 #include "mqtt_app.h"
 #include "network_app.h"
-
-// sensor init headers
 #include "sensor_init.h"
 #include "esp_log.h"
 #include "esp_check.h"
-
 #include "adc_init.h"
 #include "uart_init.h"
 #include "i2s_init.h"
 
-// standard headers
 #include <stdint.h>
 #include <stdbool.h>
 
-// freertos headers
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-// esp-idf headers
-#include "esp_log.h"
-
-// task config headers
 #include "task_config.h"
-
-// task headers
 #include "acquisition_task.h"
 #include "audio_task.h"
 #include "system_task.h"
 #include "comm_task.h"
-
-// device state headers
 #include "device_state.h"
 
 static const char *TAG = "[MAIN]";
@@ -46,16 +37,10 @@ void app_main(void)
 {
     ESP_LOGI(TAG, "System booting...");
 
+    esp_log_level_set("*", ESP_LOG_INFO);
 
-
-    // debug system info
-    //esp_log_level_set("*", ESP_LOG_INFO); // not debug mode
-    esp_log_level_set("*", ESP_LOG_DEBUG);
-
-    // Initialize the device state (structure to store the current state of the device measurements and system flags)
     device_state_init();
 
-    // Initialize the sensors
     ESP_LOGI(TAG, "Initializing sensors");
     if (sensor_init_all() != ESP_OK)
     {
@@ -66,8 +51,7 @@ void app_main(void)
     {
         ESP_LOGI(TAG, "Sensors initialized successfully");
     }
-    
-    // Check if the device state mutex was created successfully
+
     ESP_LOGI(TAG, "Initializing device state mutex");
     if (g_device_state_mutex == NULL || g_sensor_driver_mutex == NULL)
     {
@@ -78,7 +62,7 @@ void app_main(void)
     {
         ESP_LOGI(TAG, "Device state mutex created successfully");
     }
-    
+
     ESP_LOGI(TAG, "Initializing network");
     if (!network_app_init())
     {
@@ -106,9 +90,6 @@ void app_main(void)
 
     ESP_LOGI(TAG, "Creating tasks");
 
-    // Create tasks and check the return value of xTaskCreate.
-    // If there is not enough RAM, the function will fail and return a value different from pdPASS.
-    
     // Acquisition task
     if (xTaskCreate(acquisition_task,
         "acquisition_task",
@@ -118,7 +99,7 @@ void app_main(void)
         NULL) != pdPASS)
     {
         ESP_LOGE(TAG, "Failed to create acquisition_task");
-        abort(); // abort the program if the task creation fails
+        abort();
     }
     else
     {

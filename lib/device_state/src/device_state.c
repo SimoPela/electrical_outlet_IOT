@@ -4,6 +4,10 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  */
 
+/**
+ * @file device_state.c
+ * @brief Global device state definitions and initializer.
+ */
 
 #include "device_state.h"
 
@@ -15,6 +19,7 @@ SemaphoreHandle_t g_sensor_driver_mutex = NULL;
 
 static const char *TAG = "device_state";
 
+/** @copydoc device_state_init */
 void device_state_init(void)
 {
     // -----------------------------
@@ -26,7 +31,7 @@ void device_state_init(void)
 
     g_device_state.temperature_c = 0.0f;
     g_device_state.humidity_percent = 0.0f;
-    
+
     g_device_state.bmp280_pressure_hpa = 0.0f;
     g_device_state.bmp280_temperature_c = 0.0f;
 
@@ -104,7 +109,7 @@ void device_state_init(void)
     g_device_state.co2_alarm_level = NULL;
 
     // -----------------------------
-    // Mutex
+    // Mutexes
     // -----------------------------
     g_device_state_mutex = xSemaphoreCreateMutex();
     g_sensor_driver_mutex = xSemaphoreCreateMutex();

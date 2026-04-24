@@ -10,6 +10,11 @@
  * Function prefix is bmp_ (not bmp280_) for the same reason.
  */
 
+/**
+ * @file bmp280.c
+ * @brief Bosch BMP280 pressure and temperature driver — I2C wrapper implementation.
+ */
+
 #include "bmp.h"
 #include "esp32_pinout.h"
 
@@ -23,6 +28,7 @@ static const char *TAG = "BMP280";
 static bmp280_t g_bmp;
 static bool g_bmp_initialized = false;
 
+/** @copydoc bmp_init */
 esp_err_t bmp_init(void)
 {
     if (g_bmp_initialized)
@@ -51,23 +57,7 @@ esp_err_t bmp_init(void)
     return ESP_OK;
 }
 
-esp_err_t bmp_restore(void)
-{
-    if (g_bmp_initialized) {
-        ESP_LOGW(TAG, "restore L1: bmp280_init (soft re-init on same descriptor)");
-        bmp280_params_t params;
-        bmp280_init_default_params(&params);
-        esp_err_t err = bmp280_init(&g_bmp, &params);
-        if (err == ESP_OK) {
-            return ESP_OK;
-        }
-        ESP_LOGW(TAG, "restore L1 failed, L2: bmp280_free_desc + init");
-        (void)bmp280_free_desc(&g_bmp);
-        g_bmp_initialized = false;
-    }
-    return bmp_init();
-}
-
+/** @copydoc bmp_read */
 esp_err_t bmp_read(bmp_data_t *out)
 {
     ESP_RETURN_ON_FALSE(out != NULL, ESP_ERR_INVALID_ARG, TAG, "out is NULL");

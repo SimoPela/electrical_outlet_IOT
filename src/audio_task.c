@@ -4,6 +4,14 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  */
 
+/**
+ * @file audio_task.c
+ * @brief FreeRTOS audio task implementation.
+ *
+ * Reads one DMA audio block from the INMP441 via @c inmp441_w_read,
+ * computes the AC-RMS sound pressure level, and writes the result
+ * into @c g_device_state under @c g_device_state_mutex.
+ */
 
 #include <audio_task.h>
 #include <task_config.h>
@@ -23,16 +31,15 @@ static const char *TAG = "[AUDIO]";
 void audio_task(void *pvParameters)
 {
     (void)pvParameters;
-    // Counter used to log the stack usage periodically (counter = 10, tick = 1000 ms -> log every 10 seconds)
+
+    /* Periodic stack/heap log counter (see LOG_CEILING_AUDIO for period). */
     uint32_t counter = 0;
-    // Counter used to print that the task is alive every 2000 ms
     uint32_t alive_counter = 0;
 
-    // initialize all fields to 0
     audio_local_state_t local_state = {0};
 
     ESP_LOGI(TAG, "Audio task started");
-    // get the time of the last wakeup
+
     TickType_t xLastWakeTime = xTaskGetTickCount();
 
     for (;;)
@@ -67,10 +74,8 @@ void audio_task(void *pvParameters)
             xSemaphoreGive(g_device_state_mutex);
         }
 
-        // Log the stack usage periodically. Once the stack size is tuned, this can be removed.
-        logTaskStackUsage(&counter, 10, TAG, STACK_AUDIO_WORDS);
-        
-        // wait for 500ms
+        logTaskStackHeapUsage(&counter, LOG_CEILING_AUDIO, TAG, STACK_AUDIO_WORDS);
+
         vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(AUDIO_TASK_INTERVAL_MS));
     }
 }

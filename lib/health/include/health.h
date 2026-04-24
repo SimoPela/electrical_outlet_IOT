@@ -151,66 +151,6 @@ void as7341HealthCheck(TickType_t *now, const char *TAG,
 void inmp441HealthCheck(TickType_t *now, const char *TAG,
                         const device_state_t *state_copy, health_local_state_t *local_state);
 
-
-/**
- * @brief Restore AS312.
- * @param[in] TAG Log tag.
- * @return ESP_OK on success, or an ESP-IDF error code.
- */
-esp_err_t as312HealthRestore(const char *TAG); //TODO
-
-/**
- * @brief Restore MiCS-5524.
- * @param[in] TAG Log tag.
- * @return ESP_OK on success, or an ESP-IDF error code.
- */
-esp_err_t mics5524HealthRestore(const char *TAG); //TODO
-
-/**
- * @brief Restore SHT41.
- * @param[in] TAG Log tag.
- * @return ESP_OK on success, or an ESP-IDF error code.
- */
-esp_err_t sht41HealthRestore(const char *TAG); //TODO
-/**
- * @brief Restore SGP41.
- * @param[in] TAG Log tag.
- * @return ESP_OK on success, or an ESP-IDF error code.
- */
-esp_err_t sgp41HealthRestore(const char *TAG); //TODO
-/**
- * @brief Restore BMP280.
- * @param[in] TAG Log tag.
- * @return ESP_OK on success, or an ESP-IDF error code.
- */
-esp_err_t bmp280HealthRestore(const char *TAG); //TODO
-/**
- * @brief Restore SCD40.
- * @param[in] TAG Log tag.
- * @return ESP_OK on success, or an ESP-IDF error code.
- */
-esp_err_t scd40HealthRestore(const char *TAG); //TODO
-/**
- * @brief Restore PMS7003.
- * @param[in] TAG Log tag.
- * @return ESP_OK on success, or an ESP-IDF error code.
- */
-esp_err_t pms7003HealthRestore(const char *TAG); //TODO
-/**
- * @brief Restore AS7341.
- * @param[in] TAG Log tag.
- * @return ESP_OK on success, or an ESP-IDF error code.
- */
-esp_err_t as7341HealthRestore(const char *TAG); //TODO
-/**
- * @brief Restore INMP441.
- * @param[in] TAG Log tag.
- * @return ESP_OK on success, or an ESP-IDF error code.
- */
-esp_err_t inmp441HealthRestore(const char *TAG); //TODO
-
-
-
 /**
  * @brief Sensor health check, check all sensors.
  * @param[in,out] now Current tick (unused).
@@ -220,14 +160,6 @@ esp_err_t inmp441HealthRestore(const char *TAG); //TODO
  */
 void sensorHealthCheck(const char *TAG,TickType_t *now,
                        const device_state_t *state_copy, health_local_state_t *local_state );
-
-/**
- * @brief Sensor health restore, restore all sensors.
- * @param[in] TAG Log tag.
- * @param[in] local_state Local state.
- * @param[in] now Current tick.
- */
-void sensorHealthRestore(const char *TAG, health_local_state_t *local_state, TickType_t *now); 
 
 /**
  * @brief System health check.

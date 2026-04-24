@@ -33,3 +33,6 @@ mqtt_use.md
 # server
 server/node_modules/
 server/.env
+
+dependencies.lock
+sdkconfig.esp32dev

@@ -4,6 +4,10 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  */
 
+/**
+ * @file as312.c
+ * @brief AS312 PIR motion sensor — GPIO input driver implementation.
+ */
 
 #include "as312.h"
 #include "esp32_pinout.h"
@@ -15,13 +19,14 @@
 
 static const char *TAG = "AS312";
 
+/** @copydoc as312_init */
 esp_err_t as312_init(void)
 {
     gpio_config_t pir_cfg = {
         .pin_bit_mask = (1ULL << PIN_PIR_OUT),
         .mode = GPIO_MODE_INPUT,
         .pull_up_en = GPIO_PULLUP_DISABLE,
-        .pull_down_en = GPIO_PULLDOWN_DISABLE,   // oppure ENABLE se ti serve
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,
         .intr_type = GPIO_INTR_DISABLE
     };
 
@@ -35,21 +40,8 @@ esp_err_t as312_init(void)
     return ESP_OK;
 }
 
+/** @copydoc as312_read_motion */
 bool as312_read_motion(void)
 {
     return gpio_get_level(PIN_PIR_OUT) != 0;
-}
-
-esp_err_t as312_restore(void)
-{
-    /*
-     * L1 — reset the PIR pad (helps if the pin latched odd state).
-     * L2 — full input reconfigure via as312_init().
-     */
-    ESP_LOGW(TAG, "restore L1: gpio_reset_pin(PIR)");
-    gpio_reset_pin(PIN_PIR_OUT);
-    vTaskDelay(pdMS_TO_TICKS(10));
-
-    ESP_LOGW(TAG, "restore L2: reconfigure PIR GPIO");
-    return as312_init();
 }

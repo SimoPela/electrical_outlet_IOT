@@ -9,6 +9,11 @@
  * with the managed component's as7341.h.
  */
 
+/**
+ * @file as7341_w.c
+ * @brief AMS OSRAM AS7341 8-channel spectrometer — ESP-IDF I2C wrapper implementation.
+ */
+
 #include "as7341_w.h"
 #include "as7341.h"
 #include <i2cdev.h>
@@ -21,12 +26,15 @@
 
 static const char *TAG = "AS7341";
 
+/** Polling interval between data-ready checks [ms]. */
 #define AS7341_DATA_READY_POLL_MS   10
+/** Maximum number of polling attempts before timing out. */
 #define AS7341_DATA_READY_TIMEOUT   50
 
 static as7341_handle_t g_as7341 = NULL;
 static bool g_as7341_initialized = false;
 
+/** @copydoc as7341_w_init */
 esp_err_t as7341_w_init(void)
 {
     if (g_as7341_initialized)
@@ -54,31 +62,7 @@ esp_err_t as7341_w_init(void)
     return ESP_OK;
 }
 
-esp_err_t as7341_w_restore(void)
-{
-    if (g_as7341_initialized && g_as7341 != NULL) {
-        ESP_LOGW(TAG, "restore L1: power cycle");
-        (void)as7341_disable_spectral_measurement(g_as7341);
-        esp_err_t err = as7341_disable_power(g_as7341);
-        if (err == ESP_OK) {
-            vTaskDelay(pdMS_TO_TICKS(20));
-            err = as7341_enable_power(g_as7341);
-            if (err == ESP_OK) {
-                return ESP_OK;
-            }
-        }
-        ESP_LOGW(TAG, "restore L1 failed, L2: as7341_delete + init");
-
-        err = as7341_delete(g_as7341);
-        if (err != ESP_OK) {
-            ESP_LOGW(TAG, "as7341_delete: %s", esp_err_to_name(err));
-        }
-        g_as7341 = NULL;
-    }
-    g_as7341_initialized = false;
-    return as7341_w_init();
-}
-
+/** @copydoc as7341_w_read */
 esp_err_t as7341_w_read(as7341_data_t *out)
 {
     ESP_RETURN_ON_FALSE(out != NULL, ESP_ERR_INVALID_ARG, TAG, "out is NULL");

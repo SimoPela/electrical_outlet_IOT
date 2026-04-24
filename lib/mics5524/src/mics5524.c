@@ -4,6 +4,16 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  */
 
+/**
+ * @file mics5524.c
+ * @brief MiCS-5524 combustible gas sensor — ADC voltage and CO ppm estimate implementation.
+ *
+ * Voltage is obtained by averaging @c MICS_NUM_SAMPLES ADC readings through the
+ * ESP-IDF oneshot driver.  The ppm estimate uses the empirical CO curve from the
+ * MiCS-5524 datasheet (Rs/R0 power law); accurate absolute ppm requires field
+ * calibration of @c MICS_R0 in clean air.
+ */
+
 #include "mics5524.h"
 #include "adc_init.h"
 
@@ -26,31 +36,34 @@ static const adc_atten_t   MICS_ADC_ATTEN   = ADC_ATTEN_DB_12;
 /* ------------------------------------------------------------------ */
 /*  Sampling configuration                                            */
 /* ------------------------------------------------------------------ */
+
+/** Number of ADC samples averaged per voltage reading. */
 #define MICS_NUM_SAMPLES 16
 
 /* ------------------------------------------------------------------ */
-/*  Sensor electrical model calibration                               */
-/*  VCC  : voltage supply for the divider [V]                         */
-/*  RL   : load resistor [Ohm]                                        */
-/*  R0   : resistance in clean air [Ohm] — CALIBRATE in the field     */
+/*  Sensor electrical model                                           */
+/*  VCC : supply voltage for the divider [V]                          */
+/*  RL  : load resistor [Ω]                                           */
+/*  R0  : sensor resistance in clean air [Ω] — calibrate in the field */
 /* ------------------------------------------------------------------ */
 static const float MICS_VCC = 3.3f;
 static const float MICS_RL  = 10000.0f;
 static const float MICS_R0  = 75800.0f;
 
 /* ------------------------------------------------------------------ */
-/*  ADC calibration (optional, graceful fallback if unavailable)      */
+/*  ADC calibration (optional; graceful fallback if unavailable)     */
 /* ------------------------------------------------------------------ */
 static adc_cali_handle_t s_cali_handle = NULL;
 static bool              s_cali_ok     = false;
 
 /* ------------------------------------------------------------------ */
 
+/** @copydoc mics5524_init */
 esp_err_t mics5524_init(void)
 {
     adc_cali_line_fitting_config_t cfg = {
         .unit_id  = MICS_ADC_UNIT,
-        .atten    = MICS_ADC_ATTEN,      
+        .atten    = MICS_ADC_ATTEN,
         .bitwidth = ADC_BITWIDTH_DEFAULT,
     };
 
@@ -69,51 +82,9 @@ esp_err_t mics5524_init(void)
     return ESP_OK; /* not fatal: the sensor can work without calibration */
 }
 
-/** L1: drop line-fitting cali and rebuild; keeps the oneshot ADC unit (cheap). */
-static esp_err_t mics5524_restore_l1(void)
-{
-    if (s_cali_handle != NULL) {
-        adc_cali_delete_scheme_line_fitting(s_cali_handle);
-        s_cali_handle = NULL;
-    }
-    s_cali_ok = false;
-    return mics5524_init();
-}
-
-/** Quick probe: one raw read on the MiCS channel (validates ADC path). */
-static esp_err_t mics5524_adc_probe(void)
-{
-    adc_oneshot_unit_handle_t adc = adc_get_handle();
-    if (adc == NULL) {
-        return ESP_ERR_INVALID_STATE;
-    }
-    int raw = 0;
-    return adc_oneshot_read(adc, MICS_ADC_CHANNEL, &raw);
-}
-
-esp_err_t mics5524_restore(void)
-{
-    ESP_LOGW(TAG, "restore L1: refresh calibration");
-    esp_err_t err = mics5524_restore_l1();
-    if (err != ESP_OK) {
-        return err;
-    }
-
-    err = mics5524_adc_probe();
-    if (err == ESP_OK) {
-        return ESP_OK;
-    }
-
-    ESP_LOGW(TAG, "restore L1 insufficient, L2: adc_restore + recalibrate");
-    err = adc_restore();
-    if (err != ESP_OK) {
-        return err;
-    }
-    return mics5524_restore_l1();
-}
-
 /* ------------------------------------------------------------------ */
 
+/** @copydoc mics5524_read_voltage */
 float mics5524_read_voltage(void)
 {
     adc_oneshot_unit_handle_t adc = adc_get_handle();
@@ -144,12 +115,13 @@ float mics5524_read_voltage(void)
         ESP_LOGW(TAG, "Calibrated conversion failed, using fallback");
     }
 
-    /* linear fallback */
+    /* Linear fallback: map raw [0, 4095] to [0, VCC]. */
     return ((float)avg_raw / 4095.0f) * MICS_VCC;
 }
 
 /* ------------------------------------------------------------------ */
 
+/** @copydoc mics5524_read_ppm */
 float mics5524_read_ppm(void)
 {
     float voltage = mics5524_read_voltage();
@@ -157,8 +129,7 @@ float mics5524_read_ppm(void)
         return -1.0f;
     }
 
-    /* Prevent division by zero: if voltage is 0 or equals VCC
-       the divider is open/short-circuited */
+    /* Prevent division by zero when the divider is open- or short-circuited. */
     if (voltage < 0.001f || voltage >= MICS_VCC) {
         ESP_LOGW(TAG, "Voltage out of range (%.3f V), sensor disconnected?", voltage);
         return -1.0f;
@@ -168,9 +139,9 @@ float mics5524_read_ppm(void)
     float rs    = ((MICS_VCC - voltage) / voltage) * MICS_RL;
     float ratio = rs / MICS_R0;
 
-    /* Empirical CO curve from MICS5524 datasheet:
+    /* Empirical CO curve from MiCS-5524 datasheet:
        ppm = 4.4 * (Rs/R0)^(-1.179)
-       Calibrate R0 in clean air for accurate results. */
+       Calibrate R0 in clean air for accurate absolute ppm. */
     float ppm = 4.4f * powf(ratio, -1.179f);
 
     return ppm;

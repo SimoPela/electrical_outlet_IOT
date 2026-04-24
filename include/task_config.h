@@ -63,24 +63,37 @@
  * @name Application task loop periods (milliseconds)
  * @{
  */
-#define ACQUISITION_TASK_INTERVAL_MS 100
+#define ACQUISITION_TASK_INTERVAL_MS 1000
 #define AUDIO_TASK_INTERVAL_MS 500
 #define SYSTEM_TASK_INTERVAL_MS 100
 #define COMM_TASK_INTERVAL_MS 100
+/** @} */
+
+/**
+ * @name Stack/heap log ceilings (one log every LOG_STACK_PERIOD_MS)
+ *
+ * ceiling = LOG_STACK_PERIOD_MS / TASK_INTERVAL_MS
+ * @{
+ */
+#define LOG_STACK_PERIOD_MS             10000UL
+#define LOG_CEILING_ACQUISITION  (LOG_STACK_PERIOD_MS / ACQUISITION_TASK_INTERVAL_MS)  /**< 10  */
+#define LOG_CEILING_AUDIO        (LOG_STACK_PERIOD_MS / AUDIO_TASK_INTERVAL_MS)         /**< 20  */
+#define LOG_CEILING_SYSTEM       (LOG_STACK_PERIOD_MS / SYSTEM_TASK_INTERVAL_MS)        /**< 100 */
+#define LOG_CEILING_COMM         (LOG_STACK_PERIOD_MS / COMM_TASK_INTERVAL_MS)          /**< 100 */
 /** @} */
 
 /** @brief Log tag string used for verbose sensor debug lines. */
 #define TAG_DEBUG "[DEBUG]"
 
 /**
- * @brief Log stack high-water mark for the calling task every @p ceiling invocations.
+ * @brief Log stack and heap usage for the calling task every @p ceiling invocations.
  *
  * @param[in,out] counter Incremented each call; logs when @c (++*counter % ceiling) == 0 (avoid @p ceiling == 0).
  * @param[in] ceiling Period between log lines (e.g. 10 or 50 depending on task loop rate).
  * @param[in] TAG Reserved for call-site consistency; current implementation logs with @c TAG_DEBUG.
- * @param[in] task_stack_size Total stack size of this task in words (for “used” display).
+ * @param[in] task_stack_size Total stack size of this task in words (for "used" display).
  */
-void logTaskStackUsage(uint32_t *counter, uint32_t ceiling, const char *TAG, UBaseType_t task_stack_size);
+void logTaskStackHeapUsage(uint32_t *counter, uint32_t ceiling, const char *TAG, UBaseType_t task_stack_size);
 
 /**
  * @brief Periodic “task alive” heartbeat at @c ESP_LOGI level using the given @p TAG.

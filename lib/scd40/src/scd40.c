@@ -9,6 +9,11 @@
  * from the shared i2cdev bus.
  */
 
+/**
+ * @file scd40.c
+ * @brief Sensirion SCD40 CO₂ / RH / T sensor — direct ESP-IDF I2C master driver implementation.
+ */
+
 #include "scd40.h"
 #include "esp32_pinout.h"
 
@@ -23,23 +28,34 @@
 
 static const char *TAG = "SCD40";
 
+/** SCD40 7-bit I2C address. */
 #define SCD40_I2C_ADDR       0x62
 #define SCD40_I2C_FREQ_HZ    100000
 #define SCD40_I2C_TIMEOUT_MS 50
 
+/** SCD40 command opcodes (datasheet §3). */
 #define CMD_WAKE_UP              0x36F6
 #define CMD_STOP_PERIODIC        0x3F86
 #define CMD_REINIT               0x3646
 #define CMD_GET_SERIAL           0x3682
 #define CMD_START_PERIODIC       0x21B1
 #define CMD_READ_MEASUREMENT     0xEC05
+#define CMD_GET_DATA_READY       0xE4B8
 
+/** Number of consecutive read failures before forcing a restart of periodic measurement. */
 #define SCD40_MAX_CONSEC_FAIL    12
 
 static i2c_master_dev_handle_t g_handle = NULL;
 static bool g_initialized = false;
 static int  g_consec_fail = 0;
 
+/**
+ * @brief Compute CRC-8 over @p len bytes using the Sensirion polynomial (0x31, init 0xFF).
+ *
+ * @param data Pointer to input bytes.
+ * @param len  Number of bytes.
+ * @return 8-bit CRC.
+ */
 static uint8_t scd40_crc8(const uint8_t *data, size_t len)
 {
     uint8_t crc = 0xFF;
@@ -52,6 +68,12 @@ static uint8_t scd40_crc8(const uint8_t *data, size_t len)
     return crc;
 }
 
+/**
+ * @brief Transmit a 16-bit command word to the SCD40.
+ *
+ * @param cmd_code Command opcode (big-endian on the wire).
+ * @return ESP-IDF I2C error code.
+ */
 static esp_err_t scd40_send_cmd(uint16_t cmd_code)
 {
     uint8_t cmd[2] = { (uint8_t)(cmd_code >> 8),
@@ -60,6 +82,13 @@ static esp_err_t scd40_send_cmd(uint16_t cmd_code)
                                SCD40_I2C_TIMEOUT_MS);
 }
 
+/**
+ * @brief Verify the CRC of each 2-byte word in a Sensirion response frame.
+ *
+ * @param buf     Response buffer (3 bytes per word: [MSB][LSB][CRC]).
+ * @param n_words Number of words to check.
+ * @return @c true if all CRCs pass, @c false on any mismatch.
+ */
 static bool scd40_check_crc(const uint8_t *buf, size_t n_words)
 {
     for (size_t i = 0; i < n_words; i++)
@@ -70,6 +99,15 @@ static bool scd40_check_crc(const uint8_t *buf, size_t n_words)
     return true;
 }
 
+/**
+ * @brief Send a command then read and CRC-verify @p n_words response words.
+ *
+ * @param cmd_code  Command opcode.
+ * @param buf       Output buffer (must hold @p n_words * 3 bytes).
+ * @param n_words   Number of 2-byte + CRC word triplets to receive.
+ * @param delay_us  Microsecond delay between command and read (0 for none).
+ * @return ESP_OK on success, @c ESP_ERR_INVALID_CRC on CRC mismatch, or I2C error.
+ */
 static esp_err_t scd40_cmd_read(uint16_t cmd_code, uint8_t *buf,
                                 size_t n_words, uint32_t delay_us)
 {
@@ -91,6 +129,13 @@ static esp_err_t scd40_cmd_read(uint16_t cmd_code, uint8_t *buf,
     return ESP_OK;
 }
 
+/**
+ * @brief Wake, stop-periodic, reinit, read serial number, then start periodic measurement.
+ *
+ * Called by both @ref scd40_init (first time) and the consecutive-failure recovery path.
+ *
+ * @return ESP_OK on success, or an I2C / CRC error code.
+ */
 static esp_err_t scd40_start_periodic(void)
 {
     esp_err_t err;
@@ -133,6 +178,7 @@ static esp_err_t scd40_start_periodic(void)
     return ESP_OK;
 }
 
+/** @copydoc scd40_init */
 esp_err_t scd40_init(void)
 {
     if (g_initialized)
@@ -171,40 +217,7 @@ esp_err_t scd40_init(void)
     return ESP_OK;
 }
 
-esp_err_t scd40_restore(void)
-{
-    if (g_handle != NULL && g_initialized) {
-        ESP_LOGW(TAG, "restore L1: stop + reinit + start_periodic (keep I2C dev)");
-        (void)scd40_send_cmd(CMD_STOP_PERIODIC);
-        vTaskDelay(pdMS_TO_TICKS(100));
-
-        esp_err_t err = scd40_send_cmd(CMD_REINIT);
-        vTaskDelay(pdMS_TO_TICKS(30));
-        if (err == ESP_OK) {
-            err = scd40_start_periodic();
-            if (err == ESP_OK) {
-                g_consec_fail = 0;
-                return ESP_OK;
-            }
-        }
-        ESP_LOGW(TAG, "restore L1 failed, L2: rm_device + full init");
-    }
-
-    if (g_handle != NULL) {
-        if (g_initialized) {
-            (void)scd40_send_cmd(CMD_STOP_PERIODIC);
-        }
-        esp_err_t err = i2c_master_bus_rm_device(g_handle);
-        if (err != ESP_OK) {
-            ESP_LOGW(TAG, "i2c_master_bus_rm_device: %s", esp_err_to_name(err));
-        }
-        g_handle = NULL;
-    }
-    g_initialized = false;
-    g_consec_fail = 0;
-    return scd40_init();
-}
-
+/** @copydoc scd40_read */
 esp_err_t scd40_read(scd40_data_t *out)
 {
     ESP_RETURN_ON_FALSE(out != NULL, ESP_ERR_INVALID_ARG, TAG, "out is NULL");

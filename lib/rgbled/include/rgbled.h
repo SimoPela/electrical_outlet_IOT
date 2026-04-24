@@ -6,20 +6,19 @@
 
 /**
  * @file rgbled.h
- * @brief RGB LED helper.
+ * @brief RGB status LED helper (GPIO output).
  */
 
- #ifndef RGBLED_H
- #define RGBLED_H
- 
- #include <stdbool.h>
- #include "esp_err.h"
- 
- /**
-  * @brief Initialize the PIR GPIO configured in board pinout.
-  * @return ESP_OK on success, or an ESP-IDF error code.
-  */
- esp_err_t rgbled_init(void);
- 
- #endif /* RGBLED_H */
- 
+#ifndef RGBLED_H
+#define RGBLED_H
+
+#include <stdbool.h>
+#include "esp_err.h"
+
+/**
+ * @brief Configure the three RGB LED GPIO pins as outputs and drive them low.
+ * @return ESP_OK on success, or an ESP-IDF error code.
+ */
+esp_err_t rgbled_init(void);
+
+#endif /* RGBLED_H */

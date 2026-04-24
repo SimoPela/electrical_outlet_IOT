@@ -12,7 +12,12 @@
  *   - CRC-8 poly 0x31, init 0xFF
  *
  * Returns raw SRAW values; for VOC/NOx indices (0-500),
- * Sensirion's Gas Index Algorithm (BSD-3) is needed.
+ * Sensirion's Gas Index Algorithm (BSD-3) is used.
+ */
+
+/**
+ * @file sgp41.c
+ * @brief Sensirion SGP41 VOC / NOx gas sensor with Gas Index Algorithm — implementation.
  */
 
 #include "sgp41.h"
@@ -36,10 +41,13 @@ static const char *TAG = "SGP41";
 #define SGP41_CMD_CONDITIONING  0x2612
 #define SGP41_CMD_MEASURE_RAW   0x2619
 #define SGP41_CMD_HEATER_OFF    0x3615
-#define SGP41_MEASURE_DELAY_MS  55      /* > 50 ms datasheet max */
+/** Measurement execution time with margin [ms] (datasheet max 50 ms). */
+#define SGP41_MEASURE_DELAY_MS  55
 
-#define SGP41_DEFAULT_RH        0x8000  /* 50 %RH */
-#define SGP41_DEFAULT_T         0x6666  /* 25 °C  */
+/** Default relative humidity compensation ticks (50 %RH). */
+#define SGP41_DEFAULT_RH        0x8000
+/** Default temperature compensation ticks (25 °C). */
+#define SGP41_DEFAULT_T         0x6666
 
 static i2c_dev_t g_sgp41;
 static bool g_sgp41_initialized = false;
@@ -47,6 +55,13 @@ static bool g_sgp41_initialized = false;
 static GasIndexAlgorithmParams g_voc_params;
 static GasIndexAlgorithmParams g_nox_params;
 
+/**
+ * @brief Compute CRC-8 over @p len bytes (Sensirion polynomial 0x31, init 0xFF).
+ *
+ * @param data Input bytes.
+ * @param len  Number of bytes.
+ * @return 8-bit CRC.
+ */
 static uint8_t sgp41_crc8(const uint8_t *data, size_t len)
 {
     uint8_t crc = 0xFF;
@@ -62,6 +77,16 @@ static uint8_t sgp41_crc8(const uint8_t *data, size_t len)
     return crc;
 }
 
+/**
+ * @brief Build an 8-byte SGP41 measurement command frame with RH and T compensation.
+ *
+ * Frame layout: [CMD_MSB][CMD_LSB][RH_MSB][RH_LSB][RH_CRC][T_MSB][T_LSB][T_CRC].
+ *
+ * @param buf      8-byte output buffer.
+ * @param cmd      16-bit command opcode.
+ * @param rh_ticks Humidity ticks (from @c rh_to_ticks).
+ * @param t_ticks  Temperature ticks (from @c temp_to_ticks).
+ */
 static void build_cmd(uint8_t *buf, uint16_t cmd, uint16_t rh_ticks, uint16_t t_ticks)
 {
     buf[0] = (uint8_t)(cmd >> 8);
@@ -74,6 +99,12 @@ static void build_cmd(uint8_t *buf, uint16_t cmd, uint16_t rh_ticks, uint16_t t_
     buf[7] = sgp41_crc8(&buf[5], 2);
 }
 
+/**
+ * @brief Convert relative humidity [%RH] to SGP41 compensation ticks (NaN → default).
+ *
+ * @param rh Relative humidity [%RH] or NaN.
+ * @return 16-bit tick value.
+ */
 static uint16_t rh_to_ticks(float rh)
 {
     if (isnan(rh)) return SGP41_DEFAULT_RH;
@@ -82,12 +113,25 @@ static uint16_t rh_to_ticks(float rh)
     return (uint16_t)(rh * 65535.0f / 100.0f);
 }
 
+/**
+ * @brief Convert temperature [°C] to SGP41 compensation ticks (NaN → default).
+ *
+ * @param t Temperature [°C] or NaN.
+ * @return 16-bit tick value.
+ */
 static uint16_t temp_to_ticks(float t)
 {
     if (isnan(t)) return SGP41_DEFAULT_T;
     return (uint16_t)((t + 45.0f) * 65535.0f / 175.0f);
 }
 
+/**
+ * @brief Create the i2cdev mutex for the SGP41 descriptor.
+ *
+ * Called once during @ref sgp41_init before any bus transaction.
+ *
+ * @return ESP_OK on success or i2cdev error.
+ */
 static esp_err_t sgp41_init_desc(void)
 {
     g_sgp41.port = I2C_NUM_0;
@@ -99,7 +143,13 @@ static esp_err_t sgp41_init_desc(void)
     return i2c_dev_create_mutex(&g_sgp41);
 }
 
-/** Conditioning + Gas Index reset (shared by init and L1 restore). Caller must hold no lock. */
+/**
+ * @brief Run the conditioning command and (re)initialise the Gas Index Algorithm.
+ *
+ * Shared by @ref sgp41_init and the restore path.  Caller must hold no I2C lock.
+ *
+ * @return ESP_OK on success, @c ESP_FAIL on CRC mismatch or I2C error.
+ */
 static esp_err_t sgp41_conditioning_and_gas_index(void)
 {
     uint8_t cmd[8];
@@ -124,23 +174,7 @@ static esp_err_t sgp41_conditioning_and_gas_index(void)
     return ESP_OK;
 }
 
-/** Heater-off (datasheet §6.6); best-effort before re-conditioning. */
-static esp_err_t sgp41_heater_off_cmd(void)
-{
-    uint8_t ho[3] = { (uint8_t)(SGP41_CMD_HEATER_OFF >> 8),
-                      (uint8_t)(SGP41_CMD_HEATER_OFF & 0xFF),
-                      0 };
-    ho[2] = sgp41_crc8(ho, 2);
-
-    I2C_DEV_TAKE_MUTEX(&g_sgp41);
-    esp_err_t err = i2c_dev_write(&g_sgp41, NULL, 0, ho, sizeof(ho));
-    I2C_DEV_GIVE_MUTEX(&g_sgp41);
-    if (err == ESP_OK) {
-        vTaskDelay(pdMS_TO_TICKS(2));
-    }
-    return err;
-}
-
+/** @copydoc sgp41_init */
 esp_err_t sgp41_init(void)
 {
     if (g_sgp41_initialized) {
@@ -164,26 +198,7 @@ esp_err_t sgp41_init(void)
     return ESP_OK;
 }
 
-esp_err_t sgp41_restore(void)
-{
-    if (g_sgp41_initialized) {
-        ESP_LOGW(TAG, "restore L1: heater off + re-conditioning");
-        (void)sgp41_heater_off_cmd();
-        esp_err_t err = sgp41_conditioning_and_gas_index();
-        if (err == ESP_OK) {
-            return ESP_OK;
-        }
-        ESP_LOGW(TAG, "restore L1 failed, L2: i2c_dev teardown + full init");
-    }
-
-    esp_err_t err = i2c_dev_delete_mutex(&g_sgp41);
-    if (err != ESP_OK) {
-        ESP_LOGW(TAG, "i2c_dev_delete_mutex: %s", esp_err_to_name(err));
-    }
-    g_sgp41_initialized = false;
-    return sgp41_init();
-}
-
+/** @copydoc sgp41_read */
 esp_err_t sgp41_read(sgp41_data_t *out, float temperature, float humidity)
 {
     ESP_RETURN_ON_FALSE(out != NULL, ESP_ERR_INVALID_ARG, TAG, "out is NULL");

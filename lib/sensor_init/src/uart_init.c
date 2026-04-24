@@ -4,6 +4,10 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  */
 
+/**
+ * @file uart_init.c
+ * @brief UART2 driver install and restore for the Plantower PMS7003 particulate sensor.
+ */
 
 #include "uart_init.h"
 #include "esp32_pinout.h"
@@ -19,6 +23,7 @@ static const char *TAG = "UART_INIT";
 
 static bool s_uart_installed = false;
 
+/** @copydoc uart_init_all */
 esp_err_t uart_init_all(void)
 {
     if (s_uart_installed) {
@@ -61,6 +66,7 @@ esp_err_t uart_init_all(void)
     return ESP_OK;
 }
 
+/** @copydoc uart_restore */
 esp_err_t uart_restore(void)
 {
     if (s_uart_installed) {
@@ -74,7 +80,7 @@ esp_err_t uart_restore(void)
 
     esp_err_t err = uart_init_all();
     if (err == ESP_OK) {
-        /* Same idea as PMS: drop stale bytes before the next frame parse. */
+        /* Drop stale bytes accumulated during the driver outage. */
         uart_flush_input(PMS7003_UART_PORT);
     }
     return err;

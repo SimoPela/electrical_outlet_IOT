@@ -1,6 +1,24 @@
+/*
+ * Copyright 2026 Simone Pelascini and Aurélien Bollin
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ */
+
+/**
+ * @file alarm.c
+ * @brief Per-sensor alarm sub-checks and the aggregate @ref systemAlarmLogic dispatcher.
+ */
+
 #include "alarm.h"
 #include "esp_log.h"
 
+/**
+ * @brief AS312 alarm sub-check: sets @c as312_alarm when motion is detected.
+ *
+ * @param[in]  TAG        Log tag.
+ * @param[in]  state_copy Device state snapshot.
+ * @param[out] local_state Output alarm flags.
+ */
 static void as312AlarmLogic(const char *TAG, const device_state_t *state_copy, alarm_local_state_t *local_state)
 {
     if (state_copy->as312_motion_detected) {
@@ -13,6 +31,13 @@ static void as312AlarmLogic(const char *TAG, const device_state_t *state_copy, a
     }
 }
 
+/**
+ * @brief MiCS-5524 alarm sub-check: sets @c mics5524_alarm when gas ppm exceeds threshold.
+ *
+ * @param[in]  TAG        Log tag.
+ * @param[in]  state_copy Device state snapshot.
+ * @param[out] local_state Output alarm flags.
+ */
 static void mics5524AlarmLogic(const char *TAG, const device_state_t *state_copy, alarm_local_state_t *local_state)
 {
     if (state_copy->mics5524_gas_ppm > MICS5524_ALARM_THRESHOLD) {
@@ -25,8 +50,16 @@ static void mics5524AlarmLogic(const char *TAG, const device_state_t *state_copy
     }
 }
 
+/**
+ * @brief SCD40 CO₂ classification: maps @c co2_ppm to one of the @c CO2_LEVEL_* labels.
+ *
+ * @param[in]  TAG        Log tag (unused; reserved for future debug logging).
+ * @param[in]  state_copy Device state snapshot.
+ * @param[out] local_state @c co2_alarm_level is set to the matching label string.
+ */
 static void scd40AlarmLogic(const char *TAG, const device_state_t *state_copy, alarm_local_state_t *local_state)
 {
+    (void)TAG;
     if (state_copy->co2_ppm < 400) {
         local_state->co2_alarm_level = CO2_LEVEL_OPTIMAL;
     }
@@ -47,11 +80,10 @@ static void scd40AlarmLogic(const char *TAG, const device_state_t *state_copy, a
     }
 }
 
+/** @copydoc systemAlarmLogic */
 void systemAlarmLogic(const char *TAG, const device_state_t *state_copy, alarm_local_state_t *local_state)
 {
-    //ESP_LOGD(TAG, "Starting system alarm logic");
     as312AlarmLogic(TAG, state_copy, local_state);
     mics5524AlarmLogic(TAG, state_copy, local_state);
     scd40AlarmLogic(TAG, state_copy, local_state);
-    //ESP_LOGD(TAG, "System alarm logic completed");
 }

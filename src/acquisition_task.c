@@ -4,6 +4,13 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  */
 
+/**
+ * @file acquisition_task.c
+ * @brief FreeRTOS acquisition task implementation.
+ *
+ * Polls each sensor on its own software timer and copies the results into
+ * @c g_device_state under @c g_device_state_mutex at every task iteration.
+ */
 
 #include "acquisition_task.h"
 #include "task_config.h"
@@ -15,7 +22,6 @@
 #include "freertos/task.h"
 #include "esp_check.h"
 
-// sensor headers
 #include "mics5524.h"
 #include "as312.h"
 #include "scd40.h"
@@ -35,23 +41,17 @@ void acquisition_task(void *pvParameters)
 {
     (void)pvParameters;
 
-    // Counter used to log the stack usage periodically
     uint32_t counter = 0;
-
-    // Counter used to print that the task is alive every 2000 ms
     uint32_t alive_counter = 0;
 
     ESP_LOGI(TAG, "Acquisition task started");
 
-    // Get the reference wake time for vTaskDelayUntil()
     TickType_t xLastWakeTime = xTaskGetTickCount();
     TickType_t now = xLastWakeTime;
 
-    // Local persistent state: keeps the last valid values
-    // initialize all fields to 0
     acquisition_local_state_t local_state = {0};
 
-    // Force first read
+    /* Pre-subtract each interval so the first poll fires immediately. */
     TickType_t last_as312    = now - pdMS_TO_TICKS(AS312_INTERVAL_MS);
     TickType_t last_mics5524 = now - pdMS_TO_TICKS(MICS5524_INTERVAL_MS);
     TickType_t last_sgp41    = now - pdMS_TO_TICKS(SGP41_INTERVAL_MS);
@@ -65,7 +65,6 @@ void acquisition_task(void *pvParameters)
     {
         logTaskAlive(TAG, &alive_counter, 20);
 
-        // Update current time
         now = xTaskGetTickCount();
 
         // AS312 - motion
@@ -96,7 +95,6 @@ void acquisition_task(void *pvParameters)
                 local_state.mics5524_valid        = true;
                 local_state.mics5524_fault        = false;
 
-                // Debug log
                 ESP_LOGD(TAG_DEBUG, "MiCS-5524: voltage=%.2f V, ppm=%.2f ppm", voltage, ppm);
             } else {
                 local_state.mics5524_valid  = false;
@@ -117,7 +115,6 @@ void acquisition_task(void *pvParameters)
                 local_state.sht41_last_update   = now;
                 local_state.sht41_valid         = true;
                 local_state.sht41_fault         = false;
-                // Debug log
                 ESP_LOGD(TAG_DEBUG, "SHT41: temperature=%.1f°C, humidity=%.1f%%", local_state.temperature_c, local_state.humidity_percent);
             } else {
                 local_state.sht41_valid = false;
@@ -162,7 +159,6 @@ void acquisition_task(void *pvParameters)
                 local_state.bmp280_last_update = now;
                 local_state.bmp280_valid       = true;
                 local_state.bmp280_fault       = false;
-                // Debug log
                 ESP_LOGD(TAG_DEBUG, "BMP280: P=%.2f hPa  T=%.1f°C", bmp.pressure_hpa, bmp.temperature_c);
             } else {
                 local_state.bmp280_valid = false;
@@ -182,7 +178,6 @@ void acquisition_task(void *pvParameters)
                 local_state.as7341_last_update = now;
                 local_state.as7341_valid       = true;
                 local_state.as7341_fault       = false;
-                // Debug log
                 ESP_LOGD(TAG_DEBUG, "AS7341: light=%.0f, %.0f, %.0f, %.0f, %.0f, %.0f, %.0f, %.0f",
                          as.channels[0], as.channels[1], as.channels[2], as.channels[3],
                          as.channels[4], as.channels[5], as.channels[6], as.channels[7]);
@@ -210,7 +205,6 @@ void acquisition_task(void *pvParameters)
                 local_state.scd40_valid       = true;
                 local_state.scd40_fault       = false;
 
-                // Debug log
                 ESP_LOGD(TAG_DEBUG,
                         "SCD40: co2=%.0f ppm  T=%.1f°C  RH=%.1f%%",
                         scd.co2_ppm,
@@ -316,10 +310,8 @@ void acquisition_task(void *pvParameters)
             xSemaphoreGive(g_device_state_mutex);
         }
 
-        // Log the stack usage periodically
-        logTaskStackUsage(&counter, 50, TAG, STACK_ACQUISITION_WORDS);
+        logTaskStackHeapUsage(&counter, LOG_CEILING_ACQUISITION, TAG, STACK_ACQUISITION_WORDS);
 
-        // Wait for 100 ms
         vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(ACQUISITION_TASK_INTERVAL_MS));
     }
 }

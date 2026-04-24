@@ -4,6 +4,10 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  */
 
+/**
+ * @file mqtt_app.c
+ * @brief MQTT client lifecycle implementation: global handle, event handler, and startup.
+ */
 
 #include "mqtt_app.h"
 #include "app_config.h"
@@ -21,9 +25,14 @@
 
 static const char *TAG = "MQTT_APP";
 
-/* Global MQTT client handle */
+/** @brief Global MQTT client handle (NULL before @ref mqtt_app_start succeeds). */
 esp_mqtt_client_handle_t g_mqtt_client = NULL;
 
+/**
+ * @brief Write @c mqtt_connected in @c g_device_state under the device-state mutex.
+ *
+ * @param[in] connected New MQTT connection state.
+ */
 static void mqtt_set_connected_flag(bool connected)
 {
     if (xSemaphoreTake(g_device_state_mutex, portMAX_DELAY) == pdTRUE)
@@ -37,6 +46,17 @@ static void mqtt_set_connected_flag(bool connected)
     }
 }
 
+/**
+ * @brief ESP-IDF MQTT event handler registered in @ref mqtt_app_start.
+ *
+ * Updates @c mqtt_connected on connect/disconnect/error events and logs
+ * subscriptions, publications, and incoming data at DEBUG level.
+ *
+ * @param handler_args Unused.
+ * @param base         Event base (unused; always @c MQTT_EVENTS).
+ * @param event_id     @c esp_mqtt_event_id_t cast to int32_t.
+ * @param event_data   Pointer to @c esp_mqtt_event_t.
+ */
 static void mqtt_event_handler(void *handler_args,
                                esp_event_base_t base,
                                int32_t event_id,
@@ -50,7 +70,7 @@ static void mqtt_event_handler(void *handler_args,
     switch ((esp_mqtt_event_id_t)event_id)
     {
         case MQTT_EVENT_CONNECTED:
-            ESP_LOGI(TAG, "MQTT connected");
+            ESP_LOGD(TAG, "MQTT connected");
             mqtt_set_connected_flag(true);
             break;
 
@@ -60,21 +80,21 @@ static void mqtt_event_handler(void *handler_args,
             break;
 
         case MQTT_EVENT_SUBSCRIBED:
-            ESP_LOGI(TAG, "MQTT subscribed, msg_id=%d", event->msg_id);
+            ESP_LOGD(TAG, "MQTT subscribed, msg_id=%d", event->msg_id);
             break;
 
         case MQTT_EVENT_UNSUBSCRIBED:
-            ESP_LOGI(TAG, "MQTT unsubscribed, msg_id=%d", event->msg_id);
+            ESP_LOGD(TAG, "MQTT unsubscribed, msg_id=%d", event->msg_id);
             break;
 
         case MQTT_EVENT_PUBLISHED:
-            ESP_LOGI(TAG, "MQTT published, msg_id=%d", event->msg_id);
+            ESP_LOGD(TAG, "MQTT published, msg_id=%d", event->msg_id);
             break;
 
         case MQTT_EVENT_DATA:
-            ESP_LOGI(TAG, "MQTT data received");
-            ESP_LOGI(TAG, "TOPIC=%.*s", event->topic_len, event->topic);
-            ESP_LOGI(TAG, "DATA=%.*s", event->data_len, event->data);
+            ESP_LOGD(TAG, "MQTT data received");
+            ESP_LOGD(TAG, "TOPIC=%.*s", event->topic_len, event->topic);
+            ESP_LOGD(TAG, "DATA=%.*s", event->data_len, event->data);
             break;
 
         case MQTT_EVENT_ERROR:
@@ -83,11 +103,12 @@ static void mqtt_event_handler(void *handler_args,
             break;
 
         default:
-            ESP_LOGI(TAG, "MQTT other event id=%" PRId32, event_id);
+            ESP_LOGD(TAG, "MQTT other event id=%" PRId32, event_id);
             break;
     }
 }
 
+/** @copydoc mqtt_app_start */
 void mqtt_app_start(void)
 {
     esp_mqtt_client_config_t mqtt_cfg = {

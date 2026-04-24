@@ -20,6 +20,7 @@ const MQTT_TOPICS = [
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
+const ALARM_ON_MS = Number(process.env.ALARM_ON_MS || 5000);
 
 app.use(express.static(__dirname));
 

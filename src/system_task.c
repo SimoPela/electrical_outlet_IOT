@@ -4,6 +4,16 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  */
 
+/**
+ * @file system_task.c
+ * @brief FreeRTOS system supervision task implementation.
+ *
+ * At each @c SYSTEM_TASK_INTERVAL_MS tick:
+ *  1. Snapshots @c g_device_state.
+ *  2. Runs per-sensor health checks and populates @c health_local_state_t.
+ *  3. Runs alarm logic and populates @c alarm_local_state_t.
+ *  4. Writes the derived flags back to @c g_device_state.
+ */
 
 #include "system_task.h"
 #include "task_config.h"
@@ -20,34 +30,26 @@
 
 static const char *TAG = "[SYSTEM]";
 
+/** @copydoc system_task */
 void system_task(void *pvParameters)
 {
     (void)pvParameters;
 
-    // Counter used to log stack usage periodically
     uint32_t counter = 0;
-    // Counter used to print that the task is alive periodically
     uint32_t alive_counter = 0;
 
     ESP_LOGI(TAG, "System task started");
 
-    // Reference tick for vTaskDelayUntil()
     TickType_t xLastWakeTime = xTaskGetTickCount();
 
     for (;;)
     {
         logTaskAlive(TAG, &alive_counter, 2);
 
-        // Local snapshot of the shared device state
         device_state_t state_copy = {0};
-
-        // Local working state recomputed at each iteration
         system_local_state_t health_local_state = {0};
-
-        // Local working state for alarm logic
         alarm_local_state_t alarm_local_state = {0};
 
-        // Get current RTOS tick count
         TickType_t now = xTaskGetTickCount();
 
         // Read a consistent snapshot of the shared device state
@@ -57,17 +59,14 @@ void system_task(void *pvParameters)
             xSemaphoreGive(g_device_state_mutex);
         }
 
-        // Health checks of all sensors (after ALL_SENSORS_TIMEOUT_MS seconds to avoid premature checks)
+        // Health checks of all sensors (skipped before ALL_SENSORS_TIMEOUT_MS to avoid premature fault flags)
         sensorHealthCheck(TAG, &now, &state_copy, &health_local_state);
-
-        // Sensor Restore if needed (after ALL_SENSORS_TIMEOUT_MS seconds to avoid premature restores)
-        // sensorHealthRestore(TAG,&health_local_state, &now); // TODO: implement this
 
         // System health check
         systemHealthCheck(TAG, &health_local_state);
-        
+
         // System alarm logic
-        systemAlarmLogic(TAG, &state_copy, &alarm_local_state);        
+        systemAlarmLogic(TAG, &state_copy, &alarm_local_state);
 
         // Write back only high-level system flags
         if (xSemaphoreTake(g_device_state_mutex, portMAX_DELAY) == pdTRUE)
@@ -88,11 +87,8 @@ void system_task(void *pvParameters)
                  alarm_local_state.mics5524_alarm,
                  alarm_local_state.co2_alarm_level);
 
-        // Log the stack usage periodically.
-        // Once the stack size is validated, this can be removed.
-        logTaskStackUsage(&counter, 10, TAG, STACK_SYSTEM_WORDS);
+        logTaskStackHeapUsage(&counter, LOG_CEILING_SYSTEM, TAG, STACK_SYSTEM_WORDS);
 
-        // Run the task periodically every 1 second
         vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(SYSTEM_TASK_INTERVAL_MS));
     }
 }

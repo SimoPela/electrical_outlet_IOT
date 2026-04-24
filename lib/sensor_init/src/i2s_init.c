@@ -4,6 +4,15 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  */
 
+/**
+ * @file i2s_init.c
+ * @brief I2S standard Philips RX channel initializer for the INMP441 digital microphone.
+ *
+ * Configures I2S0 in master RX mode, 24-bit Philips I2S, mono, 16 kHz.
+ *
+ * @note With a 24-bit slot width, the MCLK multiple must be a multiple of 3
+ *       (ESP-IDF constraint).  384 is used here; the default 256 is rejected.
+ */
 
 #include "i2s_init.h"
 #include "esp32_pinout.h"
@@ -18,10 +27,12 @@
 
 static const char *TAG = "I2S_INIT";
 
+/** INMP441 sample rate [Hz]. */
 #define MIC_SAMPLE_RATE_HZ 16000
 
 static i2s_chan_handle_t s_rx_handle = NULL;
 
+/** @copydoc i2s_init_all */
 esp_err_t i2s_init_all(void)
 {
     if (s_rx_handle != NULL) {
@@ -36,13 +47,12 @@ esp_err_t i2s_init_all(void)
         TAG,
         "Failed to create I2S RX channel"
     );
- 
+
     /*
      * INMP441 (DS-INMP441-00): I2S, 24-bit two's complement, MSB first with 1 SCK
      * delay vs half-frame (Philips I2S). Stereo frame = 64 SCK cycles (fSCK = 64 * fWS).
      *
-     * ESP-IDF: with 24-bit slot data, mclk_multiple must be a multiple of 3
-     * (see i2s_std.h / i2s_std_set_clock); default 256 is rejected.
+     * mclk_multiple must be a multiple of 3 for 24-bit slot data.
      */
     i2s_std_clk_config_t clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(MIC_SAMPLE_RATE_HZ);
     clk_cfg.mclk_multiple = I2S_MCLK_MULTIPLE_384;
@@ -66,7 +76,7 @@ esp_err_t i2s_init_all(void)
             },
         },
     };
- 
+
     ESP_RETURN_ON_ERROR(
         i2s_channel_init_std_mode(s_rx_handle, &std_cfg),
         TAG,
@@ -83,11 +93,13 @@ esp_err_t i2s_init_all(void)
     return ESP_OK;
 }
 
+/** @copydoc i2s_get_rx_channel */
 i2s_chan_handle_t i2s_get_rx_channel(void)
 {
     return s_rx_handle;
 }
 
+/** @copydoc i2s_restore */
 esp_err_t i2s_restore(void)
 {
     if (s_rx_handle != NULL) {

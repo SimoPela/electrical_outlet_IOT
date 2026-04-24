@@ -120,7 +120,7 @@ dependencies:
   idf:
     source:
       type: idf
-    version: 5.5.0
+    version: 5.5.2
   k0i05/esp_as7341:
     component_hash: 4926fd57454970426a87519f7ce54c880ffd9ed54a1f6edb17d33187fdd02505
     dependencies:

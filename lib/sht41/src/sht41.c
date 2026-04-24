@@ -4,6 +4,13 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  */
 
+/**
+ * @file sht41.c
+ * @brief Sensirion SHT41 humidity and temperature sensor — I2C driver implementation.
+ *
+ * Wraps the esp-idf-lib @c sht4x component.  Each call to @ref sht41_read
+ * issues a high-precision measure command and blocks ~10 ms for the result.
+ */
 
 #include "sht41.h"
 #include "esp32_pinout.h"
@@ -21,6 +28,7 @@ static const char *TAG = "SHT41";
 static sht4x_t g_sht41;
 static bool g_sht41_initialized = false;
 
+/** @copydoc sht41_init */
 esp_err_t sht41_init(void)
 {
     if (g_sht41_initialized)
@@ -46,22 +54,7 @@ esp_err_t sht41_init(void)
     return ESP_OK;
 }
 
-esp_err_t sht41_restore(void)
-{
-    if (g_sht41_initialized) {
-        ESP_LOGW(TAG, "restore L1: sht4x_reset (soft)");
-        esp_err_t err = sht4x_reset(&g_sht41);
-        if (err == ESP_OK) {
-            vTaskDelay(pdMS_TO_TICKS(2));
-            return ESP_OK;
-        }
-        ESP_LOGW(TAG, "restore L1 failed, L2: free_desc + init");
-        (void)sht4x_free_desc(&g_sht41);
-        g_sht41_initialized = false;
-    }
-    return sht41_init();
-}
-
+/** @copydoc sht41_read */
 esp_err_t sht41_read(sht41_data_t *out)
 {
     ESP_RETURN_ON_FALSE(out != NULL, ESP_ERR_INVALID_ARG, TAG, "out is NULL");
