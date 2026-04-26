@@ -41,7 +41,7 @@
  * @name Sensor polling intervals (milliseconds)
  * @{
  */
-#define AS312_INTERVAL_MS      100
+#define AS312_INTERVAL_MS      1000
 #define MICS5524_INTERVAL_MS   1000
 #define SGP41_INTERVAL_MS      1000
 #define SHT41_INTERVAL_MS      2000
