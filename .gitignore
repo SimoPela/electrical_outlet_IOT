@@ -21,9 +21,6 @@ build/
 # secret files
 lib/config/include/app_config.h
 
-# idf component
-managed_components/
-
 # mqtt instructions
 mqtt_use.md 
 
