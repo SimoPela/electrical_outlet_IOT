@@ -1,0 +1,29 @@
+\babel@toc {english}{}\relax 
+\contentsline {section}{\numberline {1}Summary}{2}{section.1}%
+\contentsline {section}{\numberline {2}System Context}{2}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Hardware}{2}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}System actors and data paths}{3}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}MQTT topics}{3}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Web dashboard}{3}{subsection.2.4}%
+\contentsline {section}{\numberline {3}Requirements}{4}{section.3}%
+\contentsline {section}{\numberline {4}Design}{5}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Boot sequence}{5}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}FreeRTOS task architecture}{6}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Sensor polling intervals}{6}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}System supervision and alarm logic}{7}{subsection.4.4}%
+\contentsline {subsection}{\numberline {4.5}System context diagram}{7}{subsection.4.5}%
+\contentsline {subsection}{\numberline {4.6}UML task interaction diagram}{8}{subsection.4.6}%
+\contentsline {subsection}{\numberline {4.7}Acquisition polling flow}{8}{subsection.4.7}%
+\contentsline {section}{\numberline {5}Runtime Statistics}{9}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Methodology}{9}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Stack usage per task}{9}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Heap usage over time}{10}{subsection.5.3}%
+\contentsline {section}{\numberline {6}File Structure}{11}{section.6}%
+\contentsline {section}{\numberline {7}User Manual}{12}{section.7}%
+\contentsline {subsection}{\numberline {7.1}Step 1 --- Configure credentials}{12}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}Step 2 --- Flash and monitor}{12}{subsection.7.2}%
+\contentsline {subsection}{\numberline {7.3}Step 3 --- Verify boot sequence}{12}{subsection.7.3}%
+\contentsline {subsection}{\numberline {7.4}Step 4 --- Subscribe to MQTT topics}{13}{subsection.7.4}%
+\contentsline {subsection}{\numberline {7.5}Step 5 --- Start the web dashboard (optional)}{13}{subsection.7.5}%
+\contentsline {subsection}{\numberline {7.6}Troubleshooting}{13}{subsection.7.6}%
+\contentsline {section}{\numberline {8}Version control}{14}{section.8}%

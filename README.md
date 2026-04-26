@@ -75,7 +75,7 @@ Task definitions are configured in `include/task_config.h`.
 
 | Task | Main role | Priority | Stack (words) | Loop period |
 |---|---|---:|---:|---:|
-| `acquisition_task` | Poll environmental sensors and update shared state | 2 | 4096 | 100 ms |
+| `acquisition_task` | Poll environmental sensors and update shared state | 2 | 4096 | 1000 ms |
 | `audio_task` | Read INMP441 and update noise metrics | 2 | 4096 | 500 ms |
 | `comm_task` | Publish MQTT system/environment/alarm payloads | 3 | 4096 | 100 ms |
 | `system_task` | Evaluate health and alarm state | 4 | 4096 | 100 ms |

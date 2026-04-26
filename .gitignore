@@ -21,9 +21,6 @@ build/
 # secret files
 lib/config/include/app_config.h
 
-# temporary files (copyright issues)
-raport/
-
 # idf component
 managed_components/
 
