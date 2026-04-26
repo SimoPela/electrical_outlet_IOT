@@ -81,13 +81,13 @@ Task definitions are configured in `include/task_config.h`.
 | `system_task` | Evaluate health and alarm state | 4 | 4096 | 100 ms |
 
 The firmware uses periodic polling instead of interrupt-driven sampling for most sensors.
-`acquisition_task` runs every 100 ms and checks per-sensor deadlines (for example 1000 ms, 2000 ms, 2500 ms, 5000 ms depending on the sensor). When a deadline is reached, it reads that sensor, updates local values, then commits a synchronized snapshot to the shared device state.
+`acquisition_task` runs every 1000 ms and checks per-sensor deadlines (for example 1000 ms, 2000 ms, 2500 ms, 5000 ms depending on the sensor). When a deadline is reached, it reads that sensor, updates local values, then commits a synchronized snapshot to the shared device state.
 In parallel, `audio_task` handles the INMP441 capture pipeline at its own cadence, while `system_task` computes health/alarm flags and `comm_task` publishes MQTT payloads from a consistent state snapshot.
 
 ```mermaid
 flowchart LR
     subgraph RTOS[FreeRTOS Runtime]
-        ACQ["acquisition_task (100 ms loop)\n- deadline-based polling\n- multi-sensor reads"]
+        ACQ["acquisition_task (1000 ms loop)\n- deadline-based polling\n- multi-sensor reads"]
         AUD["audio_task (500 ms loop)\n- INMP441 read\n- noise_db update"]
         SYS["system_task (100 ms loop)\n- health checks\n- alarm logic"]
         COM["comm_task (100 ms loop)\n- MQTT publish scheduler"]
